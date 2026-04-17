@@ -20,6 +20,15 @@ npm run start
 npm run lint
 ```
 
+## Desarrollo
+
+```bash
+npm install
+npm run dev
+```
+
+Luego abre http://localhost:3000.
+
 ## Estructura
 
 - src/app: rutas, layout y estilos globales
