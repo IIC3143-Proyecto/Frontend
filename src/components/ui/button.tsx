@@ -1,19 +1,25 @@
-
 import * as React from "react"
 import { Slot } from "@radix-ui/react-slot"
 import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 active:scale-100 hover:scale-110",
+  // Base: Quitamos el scale de aquí para que no afecte a todos por igual
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground hover:bg-primary/70 active:bg-primary",
-        destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/70 active:bg-destructive",
-        outline: "border border-input bg-background hover:text-foreground  active:text-foreground",
-        secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/60 active:bg-secondary",
-        ghost: "hover:bg-accent/60 hover:text-accent-foreground active:bg-transparent",
+        // Añadimos hover:scale-105 y active:scale-95 solo a los que queremos
+        default: 
+          "bg-primary text-primary-foreground hover:bg-primary/70 hover:scale-105 active:scale-95 active:bg-primary",
+        destructive:
+          "bg-destructive text-destructive-foreground hover:bg-destructive/90 hover:scale-105 active:scale-95",
+        outline:
+          "border border-input bg-background hover:bg-accent hover:text-accent-foreground hover:scale-105 active:scale-95",
+        secondary:
+          "bg-secondary text-secondary-foreground hover:bg-secondary/80 hover:scale-105 active:scale-95",
+        // Ghost y Link se quedan sin el efecto de escala para mantener la elegancia
+        ghost: "hover:bg-accent hover:text-accent-foreground active:bg-transparent",
         link: "text-primary underline-offset-4 hover:underline",
       },
       size: {
