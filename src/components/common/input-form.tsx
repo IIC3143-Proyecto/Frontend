@@ -2,8 +2,8 @@
 
 import * as React from "react"
 import { IconEye, IconEyeOff } from "@tabler/icons-react"
-import { Control, FieldValues, FieldPath } from "react-hook-form"
-import type { Icon as TablerIcon } from "@tabler/icons-react"
+import { Control, FieldValues, FieldPath } from "react-hook-form" 
+import { Icon as TablerIcon } from "@tabler/icons-react"
 
 import {
   FormControl,
@@ -21,7 +21,7 @@ import { cn } from "@/lib/utils"
 type InputType = "text" | "password" | "email" | "number" | "tel" | "url"
 
 interface InputControlProps extends React.ComponentProps<"input"> {
-  icon?: React.ElementType<React.ComponentProps<typeof TablerIcon>>
+  icon?: TablerIcon
   isPassword: boolean
   inputClassName?: string
 }
@@ -89,7 +89,7 @@ interface FormInputProps<TFieldValues extends FieldValues = FieldValues>
   label?: string
   description?: string
   type?: InputType
-  icon?: React.ElementType<React.ComponentProps<typeof TablerIcon>>
+  icon?: TablerIcon
   inputClassName?: string
   labelClassName?: string
   messageClassName?: string
