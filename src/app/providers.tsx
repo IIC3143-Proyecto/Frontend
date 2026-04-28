@@ -1,0 +1,33 @@
+'use client';
+
+import { Auth0Provider } from '@auth0/nextjs-auth0/client'; 
+import { MSWProvider } from '@/lib/msw/msw-provider';
+import { AuthRedirectWrapper } from '@/components/auth/AuthRedirectWrapper';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { useState } from 'react';
+
+export function Providers({ children }: { children: React.ReactNode }) {
+  const [queryClient] = useState(() => new QueryClient({
+    defaultOptions: {
+      queries: {
+        // En desarrollo, esto evita que se hagan peticiones infinitas al fallar
+        retry: false,
+        gcTime: 0,
+        staleTime: 0,
+        refetchOnWindowFocus: false,
+      },
+    },
+  }));
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <Auth0Provider>
+        <MSWProvider>
+          <AuthRedirectWrapper>
+            {children}
+          </AuthRedirectWrapper>
+        </MSWProvider>
+      </Auth0Provider>
+    </QueryClientProvider>
+  );
+}
