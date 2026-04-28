@@ -38,15 +38,11 @@ const USERS: Record<string, MockUser> = {
 export const handlers = [
   http.get('*/api/users/me', () => {
     const scenario = getMockUser();
-    const user = USERS[scenario];
-
-    console.log('[MSW] scenario:', scenario);
-    console.log('[MSW] user:', user);
-
-    return HttpResponse.json(user);
+    return HttpResponse.json(USERS[scenario]);
   }),
 
-  http.patch('*/users/me', async ({ request }) => {
+  // ✅ FIX: endpoint correcto
+  http.patch('*/api/users/me', async ({ request }) => {
     const data = await request.json();
 
     const scenario = getMockUser();
@@ -56,8 +52,6 @@ export const handlers = [
       typeof data === 'object' && data !== null
         ? { ...baseUser, ...data }
         : baseUser;
-
-    console.log('[MSW] PATCH:', updated);
 
     return HttpResponse.json(updated);
   }),
