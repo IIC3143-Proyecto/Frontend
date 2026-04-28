@@ -40,8 +40,6 @@ export const handlers = [
     const scenario = getMockUser();
     const user = USERS[scenario];
 
-    console.log('[MSW] scenario:', scenario);
-    console.log('[MSW] user:', user);
 
     return HttpResponse.json(user);
   }),
@@ -57,7 +55,6 @@ export const handlers = [
         ? { ...baseUser, ...data }
         : baseUser;
 
-    console.log('[MSW] PATCH:', updated);
 
     return HttpResponse.json(updated);
   }),
