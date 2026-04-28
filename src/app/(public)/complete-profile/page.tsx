@@ -17,8 +17,6 @@ export default function CompleteProfilePage() {
       <Button
         className="flex items-center gap-3 bg-black text-white p-8 text-xl font-bold hover:scale-105 transition-transform"
         onClick={async () => {
-          console.log('➡️ PATCH profile');
-
           await fetch('/api/users/me', {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
@@ -29,8 +27,6 @@ export default function CompleteProfilePage() {
 
           // 🔥 CLAVE: invalidar cache
           await queryClient.invalidateQueries({ queryKey: ['me'] });
-
-          console.log('➡️ redirect → /onboarding');
 
           router.push('/onboarding');
         }}

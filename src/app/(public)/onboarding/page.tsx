@@ -17,7 +17,6 @@ export default function OnboardingPage() {
       <Button
         className="flex items-center gap-2 bg-white text-black font-black p-6 hover:bg-gray-200"
         onClick={async () => {
-          console.log('➡️ PATCH onboarding');
 
           await fetch('/api/users/me', {
             method: 'PATCH',
@@ -27,8 +26,6 @@ export default function OnboardingPage() {
 
           // 🔥 CLAVE
           await queryClient.invalidateQueries({ queryKey: ['me'] });
-
-          console.log('➡️ redirect → /feed');
 
           router.push('/feed');
         }}
