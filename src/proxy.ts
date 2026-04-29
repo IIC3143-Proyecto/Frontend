@@ -1,4 +1,3 @@
-// src/middleware.ts (o proxy.ts)
 import { NextRequest, NextResponse } from "next/server";
 import { auth0 } from "@/lib/auth0";
 

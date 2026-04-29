@@ -1,12 +1,12 @@
 'use client';
 import { LogIn, UserPlus, ShoppingBag, LogOut, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useUser } from '@auth0/nextjs-auth0/client'; // Importante
+import { useUser } from '@auth0/nextjs-auth0/client';
 
 export function Navbar() {
   const { user, isLoading } = useUser();
 
-  if (isLoading) return <div className="h-16" />; // Skeleton o vacío mientras carga
+  if (isLoading) return <div className="h-16" />; 
 
   return (
     <nav className="w-full border-b-4 border-black bg-white p-4">
@@ -17,7 +17,6 @@ export function Navbar() {
         
         <div className="flex gap-4">
           {user ? (
-            // VISTA LOGUEADO
             <>
               <a href="/profile">
                 <Button variant="outline" className="border-2 border-black gap-2 font-bold shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
@@ -31,7 +30,6 @@ export function Navbar() {
               </a>
             </>
           ) : (
-            // VISTA INVITADO
             <>
               <a href="/auth/login">
                 <Button variant="outline" className="border-2 border-black gap-2 font-bold shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">

@@ -24,7 +24,6 @@ export default function OnboardingPage() {
             body: JSON.stringify({ onboardingCompleted: true }),
           });
 
-          // 🔥 CLAVE
           await queryClient.invalidateQueries({ queryKey: ['currentUser'] });
 
           router.push('/feed');

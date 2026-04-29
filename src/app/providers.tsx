@@ -10,7 +10,6 @@ export function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(() => new QueryClient({
     defaultOptions: {
       queries: {
-        // En desarrollo, esto evita que se hagan peticiones infinitas al fallar
         retry: false,
         gcTime: 0,
         staleTime: 0,

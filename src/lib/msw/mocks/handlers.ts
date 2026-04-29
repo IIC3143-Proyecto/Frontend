@@ -42,7 +42,6 @@ export const handlers = [
     return HttpResponse.json(USERS[scenario]);
   }),
 
-  // ✅ FIX: endpoint correcto
   http.patch('*/api/users/me', async ({ request }) => {
     const data = await request.json();
 
