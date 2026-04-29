@@ -26,7 +26,7 @@ export default function CompleteProfilePage() {
           });
 
           // 🔥 CLAVE: invalidar cache
-          await queryClient.invalidateQueries({ queryKey: ['me'] });
+          await queryClient.invalidateQueries({ queryKey: ['currentUser'] });
 
           router.push('/onboarding');
         }}

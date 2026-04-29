@@ -25,7 +25,7 @@ export default function OnboardingPage() {
           });
 
           // 🔥 CLAVE
-          await queryClient.invalidateQueries({ queryKey: ['me'] });
+          await queryClient.invalidateQueries({ queryKey: ['currentUser'] });
 
           router.push('/feed');
         }}
