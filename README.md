@@ -34,3 +34,7 @@ Luego abre http://localhost:3000.
 - src/app: rutas, layout y estilos globales
 - src/components/ui: componentes UI
 - src/lib/utils.ts: utilidades (helper `cn`)
+
+## Documentación
+
+- [MSW (Mock Service Worker)](./docs/msw.md)
