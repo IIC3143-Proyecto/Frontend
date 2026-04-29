@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 
 let workerStarted = false;
+let workerStartPromise: Promise<void> | null = null;
 
 export function MSWProvider({ children }: { children: React.ReactNode }) {
   const [mswReady, setMswReady] = useState(false);
@@ -16,22 +17,30 @@ export function MSWProvider({ children }: { children: React.ReactNode }) {
     }
 
     const startMSW = async () => {
+      // ✅ Si ya se inició, no hacer nada
       if (workerStarted) {
         setMswReady(true);
         return;
       }
 
+      // ✅ Si ya hay un start en progreso, reutilizarlo
+      if (!workerStartPromise) {
+        workerStartPromise = (async () => {
+          const { worker } = await import('./mocks/browser');
+
+          await worker.start({
+            onUnhandledRequest: 'bypass',
+            serviceWorker: {
+              url: '/mockServiceWorker.js',
+            },
+          });
+
+          workerStarted = true;
+        })();
+      }
+
       try {
-        const { worker } = await import('./mocks/browser');
-
-        await worker.start({
-          onUnhandledRequest: 'bypass',
-          serviceWorker: {
-            url: '/mockServiceWorker.js',
-          },
-        });
-
-        workerStarted = true;
+        await workerStartPromise;
       } catch (error) {
         console.error('❌ MSW error:', error);
       } finally {
@@ -47,7 +56,9 @@ export function MSWProvider({ children }: { children: React.ReactNode }) {
       <div className="flex items-center justify-center min-h-screen bg-background">
         <div className="flex flex-col items-center gap-4">
           <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin" />
-          <span className="text-xl font-black uppercase tracking-widest text-foreground">Cargando</span>
+          <span className="text-xl font-black uppercase tracking-widest text-foreground">
+            Cargando
+          </span>
         </div>
       </div>
     );
