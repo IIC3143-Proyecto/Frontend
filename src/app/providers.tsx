@@ -2,7 +2,6 @@
 
 import { Auth0Provider } from '@auth0/nextjs-auth0/client'; 
 import { MSWProvider } from '@/lib/msw/msw-provider';
-import { AuthRedirectWrapper } from '@/components/auth/AuthRedirectWrapper';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useState } from 'react';
 
@@ -20,13 +19,11 @@ export function Providers({ children }: { children: React.ReactNode }) {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <Auth0Provider>
-        <MSWProvider>
-          <AuthRedirectWrapper>
+        <Auth0Provider>
+            <MSWProvider>
             {children}
-          </AuthRedirectWrapper>
-        </MSWProvider>
-      </Auth0Provider>
+            </MSWProvider>
+        </Auth0Provider>
     </QueryClientProvider>
   );
 }
