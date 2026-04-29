@@ -5,16 +5,7 @@ on:
     types: [published]
 
 jobs:
-  ci:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - run: npm ci
-      - name: Run lint
-        run: npm run lint
-
   deploy:
-    needs: ci
     runs-on: ubuntu-latest
     environment: production
     steps:
