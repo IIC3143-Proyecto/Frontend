@@ -95,7 +95,7 @@ export function resetMockUser() {
 
 ## Importante
 
-- Esto solo funciona en desarrollo (`NODE_ENV=development`)
+- Esto solo funciona en desarrollo (`NODE_ENV=development` y `NEXT_PUBLIC_ENABLE_MSW=true`)
 - MSW intercepta `api/users/me`
 - El cambio afecta toda la app inmediatamente (no requiere refresh si el handler lee el estado en runtime)
 
