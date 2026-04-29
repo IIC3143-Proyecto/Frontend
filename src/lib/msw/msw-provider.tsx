@@ -17,13 +17,11 @@ export function MSWProvider({ children }: { children: React.ReactNode }) {
     }
 
     const startMSW = async () => {
-      // ✅ Si ya se inició, no hacer nada
       if (workerStarted) {
         setMswReady(true);
         return;
       }
 
-      // ✅ Si ya hay un start en progreso, reutilizarlo
       if (!workerStartPromise) {
         workerStartPromise = (async () => {
           const { worker } = await import('./mocks/browser');
