@@ -1,5 +1,6 @@
 import { http, HttpResponse } from 'msw';
 import { getMockUser } from './scenario';
+import type { MockUserScenario } from './scenario';
 
 type MockUser = {
   id: string;
@@ -8,7 +9,7 @@ type MockUser = {
   onboardingCompleted: boolean;
 };
 
-const USERS: Record<string, MockUser> = {
+const USERS: Record<MockUserScenario, MockUser> = {
   FULL: {
     id: "user_123",
     username: "Flo_Full",
