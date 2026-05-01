@@ -1,5 +1,8 @@
-'use client';
-import { useEffect, useState } from 'react';
+"use client";
+import { useEffect, useState } from "react";
+
+const isDevelopment = process.env.NODE_ENV === "development";
+const isMswEnabled = process.env.NEXT_PUBLIC_ENABLE_MSW === "true";
 
 let workerStarted = false;
 let workerStartPromise: Promise<void> | null = null;
@@ -8,11 +11,7 @@ export function MSWProvider({ children }: { children: React.ReactNode }) {
   const [mswReady, setMswReady] = useState(false);
 
   useEffect(() => {
-    const isDevelopment = process.env.NODE_ENV === 'development';
-    const isMswEnabled = process.env.NEXT_PUBLIC_ENABLE_MSW === 'true';
-
     if (!isDevelopment || !isMswEnabled) {
-      setMswReady(true);
       return;
     }
 
@@ -24,12 +23,12 @@ export function MSWProvider({ children }: { children: React.ReactNode }) {
 
       if (!workerStartPromise) {
         workerStartPromise = (async () => {
-          const { worker } = await import('./mocks/browser');
+          const { worker } = await import("./mocks/browser");
 
           await worker.start({
-            onUnhandledRequest: 'bypass',
+            onUnhandledRequest: "bypass",
             serviceWorker: {
-              url: '/mockServiceWorker.js',
+              url: "/mockServiceWorker.js",
             },
           });
 
@@ -40,7 +39,7 @@ export function MSWProvider({ children }: { children: React.ReactNode }) {
       try {
         await workerStartPromise;
       } catch (error) {
-        console.error('❌ MSW error:', error);
+        console.error("❌ MSW error:", error);
       } finally {
         setMswReady(true);
       }
