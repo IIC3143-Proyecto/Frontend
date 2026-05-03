@@ -12,9 +12,29 @@ export function MSWProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!isDevelopment || !isMswEnabled) {
+      const handleDisabledMsw = async () => {
+        if (typeof window !== "undefined" && "serviceWorker" in navigator) {
+          try {
+            const registrations = await navigator.serviceWorker.getRegistrations();
+            for (const registration of registrations) {
+              if (
+                registration.active &&
+                registration.active.scriptURL.includes("mockServiceWorker.js")
+              ) {
+                await registration.unregister();
+              }
+            }
+          } catch {
+          }
+        }
+        setMswReady(true);
+      };
+
+      handleDisabledMsw();
       return;
     }
 
+    // Caso 2: MSW debe activarse
     const startMSW = async () => {
       if (workerStarted) {
         setMswReady(true);
