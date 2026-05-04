@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useMutation } from "@tanstack/react-query";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
@@ -16,12 +15,6 @@ export default function Home() {
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center gap-6 p-24">
-      <Link
-        href="/login"
-        className="text-black font-black uppercase underline tracking-widest"
-      >
-        Ir al Login
-      </Link>
       <button
         onClick={() => mutate()}
         disabled={isPending}
