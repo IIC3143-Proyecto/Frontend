@@ -10,25 +10,25 @@ type MockUser = {
 
 const USERS: Record<string, MockUser> = {
   FULL: {
-    id: "user_123",
+    id: "auth0|full_123",
     username: "Flo_Full",
     photoUrl: "https://vtrna.com/avatar.jpg",
     onboardingCompleted: true,
   },
   NO_PHOTO: {
-    id: "user_123",
+    id: "auth0|no_photo_123",
     username: "Flo_Sin_Foto",
     photoUrl: null,
     onboardingCompleted: true,
   },
   ONBOARDING_PENDING: {
-    id: "user_123",
+    id: "auth0|pending_123",
     username: "Flo_Pendiente",
     photoUrl: "https://vtrna.com/avatar.jpg",
     onboardingCompleted: false,
   },
   NEW: {
-    id: "user_123",
+    id: "auth0|new_123",
     username: "Flo_Nuevo",
     photoUrl: null,
     onboardingCompleted: false,
@@ -36,22 +36,42 @@ const USERS: Record<string, MockUser> = {
 };
 
 export const handlers = [
-  http.get('*/api/users/me', () => {
+  http.get('*/auth/profile', () => {
     const scenario = getMockUser();
-    return HttpResponse.json(USERS[scenario]);
+    const user = USERS[scenario];
+
+    if (!user) return new HttpResponse(null, { status: 401 });
+
+    return HttpResponse.json({
+      sub: user.id,
+      nickname: user.username,
+      name: user.username,
+      picture: user.photoUrl,
+      email: `${user.username.toLowerCase()}@vtrna.cl`,
+      email_verified: true,
+    });
   }),
 
-  http.patch('*/api/users/me', async ({ request }) => {
-    const data = await request.json();
-
+  http.get('*/auth/sync-user', () => {
     const scenario = getMockUser();
-    const baseUser = USERS[scenario];
+    const user = USERS[scenario];
 
-    const updated =
-      typeof data === 'object' && data !== null
-        ? { ...baseUser, ...data }
-        : baseUser;
+    if (!user) return new HttpResponse(null, { status: 401 });
 
-    return HttpResponse.json(updated);
+    return HttpResponse.json({
+      id: user.id, 
+      username: user.username,
+      email: `${user.username.toLowerCase()}@vtrna.cl`,
+      onboardingCompleted: user.onboardingCompleted,
+      name: user.username,
+      providerId: user.id, 
+    });
+  }),
+
+  http.get('*/auth/logout', () => {
+    return new HttpResponse(null, { 
+      status: 302, 
+      headers: { Location: '/' } 
+    });
   }),
 ];
