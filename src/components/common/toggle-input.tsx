@@ -13,8 +13,14 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
+/**
+ * Supported size options for the ToggleInputGroup component.
+ */
 type ToggleInputSize = "sm" | "default" | "lg";
 
+/**
+ * Size-based class names for ToggleInputGroup and its elements.
+ */
 const sizeClasses = {
   sm: {
     label: "text-[9px]",
@@ -36,6 +42,18 @@ const sizeClasses = {
   },
 };
 
+/**
+ * Props for the ToggleInputGroup component.
+ * @template TFieldValues Type of form field values.
+ * @property control react-hook-form control object.
+ * @property name Field name.
+ * @property label Optional label text.
+ * @property options Array of toggle options (label and value).
+ * @property type Selection type: "single" or "multiple".
+ * @property limit Max number of options to show before expanding.
+ * @property size Size of the toggles (sm, default, lg).
+ * @property className Additional class names for the group.
+ */
 interface ToggleInputGroupProps<TFieldValues extends FieldValues> {
   control: Control<TFieldValues>;
   name: FieldPath<TFieldValues>;
@@ -47,6 +65,10 @@ interface ToggleInputGroupProps<TFieldValues extends FieldValues> {
   className?: string;
 }
 
+/**
+ * Toggle group input for forms, supporting single/multiple selection, size, and expand/collapse.
+ * Integrates with react-hook-form.
+ */
 export function ToggleInputGroup<TFieldValues extends FieldValues>({
   control,
   name,

@@ -16,9 +16,19 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
+/**
+ * Supported input types for the TextInput component.
+ */
 type InputType = "text" | "password" | "email" | "number" | "tel" | "url";
+
+/**
+ * Supported size options for the TextInput component.
+ */
 type TextInputSize = "sm" | "default" | "lg";
 
+/**
+ * Size-based class names for TextInput and its elements.
+ */
 const sizeClasses = {
   sm: {
     label: "text-[9px]",
@@ -46,6 +56,13 @@ const sizeClasses = {
   },
 };
 
+/**
+ * Props for the internal InputControl component.
+ * @property icon Optional icon to display inside the input.
+ * @property isPassword If true, enables password visibility toggle.
+ * @property inputClassName Additional class names for the input element.
+ * @property size Size of the input (sm, default, lg).
+ */
 type InputControlProps = Omit<React.ComponentProps<"input">, "size"> & {
   icon?: TablerIcon;
   isPassword?: boolean;
@@ -53,6 +70,9 @@ type InputControlProps = Omit<React.ComponentProps<"input">, "size"> & {
   size?: TextInputSize;
 };
 
+/**
+ * Internal input control with icon and password toggle support.
+ */
 const InputControl = React.forwardRef<HTMLInputElement, InputControlProps>(
   function InputControl({ icon: Icon, isPassword, type, inputClassName, size = "default", ...props }, ref) {
     const { error } = useFormField();
@@ -100,6 +120,20 @@ const InputControl = React.forwardRef<HTMLInputElement, InputControlProps>(
 );
 InputControl.displayName = "InputControl";
 
+/**
+ * Props for the TextInput component.
+ * @template TFieldValues Type of form field values.
+ * @property control react-hook-form control object.
+ * @property name Field name.
+ * @property label Optional label text.
+ * @property description Optional description below the input.
+ * @property type Input type (text, password, etc).
+ * @property size Input size (sm, default, lg).
+ * @property icon Optional icon to display inside the input.
+ * @property inputClassName Additional class names for the input element.
+ * @property labelClassName Additional class names for the label.
+ * @property messageClassName Additional class names for the message.
+ */
 interface TextInputProps<TFieldValues extends FieldValues>
   extends Omit<React.ComponentProps<"input">, "name" | "type" | "size"> {
   control: Control<TFieldValues>;
@@ -114,6 +148,10 @@ interface TextInputProps<TFieldValues extends FieldValues>
   messageClassName?: string;
 }
 
+/**
+ * Form input component with optional icon, password toggle, and size support.
+ * Integrates with react-hook-form.
+ */
 export function TextInput<TFieldValues extends FieldValues>({
   control,
   name,
