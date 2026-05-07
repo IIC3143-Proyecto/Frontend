@@ -107,7 +107,7 @@ export function ToggleInputGroup<TFieldValues extends FieldValues>({
 
           <FormControl>
             <ToggleGroup
-              type={type as any}
+              type={type as "single" | "multiple"}
               value={field.value}
               disabled={disabled} 
               onValueChange={(val: string | string[]) => {

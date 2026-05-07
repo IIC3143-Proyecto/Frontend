@@ -3,7 +3,7 @@
 import { useForm, SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { IconMail, IconLock } from "@tabler/icons-react";
+import { IconMail } from "@tabler/icons-react";
 
 import { Form } from "@/components/ui/form";
 import { TextInput } from "@/components/common/text-input";
@@ -38,7 +38,7 @@ type DemoInput = z.input<typeof demoSchema>;
 type DemoOutput = z.output<typeof demoSchema>;
 
 export function OnboardingStylesForm() {
-  const form = useForm<DemoInput, any, DemoOutput>({
+  const form = useForm<DemoInput, void, DemoOutput>({
     resolver: zodResolver(demoSchema),
     defaultValues: {
       username: "",
