@@ -1,10 +1,8 @@
 "use client";
 
 import * as React from "react";
-import { IconEye, IconEyeOff } from "@tabler/icons-react";
 import { Control, FieldValues, FieldPath } from "react-hook-form";
-import { Icon as TablerIcon } from "@tabler/icons-react";
-
+import { Icon as TablerIcon, IconEye, IconEyeOff } from "@tabler/icons-react";
 import {
   FormControl,
   FormDescription,
@@ -19,131 +17,153 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 type InputType = "text" | "password" | "email" | "number" | "tel" | "url";
+type TextInputSize = "sm" | "default" | "lg";
 
-interface InputControlProps extends React.ComponentProps<"input"> {
+const sizeClasses = {
+  sm: {
+    label: "text-[9px]",
+    icon: "h-3.5 w-3.5",
+    iconOffset: "pl-8",
+    input: "h-8 text-xs",
+    eyeButton: "h-8",
+    message: "text-[10px]",
+  },
+  default: {
+    label: "text-[10px]",
+    icon: "h-4 w-4",
+    iconOffset: "pl-9",
+    input: "h-10 text-sm",
+    eyeButton: "h-10",
+    message: "text-xs",
+  },
+  lg: {
+    label: "text-xs",
+    icon: "h-5 w-5",
+    iconOffset: "pl-10",
+    input: "h-12 text-base",
+    eyeButton: "h-12",
+    message: "text-sm",
+  },
+};
+
+type InputControlProps = Omit<React.ComponentProps<"input">, "size"> & {
   icon?: TablerIcon;
-  isPassword: boolean;
+  isPassword?: boolean;
   inputClassName?: string;
-}
+  size?: TextInputSize;
+};
 
 const InputControl = React.forwardRef<HTMLInputElement, InputControlProps>(
-  ({ icon: Icon, isPassword, type, inputClassName, ...props }, ref) => {
+  function InputControl({ icon: Icon, isPassword, type, inputClassName, size = "default", ...props }, ref) {
     const { error } = useFormField();
     const [showPassword, setShowPassword] = React.useState(false);
-
     const finalType = isPassword ? (showPassword ? "text" : "password") : type;
+    const s = sizeClasses[size];
 
     return (
       <div className="relative flex items-center">
         {Icon && (
           <Icon
             className={cn(
-              "absolute left-3 h-4 w-4 transition-colors pointer-events-none",
-              error ? "text-destructive" : "text-muted-foreground/70",
+              "absolute left-3 transition-colors pointer-events-none",
+              s.icon,
+              error ? "text-destructive" : "text-muted-foreground/70"
             )}
           />
         )}
-
         <FormControl>
           <Input
             {...props}
             ref={ref}
             type={finalType}
-            suppressHydrationWarning
-            className={cn(
-              Icon && "pl-9",
-              isPassword && "pr-10",
-              inputClassName,
-            )}
+            className={cn(s.input, Icon && s.iconOffset, isPassword && "pr-10", inputClassName)}
           />
         </FormControl>
-
         {isPassword && (
           <Button
             type="button"
             variant="ghost"
             size="icon"
-            className="absolute right-0 h-full px-3 text-muted-foreground hover:bg-transparent"
+            className={cn("absolute right-0 px-3", s.eyeButton)}
             onClick={() => setShowPassword((v) => !v)}
-            tabIndex={-1}
-            aria-label={
-              showPassword ? "Ocultar contraseña" : "Mostrar contraseña"
-            }
           >
             {showPassword ? (
-              <IconEyeOff className="h-4 w-4" />
+              <IconEyeOff className={s.icon} />
             ) : (
-              <IconEye className="h-4 w-4" />
+              <IconEye className={s.icon} />
             )}
           </Button>
         )}
       </div>
     );
-  },
+  }
 );
 InputControl.displayName = "InputControl";
 
-interface FormInputProps<
-  TFieldValues extends FieldValues = FieldValues,
-> extends Omit<React.ComponentProps<"input">, "name" | "type"> {
+interface TextInputProps<TFieldValues extends FieldValues>
+  extends Omit<React.ComponentProps<"input">, "name" | "type" | "size"> {
   control: Control<TFieldValues>;
   name: FieldPath<TFieldValues>;
   label?: string;
   description?: string;
   type?: InputType;
+  size?: TextInputSize;
   icon?: TablerIcon;
   inputClassName?: string;
   labelClassName?: string;
   messageClassName?: string;
 }
 
-export function FormInput<TFieldValues extends FieldValues = FieldValues>({
+export function TextInput<TFieldValues extends FieldValues>({
   control,
   name,
   label,
   description,
   type = "text",
+  size = "default",
   icon,
+  disabled, 
   inputClassName,
   labelClassName,
   messageClassName,
   className,
   ...props
-}: FormInputProps<TFieldValues>) {
+}: TextInputProps<TFieldValues> & { disabled?: boolean }) {
+  const s = sizeClasses[size];
+
   return (
     <FormField
       control={control}
       name={name}
+      disabled={disabled}
       render={({ field }) => (
-        <FormItem className={cn("w-full space-y-1.5", className)}>
+        <FormItem className={cn("w-full space-y-1.5", className, disabled && "opacity-60 cursor-not-allowed")}>
           {label && (
             <FormLabel
               className={cn(
                 "font-bold uppercase tracking-wider text-muted-foreground",
+                s.label,
                 labelClassName,
+                disabled && "text-muted-foreground/50" 
               )}
             >
               {label}
             </FormLabel>
           )}
-
           <InputControl
             {...props}
             {...field}
             type={type}
+            size={size}
             icon={icon}
+            disabled={disabled} 
             isPassword={type === "password"}
             inputClassName={inputClassName}
+            value={field.value ?? ""}
           />
-
-          {description && (
-            <FormDescription className={cn(messageClassName)}>
-              {description}
-            </FormDescription>
-          )}
-
-          <div className="min-h-4">
-            <FormMessage className={cn("font-bold", messageClassName)} />
+          {description && <FormDescription>{description}</FormDescription>}
+          <div className="min-h-[1.1em]">
+            <FormMessage className={cn("font-bold", s.message, messageClassName)} />
           </div>
         </FormItem>
       )}
