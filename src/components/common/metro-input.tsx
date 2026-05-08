@@ -1,3 +1,4 @@
+// src/components/common/metro-input.tsx
 "use client";
 
 import * as React from "react";
@@ -93,12 +94,7 @@ export function MetroInput<TFieldValues extends FieldValues>({
   const [search, setSearch] = React.useState("");
   const [activeLine, setActiveLine] = React.useState<string>("");
   const s = sizeClasses[size];
-
-  React.useEffect(() => {
-    if (lines.length > 0 && !activeLine) {
-      setActiveLine(lines[0].number);
-    }
-  }, [lines]);
+  const effectiveActiveLine = activeLine || lines[0]?.number || "";
 
   const visibleStations = React.useMemo(() => {
     if (search.trim()) {
@@ -108,9 +104,9 @@ export function MetroInput<TFieldValues extends FieldValues>({
           .map(name => ({ name, line: line.number }))
       );
     }
-    const active = lines.find(l => l.number === activeLine);
-    return (active?.stations ?? []).map(name => ({ name, line: activeLine }));
-  }, [search, activeLine, lines]);
+    const active = lines.find(l => l.number === effectiveActiveLine);
+    return (active?.stations ?? []).map(name => ({ name, line: effectiveActiveLine }));
+  }, [search, effectiveActiveLine, lines]);
 
   return (
     <FormField
@@ -138,6 +134,7 @@ export function MetroInput<TFieldValues extends FieldValues>({
             <FormControl>
               <div className="w-full space-y-2 overflow-hidden">
 
+                {/* Header with clear all button */}
                 <div className="flex items-center justify-between gap-2">
                   <span className={cn("uppercase tracking-wider text-muted-foreground", s.label)}>
                     Seleccionadas:
@@ -153,6 +150,7 @@ export function MetroInput<TFieldValues extends FieldValues>({
                   )}
                 </div>
 
+                {/* Pills zone — fixed height, horizontally scrollable */}
                 <div
                   className={cn(
                     s.pillsContainer,
@@ -187,6 +185,7 @@ export function MetroInput<TFieldValues extends FieldValues>({
                   )}
                 </div>
 
+                {/* Search — igual que antes */}
                 <Input
                   placeholder="Buscar estación..."
                   value={search}
@@ -195,8 +194,10 @@ export function MetroInput<TFieldValues extends FieldValues>({
                   className={s.input}
                 />
 
+                {/* Contenedor principal */}
                 <div className="border rounded-lg overflow-hidden">
 
+                  {/* Fila de líneas */}
                   <div className={cn("flex items-center bg-muted/40 border-b", s.linesRow)}>
                     {loading && <span className={cn("text-muted-foreground", s.footer)}>Cargando líneas...</span>}
                     {error && <span className={cn("text-destructive", s.footer)}>{error}</span>}
@@ -204,7 +205,7 @@ export function MetroInput<TFieldValues extends FieldValues>({
                       <>
                         <ToggleGroup
                           type="single"
-                          value={search.trim() ? "" : activeLine}
+                          value={search.trim() ? "" : effectiveActiveLine}
                           onValueChange={val => { if (val) setActiveLine(val); }}
                           spacing={8}
                           disabled={disabled || !!search.trim()}
@@ -230,6 +231,7 @@ export function MetroInput<TFieldValues extends FieldValues>({
                     )}
                   </div>
 
+                  {/* Bloque de estaciones */}
                   <div
                     className={cn(
                       s.stationsArea,
@@ -260,7 +262,7 @@ export function MetroInput<TFieldValues extends FieldValues>({
                           className="accent-black shrink-0"
                         />
                         <span className="truncate">{name}</span>
-
+                        {/* Muestra la línea cuando se está buscando */}
                         {search.trim() && (
                           <span className="ml-auto text-muted-foreground text-[10px] shrink-0">L{line}</span>
                         )}

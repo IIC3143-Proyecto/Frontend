@@ -6,20 +6,38 @@ type Station = { name: string; line: string };
 type MetroLine = { number: string; stations: string[] };
 
 export function useMetroStations() {
-  const [lines, setLines] = React.useState<MetroLine[]>([]);
-  const [loading, setLoading] = React.useState(false);
+  const [lines, setLines] = React.useState<MetroLine[]>(() => {
+    try {
+      const cached = localStorage.getItem(CACHE_KEY);
+      return cached ? JSON.parse(cached) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  // Empieza en true solo si no hay caché — así nunca llamamos setLoading(true) en el effect
+  const [loading, setLoading] = React.useState<boolean>(() => {
+    try {
+      const cached = localStorage.getItem(CACHE_KEY);
+      return !cached;
+    } catch {
+      return true;
+    }
+  });
+
   const [error, setError] = React.useState<string | null>(null);
+  const hasFetched = React.useRef(false);
 
   React.useEffect(() => {
-    const cached = localStorage.getItem(CACHE_KEY);
-    if (cached) {
-      setLines(JSON.parse(cached));
-      setError(null);
-      return;
+    if (hasFetched.current) return;
+    hasFetched.current = true;
+
+    try {
+      if (localStorage.getItem(CACHE_KEY)) return;
+    } catch {
+      // si localStorage falla, igual intentamos el fetch
     }
 
-    setLoading(true);
-    setError(null);
     fetch('/api/metro/stations')
       .then(r => {
         if (!r.ok) throw new Error(`HTTP error! status: ${r.status}`);
@@ -31,20 +49,13 @@ export function useMetroStations() {
           acc[line].push(name);
           return acc;
         }, {});
-
-        const result = Object.entries(grouped).map(([number, stations]) => ({
-          number,
-          stations,
-        }));
-
+        const result = Object.entries(grouped).map(([number, stations]) => ({ number, stations }));
         localStorage.setItem(CACHE_KEY, JSON.stringify(result));
         setLines(result);
-        setError(null);
       })
       .catch((err: Error) => {
         console.error('[Metro Hook] Error loading metro stations:', err);
         setError(err.message || 'Failed to load metro stations');
-        setLines([]);
       })
       .finally(() => setLoading(false));
   }, []);
