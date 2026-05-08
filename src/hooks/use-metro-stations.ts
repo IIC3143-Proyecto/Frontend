@@ -15,7 +15,6 @@ export function useMetroStations() {
     }
   });
 
-  // Empieza en true solo si no hay caché — así nunca llamamos setLoading(true) en el effect
   const [loading, setLoading] = React.useState<boolean>(() => {
     try {
       const cached = localStorage.getItem(CACHE_KEY);
@@ -34,9 +33,7 @@ export function useMetroStations() {
 
     try {
       if (localStorage.getItem(CACHE_KEY)) return;
-    } catch {
-      // si localStorage falla, igual intentamos el fetch
-    }
+    } catch {}
 
     fetch('/api/metro/stations')
       .then(r => {

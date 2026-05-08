@@ -133,8 +133,6 @@ export function MetroInput<TFieldValues extends FieldValues>({
 
             <FormControl>
               <div className="w-full space-y-2 overflow-hidden">
-
-                {/* Header with clear all button */}
                 <div className="flex items-center justify-between gap-2">
                   <span className={cn("uppercase tracking-wider text-muted-foreground", s.label)}>
                     Seleccionadas:
@@ -149,8 +147,6 @@ export function MetroInput<TFieldValues extends FieldValues>({
                     </button>
                   )}
                 </div>
-
-                {/* Pills zone — fixed height, horizontally scrollable */}
                 <div
                   className={cn(
                     s.pillsContainer,
@@ -184,8 +180,6 @@ export function MetroInput<TFieldValues extends FieldValues>({
                     ))
                   )}
                 </div>
-
-                {/* Search — igual que antes */}
                 <Input
                   placeholder="Buscar estación..."
                   value={search}
@@ -193,11 +187,7 @@ export function MetroInput<TFieldValues extends FieldValues>({
                   disabled={disabled}
                   className={s.input}
                 />
-
-                {/* Contenedor principal */}
                 <div className="border rounded-lg overflow-hidden">
-
-                  {/* Fila de líneas */}
                   <div className={cn("flex items-center bg-muted/40 border-b", s.linesRow)}>
                     {loading && <span className={cn("text-muted-foreground", s.footer)}>Cargando líneas...</span>}
                     {error && <span className={cn("text-destructive", s.footer)}>{error}</span>}
@@ -230,8 +220,6 @@ export function MetroInput<TFieldValues extends FieldValues>({
                       </>
                     )}
                   </div>
-
-                  {/* Bloque de estaciones */}
                   <div
                     className={cn(
                       s.stationsArea,
@@ -262,7 +250,6 @@ export function MetroInput<TFieldValues extends FieldValues>({
                           className="accent-black shrink-0"
                         />
                         <span className="truncate">{name}</span>
-                        {/* Muestra la línea cuando se está buscando */}
                         {search.trim() && (
                           <span className="ml-auto text-muted-foreground text-[10px] shrink-0">L{line}</span>
                         )}
