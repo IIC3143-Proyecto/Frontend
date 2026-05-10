@@ -171,6 +171,7 @@ export function MetroInput<TFieldValues extends FieldValues>({
                           <button
                             type="button"
                             onClick={() => field.onChange(selected.filter(s => s !== station))}
+                            aria-label={`Eliminar ${station}`}
                             className="ml-0.5 hover:opacity-70 transition-opacity leading-none"
                           >
                             ×
