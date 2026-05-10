@@ -43,23 +43,10 @@ export function useMetroStations() {
   });
 
   const [error, setError] = React.useState<string | null>(null);
-  const hasFetched = React.useRef(false);
 
   React.useEffect(() => {
-    if (hasFetched.current) return;
-    hasFetched.current = true;
-
-    try {
-      const cached = localStorage.getItem(CACHE_KEY);
-      if (cached) {
-        const parsed = JSON.parse(cached);
-        if (isValidCache(parsed)) {
-          setLines(parsed);
-          setLoading(false);
-          return;
-        }
-      }
-    } catch {}
+    // Only fetch if not already loaded from cache
+    if (!loading) return;
 
     fetch('/api/metro/stations')
       .then(r => {
@@ -87,7 +74,7 @@ export function useMetroStations() {
         setError(err.message || 'Failed to load metro stations');
       })
       .finally(() => setLoading(false));
-  }, []);
+  }, [loading]);
 
   return { lines, loading, error };
 }
