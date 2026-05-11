@@ -104,6 +104,9 @@ const InputControl = React.forwardRef<HTMLInputElement, InputControlProps>(
             type="button"
             variant="ghost"
             size="icon"
+            disabled={props.disabled}
+            aria-label={showPassword ? "Hide password" : "Show password"}
+            aria-pressed={showPassword}
             className={cn("absolute right-0 px-3", s.eyeButton)}
             onClick={() => setShowPassword((v) => !v)}
           >

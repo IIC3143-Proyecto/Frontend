@@ -4,6 +4,7 @@ import * as React from "react";
 import { Control, FieldValues, FieldPath } from "react-hook-form";
 import {
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -24,18 +25,21 @@ type ToggleInputSize = "sm" | "default" | "lg";
 const sizeClasses = {
   sm: {
     label: "text-[9px]",
+    description: "text-[11px]",
     pill: "h-7 px-3 text-xs",
     button: "h-7 px-3 text-[11px]",
     message: "text-[10px]",
   },
   default: {
     label: "text-[10px]",
+    description: "text-[12px]",
     pill: "h-9 px-4 text-sm",
     button: "h-9 px-4 text-xs",
     message: "text-xs",
   },
   lg: {
     label: "text-xs",
+    description: "text-sm",
     pill: "h-11 px-5 text-base",
     button: "h-11 px-5 text-sm",
     message: "text-sm",
@@ -52,6 +56,7 @@ const sizeClasses = {
  * @property type Selection type: "single" or "multiple".
  * @property limit Max number of options to show before expanding.
  * @property size Size of the toggles (sm, default, lg).
+ * @property disabled Whether the toggle group is disabled.
  * @property className Additional class names for the group.
  */
 interface ToggleInputGroupProps<TFieldValues extends FieldValues> {
@@ -62,6 +67,7 @@ interface ToggleInputGroupProps<TFieldValues extends FieldValues> {
   type?: "single" | "multiple";
   limit?: number;
   size?: ToggleInputSize;
+  disabled?: boolean;
   className?: string;
 }
 
@@ -77,9 +83,9 @@ export function ToggleInputGroup<TFieldValues extends FieldValues>({
   type = "single",
   limit,
   size = "default",
-  disabled, 
+  disabled,
   className,
-}: ToggleInputGroupProps<TFieldValues> & { disabled?: boolean }) {
+}: ToggleInputGroupProps<TFieldValues>) {
   const [isExpanded, setIsExpanded] = React.useState(false);
   const s = sizeClasses[size];
 
@@ -94,22 +100,33 @@ export function ToggleInputGroup<TFieldValues extends FieldValues>({
       render={({ field }) => (
         <FormItem className={cn("w-full space-y-3", className, disabled && "opacity-60")}>
           {label && (
-            <FormLabel
-              className={cn(
-                "font-bold uppercase tracking-wider text-muted-foreground",
-                s.label,
-                disabled && "text-muted-foreground/50" 
-              )}
-            >
-              {label}
-            </FormLabel>
+            <>
+              <FormLabel
+                className={cn(
+                  "font-bold uppercase tracking-wider text-muted-foreground",
+                  s.label,
+                  disabled && "text-muted-foreground/50" 
+                )}
+              >
+                {label}
+              </FormLabel>
+              <FormDescription
+                className={cn(
+                  "font-normal text-muted-foreground/70",
+                  s.description,
+                  disabled && "text-muted-foreground/40"
+                )}
+              >
+                {type === "single" ? "Selecciona una opción" : "Selecciona una o más opciones"}
+              </FormDescription>
+            </>
           )}
 
           <FormControl>
             <ToggleGroup
               type={type as "single" | "multiple"}
               value={field.value}
-              disabled={disabled} 
+              disabled={disabled}
               onValueChange={(val: string | string[]) => {
                 if (type === "single" && !val) return;
                 field.onChange(val);
