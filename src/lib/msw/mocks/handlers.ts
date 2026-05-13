@@ -1,64 +1,17 @@
-import { http, HttpResponse } from 'msw';
-import { getMockUser } from './scenario';
-import metroData from './data/metro-stations.json';
+import { usersHandlers } from './handlers/users';
+import { metroHandlers } from './handlers/metros';
+import { avatarHandlers } from './handlers/avatar';
 
-type MockUser = {
-  id: string;
-  username: string;
-  photoUrl: string | null;
-  onboardingCompleted: boolean;
-};
-
-const USERS: Record<string, MockUser> = {
-  FULL: {
-    id: "user_123",
-    username: "Flo_Full",
-    photoUrl: "https://vtrna.com/avatar.jpg",
-    onboardingCompleted: true,
-  },
-  NO_PHOTO: {
-    id: "user_123",
-    username: "Flo_Sin_Foto",
-    photoUrl: null,
-    onboardingCompleted: true,
-  },
-  ONBOARDING_PENDING: {
-    id: "user_123",
-    username: "Flo_Pendiente",
-    photoUrl: "https://vtrna.com/avatar.jpg",
-    onboardingCompleted: false,
-  },
-  NEW: {
-    id: "user_123",
-    username: "Flo_Nuevo",
-    photoUrl: null,
-    onboardingCompleted: false,
-  },
-};
-
+/**
+ * Centralized MSW handlers
+ * 
+ * Combines all mock handlers from individual handler modules:
+ * - User endpoints (users.ts)
+ * - Metro endpoints (metros.ts)
+ * - Avatar upload (avatar.ts)
+ */
 export const handlers = [
-  http.get('*/api/users/me', () => {
-    const scenario = getMockUser();
-    return HttpResponse.json(USERS[scenario]);
-  }),
-
-  http.patch('*/api/users/me', async ({ request }) => {
-    const data = await request.json();
-
-    const scenario = getMockUser();
-    const baseUser = USERS[scenario];
-
-    const updated =
-      typeof data === 'object' && data !== null
-        ? { ...baseUser, ...data }
-        : baseUser;
-
-    return HttpResponse.json(updated);
-  }),
-  http.get('*/api/metro/stations', () => {
-    const stations = metroData.lines.flatMap(line =>
-        line.stations.map(name => ({ name, line: line.number }))
-    );
-    return HttpResponse.json(stations);
-    }),
+  ...userHandlers,
+  ...metroHandlers,
+  ...avatarHandlers,
 ];
