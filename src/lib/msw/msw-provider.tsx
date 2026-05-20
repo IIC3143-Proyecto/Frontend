@@ -34,7 +34,6 @@ export function MSWProvider({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    // Caso 2: MSW debe activarse
     const startMSW = async () => {
       if (workerStarted) {
         setMswReady(true);

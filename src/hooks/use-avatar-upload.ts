@@ -48,7 +48,6 @@ export function useAvatarUpload(
   const [error, setError] = React.useState<Error | null>(null);
   const previewUrlRef = React.useRef<string | null>(null);
 
-  // Revoke object URL on unmount to avoid memory leaks
   React.useEffect(() => {
     return () => {
       if (previewUrlRef.current) {
@@ -71,14 +70,12 @@ export function useAvatarUpload(
           useWebWorker: true,
         });
 
-        // Rename to .webp so the backend receives the correct filename
         const namedFile = new File(
           [webpFile],
           raw.name.replace(/\.[^.]+$/, ".webp"),
           { type: "image/webp" }
         );
 
-        // Revoke old preview before creating a new one
         if (previewUrlRef.current) {
           URL.revokeObjectURL(previewUrlRef.current);
         }
