@@ -4,8 +4,9 @@ export default defineConfig({
   testDir: './e2e',
   fullyParallel: false,
   forbidOnly: !!process.env.CI,
-  retries: process.env.CI ? 1 : 0,
-  reporter: 'html',
+  retries: process.env.CI ? 2 : 0,
+  workers: 1,
+  reporter: [['html', { open: 'never' }]],
   use: {
     baseURL: 'http://localhost:3000',
     trace: 'on-first-retry',
@@ -17,7 +18,7 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: 'npm run dev',
+    command: 'NEXT_PUBLIC_ENABLE_MSW=true npm run dev',
     url: 'http://localhost:3000',
     reuseExistingServer: !process.env.CI,
   },
