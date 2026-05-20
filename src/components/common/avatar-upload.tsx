@@ -1,15 +1,13 @@
 "use client";
 
 import * as React from "react";
-import { Camera, Loader2 } from "lucide-react";
+import { IconUserPlus, IconLoader2, IconCamera } from '@tabler/icons-react';
 import { useDropzone, type FileRejection } from "react-dropzone";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 import { useAvatarUpload, type UseAvatarUploadOptions } from "@/hooks/use-avatar-upload";
-
-// ─── Variants ────────────────────────────────────────────────────────────────
 
 const avatarWrapperVariants = cva("group relative rounded-full", {
   variants: {
@@ -51,36 +49,52 @@ const overlayIconVariants = cva("text-white", {
   defaultVariants: { size: "md" },
 });
 
-// ─── Types ────────────────────────────────────────────────────────────────────
+const fallbackIconVariants = cva("text-muted-foreground", {
+  variants: {
+    size: {
+      sm: "size-5",
+      md: "size-6",
+      lg: "size-8",
+    },
+  },
+  defaultVariants: { size: "md" },
+});
 
 export interface AvatarUploadProps
   extends Omit<React.HTMLAttributes<HTMLDivElement>, "onChange">,
     VariantProps<typeof avatarWrapperVariants>,
     Pick<UseAvatarUploadOptions, "maxSizeMB" | "maxWidthOrHeight" | "quality"> {
-  /** Current avatar URL (e.g. from server) */
+  /** URL of an existing avatar to display before any file is selected. */
   src?: string;
-  /** Initials shown in AvatarFallback */
-  fallback?: string;
-  /** Called with the converted WebP File, ready to send to the backend */
+  /** Content shown when no image is available. Defaults to a user-plus icon. */
+  fallback?: string | React.ReactNode;
+  /** Called with the converted WebP `File` once the user selects an image. */
   onChange?: (file: File) => void;
-  /** Max accepted file size for the dropzone in bytes (default: 5 MB) */
+  /** Maximum input file size accepted by the dropzone, in bytes. Defaults to 5 MB. */
   maxDropzoneSize?: number;
+  /** Disables the dropzone and dims the component. */
   disabled?: boolean;
-  /** External validation error (e.g. from form submission) */
+  /** External error message from a parent form. Shown when no internal error is present. */
   validationError?: string | null;
-  /** Called when file dialog is closed without selecting a file */
+  /** Called when the file dialog is dismissed without selecting a file. */
   onFileDialogCancel?: () => void;
+  /** Adds `aria-required` and a `*` badge. Does not enforce validation internally. */
+  required?: boolean;
 }
 
-// ─── Component ────────────────────────────────────────────────────────────────
-
+/**
+ * AvatarUpload
+ *
+ * Circular avatar picker that converts any dropped or selected image to WebP in-browser,
+ * shows a live preview, and surfaces both dropzone-level and parent-supplied validation errors.
+ */
 export const AvatarUpload = React.forwardRef<
   HTMLDivElement,
   AvatarUploadProps
 >(function AvatarUpload(
   {
     src,
-    fallback = "??",
+    fallback,
     onChange,
     size = "md",
     disabled = false,
@@ -90,6 +104,7 @@ export const AvatarUpload = React.forwardRef<
     maxDropzoneSize = 5 * 1024 * 1024,
     validationError,
     onFileDialogCancel,
+    required = false,
     className,
     ...props
   },
@@ -111,7 +126,7 @@ export const AvatarUpload = React.forwardRef<
       setRejectMessage(null);
 
       if (rejected.length > 0) {
-        const reason = rejected[0].errors[0]?.message ?? "File not accepted";
+        const reason = rejected[0].errors[0]?.message ?? "Archivo no aceptado";
         setRejectMessage(reason);
         return;
       }
@@ -134,12 +149,16 @@ export const AvatarUpload = React.forwardRef<
 
   const displaySrc = preview ?? src;
 
-  // Internal errors from conversion/rejection take priority; fall back to external validation error
   const hasInternalError = Boolean(error || rejectMessage);
   const internalErrorMessage = error?.message ?? rejectMessage;
 
   const hasError = hasInternalError || Boolean(validationError);
   const errorMessage = internalErrorMessage ?? validationError;
+
+  const defaultFallback = (
+    <IconUserPlus className={fallbackIconVariants({ size })} />
+  );
+  const displayFallback = fallback ?? defaultFallback;
 
   return (
     <div
@@ -158,21 +177,31 @@ export const AvatarUpload = React.forwardRef<
             hasError && "border-1 border-destructive",
             hasError && (isFocused || isHovered) && "shadow-[0_0_0_3px_oklch(from_var(--destructive)_l_c_h_/_0.12)]"
         )}
+        role="img"
+        aria-required={required}
+        aria-label={`Subir imagen de usuario${required ? " (required)" : ""}`}
         >
         <input
           {...getInputProps()}
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
-          aria-label="Upload avatar image"
+          aria-label="Subir imagen de usuario"
         />
 
         <Avatar className={cn(avatarImageVariants({ size }), "size-full")}>
-            <AvatarImage src={displaySrc} alt="Avatar preview" />
-            <AvatarFallback className="text-sm font-medium select-none">
-            {fallback}
+            <AvatarImage src={displaySrc} alt="Vista previa del avatar" />
+            <AvatarFallback className="text-sm font-medium select-none flex items-center justify-center">
+            {displayFallback}
             </AvatarFallback>
         </Avatar>
-
+        {required && !disabled && (
+          <span
+            className="absolute -top-2 -right-2 text-base font-bold text-destructive"
+            aria-hidden="true"
+          >
+            *
+          </span>
+        )}
         {!disabled && (
             <div
             className={cn(
@@ -182,16 +211,14 @@ export const AvatarUpload = React.forwardRef<
             )}
             >
             {isConverting ? (
-                <Loader2 className={cn(overlayIconVariants({ size }), "animate-spin")} />
+                <IconLoader2 className={cn(overlayIconVariants({ size }), "animate-spin")} />
             ) : (
-                <Camera className={overlayIconVariants({ size })} />
+                <IconCamera className={overlayIconVariants({ size })} />
             )}
             </div>
         )}
         </div>
 
-
-      {/* Status / error message — mirrors FormMessage pattern */}
       <div className="min-h-[1.1em]">
         {hasError ? (
           <p className="text-xs font-bold text-destructive text-center">
@@ -200,10 +227,10 @@ export const AvatarUpload = React.forwardRef<
         ) : (
           <p className="text-xs text-muted-foreground select-none text-center">
             {disabled
-              ? "Avatar upload disabled"
+              ? "Subida de avatar deshabilitada"
               : isConverting
-                ? "Converting to WebP…"
-                : "Click or drag to change avatar"}
+                ? "Convirtiendo a WebP…"
+                : "Haz clic o arrastra para cambiar la imagen"}
           </p>
         )}
       </div>

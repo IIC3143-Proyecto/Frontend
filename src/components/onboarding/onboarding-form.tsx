@@ -1,50 +1,92 @@
 "use client";
 
 import * as React from "react";
-import { Loader2 } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { IconLoader2 } from "@tabler/icons-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Form } from "@/components/ui/form";
+import { toast } from "sonner";
 import { AvatarUpload } from "../common/avatar-upload";
 import { TextInput } from "../common/text-input";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-// ─── Validation Schema ────────────────────────────────────────────────────────
-
 const onboardingSchema = z.object({
   username: z
     .string()
-    .min(1, "Username is required")
-    .min(3, "Username must be at least 3 characters")
-    .max(30, "Username must be at most 30 characters")
-    .regex(/^[a-zA-Z0-9_-]+$/, "Username can only contain letters, numbers, underscores, and hyphens"),
+    .min(1, "Username es requerido")
+    .min(3, "Username debe tener al menos 3 caracteres")
+    .max(30, "Username debe tener como máximo 30 caracteres")
+    .regex(/^[a-zA-Z0-9_-]+$/, "Username solo puede contener letras, números, guiones y guiones bajos"),
   bio: z
     .string()
-    .max(500, "Bio must be at most 500 characters"),
+    .max(500, "Bio debe tener como máximo 500 caracteres"),
 });
 
 type OnboardingFormSchema = z.infer<typeof onboardingSchema>;
 
-// ─── Types ────────────────────────────────────────────────────────────────────
-
-export interface OnboardingFormData extends OnboardingFormSchema {
-  avatar: File;
-}
-
 export interface OnboardingFormProps
-  extends Omit<React.HTMLAttributes<HTMLDivElement>, "onSubmit"> {
-  onSubmit?: (data: OnboardingFormData) => Promise<void>;
+  extends React.HTMLAttributes<HTMLDivElement> {
+  /** Called after a successful profile save. */
+  onSuccess?: () => void | Promise<void>;
+  /** Disables all form inputs and the submit button. */
   disabled?: boolean;
 }
 
-// ─── Component ────────────────────────────────────────────────────────────────
+const AUTH_TOKEN = "Bearer mock-auth-token";
 
+async function uploadAvatar(file: File): Promise<string> {
+  const body = new FormData();
+  body.append("avatar", file);
+
+  const res = await fetch("/profile/avatar", {
+    method: "POST",
+    headers: { Authorization: AUTH_TOKEN },
+    body,
+  });
+
+  if (!res.ok) {
+    const json = await res.json().catch(() => ({}));
+    throw Object.assign(new Error(json.message ?? "Failed to upload avatar"), { status: res.status });
+  }
+
+  const { photoUrl } = await res.json();
+  return photoUrl as string;
+}
+
+async function patchUser(data: { username: string; bio: string; photoUrl: string }): Promise<void> {
+  const res = await fetch("/user", {
+    method: "PATCH",
+    headers: {
+      Authorization: AUTH_TOKEN,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(data),
+  });
+
+  if (!res.ok) {
+    const json = await res.json().catch(() => ({}));
+    throw Object.assign(new Error(json.message ?? "Failed to save profile"), {
+      status: res.status,
+      field: json.field as string | undefined,
+    });
+  }
+}
+
+/**
+ * OnboardingForm
+ *
+ * Profile completion form. Uploads an avatar to `POST /profile/avatar`,
+ * then saves username and bio via `PATCH /user`.
+ */
 export const OnboardingForm = React.forwardRef<
   HTMLDivElement,
   OnboardingFormProps
->(function OnboardingForm({ onSubmit, disabled = false, className, ...props }, ref) {
+>(function OnboardingForm({ onSuccess, disabled = false, className, ...props }, ref) {
+  const router = useRouter();
+
   const form = useForm<OnboardingFormSchema>({
     resolver: zodResolver(onboardingSchema),
     mode: "onTouched",
@@ -55,15 +97,12 @@ export const OnboardingForm = React.forwardRef<
   });
 
   const [isSubmitting, setIsSubmitting] = React.useState(false);
-  const [globalError, setGlobalError] = React.useState<string | null>(null);
   const [avatarFile, setAvatarFile] = React.useState<File | undefined>();
   const [avatarPreview, setAvatarPreview] = React.useState<string | null>(null);
   const [avatarError, setAvatarError] = React.useState<string | null>(null);
-  
 
   const handleAvatarChange = React.useCallback((file: File) => {
     setAvatarFile(file);
-    // Clear validation error as soon as user picks a file
     setAvatarError(null);
 
     const url = URL.createObjectURL(file);
@@ -73,28 +112,67 @@ export const OnboardingForm = React.forwardRef<
   }, []);
 
   const handleSubmitClick = () => {
-    if (!avatarFile) setAvatarError("Avatar is required");
+    if (!avatarFile) setAvatarError("Avatar es requerido");
   };
 
   const handleFormSubmit = async (data: OnboardingFormSchema) => {
-    // Validate avatar is present — set error so AvatarUpload shows it
     if (!avatarFile) {
-      setAvatarError("Avatar is required");
+      setAvatarError("Avatar es requerido");
       return;
     }
 
-    if (!onSubmit) return;
+    setIsSubmitting(true);
 
     try {
-      setIsSubmitting(true);
-      setGlobalError(null);
-      await onSubmit({
-        ...data,
-        avatar: avatarFile,
-      });
-    } catch (err) {
-      const message = err instanceof Error ? err.message : "An error occurred";
-      setGlobalError(message);
+      let photoUrl: string;
+
+      try {
+        photoUrl = await uploadAvatar(avatarFile);
+      } catch (err) {
+        const status = (err as { status?: number }).status;
+        const message = err instanceof Error ? err.message : "Error al subir la foto de usuario";
+
+        if (status === undefined) {
+          toast.error("Error de red", { description: "Verifica tu conexión e inténtalo de nuevo." });
+          return;
+        }
+        if (status === 401) {
+          router.push("/session-expired");
+          return;
+        }
+        if (status === 422) {
+          setAvatarError(message);
+          return;
+        }
+        toast.error("Error", { description: message });
+        return;
+      }
+
+      try {
+        await patchUser({ username: data.username, bio: data.bio, photoUrl });
+      } catch (err) {
+        const status = (err as { status?: number }).status;
+        const field = (err as { field?: string }).field;
+        const message = err instanceof Error ? err.message : "Error al guardar el perfil";
+
+        if (status === undefined) {
+          toast.error("Error de red", { description: "Verifica tu conexión e inténtalo de nuevo." });
+          return;
+        }
+        if (status === 401) {
+          router.push("/session-expired");
+          return;
+        }
+        if (status === 409 && field === "username") {
+          form.setError("username", { type: "server", message });
+          return;
+        }
+        toast.error("Error", { description: message });
+        return;
+      }
+
+      toast.success("Perfil actualizado!", { description: "Tu perfil ha sido actualizado exitosamente." });
+      await onSuccess?.();
     } finally {
       setIsSubmitting(false);
     }
@@ -114,11 +192,10 @@ export const OnboardingForm = React.forwardRef<
     >
       <Form {...form}>
         <div className="flex flex-col gap-6">
-          {/* Title */}
           <div className="text-center">
-            <h1 className="text-3xl font-semibold">Complete Your Profile</h1>
+            <h1 className="text-3xl font-semibold">Completa tu perfil</h1>
             <p className="text-sm text-muted-foreground mt-2">
-              Add your avatar, username, and a brief bio
+              Agrega tu avatar, nombre de usuario y una breve biografía
             </p>
           </div>
 
@@ -127,41 +204,37 @@ export const OnboardingForm = React.forwardRef<
             className="flex flex-col gap-6"
             noValidate
           >
-            {/* Avatar — validationError drives the error ring + message */}
             <div className="flex flex-col items-center">
               <AvatarUpload
                 src={avatarPreview ?? undefined}
-                fallback="YOU"
                 onChange={handleAvatarChange}
                 size="lg"
                 disabled={disabled || isLoading}
                 validationError={avatarError}
+                required={true}
               />
             </div>
 
-            {/* Username */}
             <TextInput
               control={form.control}
               name="username"
               label="Username *"
-              placeholder="Enter your username"
+              placeholder="Escribe tu username"
               disabled={disabled || isLoading}
               autoFocus
               required
             />
 
-            {/* Bio */}
             <TextInput
               control={form.control}
               name="bio"
               label="Bio"
-              placeholder="Write a short bio about yourself..."
+              placeholder="Escribe una breve biografía sobre ti..."
               disabled={disabled || isLoading}
               isTextarea
               inputClassName={cn("min-h-[100px] max-h-[100px]")}
             />
 
-            {/* Submit */}
             <Button
               type="submit"
               onMouseDown={handleSubmitClick}
@@ -169,16 +242,11 @@ export const OnboardingForm = React.forwardRef<
               size="lg"
               className="w-full"
             >
-              {isLoading && <Loader2 className="mr-2 size-4 animate-spin" />}
-              {isLoading ? "Saving..." : "Complete Profile"}
+              {isLoading && <IconLoader2 className="mr-2 size-4 animate-spin" />}
+              {isLoading ? "Guardando..." : "Guardar perfil"}
             </Button>
           </form>
 
-          {globalError && (
-            <p className="text-sm text-destructive font-medium text-center bg-destructive/10 p-3 rounded">
-              {globalError}
-            </p>
-          )}
         </div>
       </Form>
     </div>
