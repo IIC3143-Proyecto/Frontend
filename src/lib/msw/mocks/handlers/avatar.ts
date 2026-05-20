@@ -1,29 +1,60 @@
-import { http, HttpResponse } from 'msw';
+import { http, HttpResponse, delay } from 'msw';
+import { getErrorScenario } from '../scenario';
 
-// Simulates uploading a WebP avatar and returning an updated photoUrl
 export const avatarHandlers = [
-  http.post('*/api/profile/avatar', async ({ request }) => {
+  http.post('*/profile/avatar', async ({ request }) => {
+    const scenario = getErrorScenario();
+
+    if (scenario === 'AVATAR_401') {
+      return HttpResponse.json({ message: 'Unauthorized' }, { status: 401 });
+    }
+    if (scenario === 'AVATAR_422') {
+      return HttpResponse.json({ message: 'File must be a WebP image' }, { status: 422 });
+    }
+    if (scenario === 'AVATAR_500') {
+      return HttpResponse.json({ message: 'Internal server error' }, { status: 500 });
+    }
+    if (scenario === 'AVATAR_TIMEOUT') {
+      await delay('infinite');
+    }
+    if (scenario === 'AVATAR_NETWORK') {
+      return HttpResponse.error();
+    }
+    if (scenario === 'AVATAR_SLOW') {
+      await delay(2000);
+      return HttpResponse.json(
+        { photoUrl: `https://vtrna.com/avatars/mock-${Date.now()}.webp` },
+        { status: 201 }
+      );
+    }
+
+    const token = request.headers.get('Authorization');
+    if (!token) {
+        return HttpResponse.json(
+        { message: 'Unauthorized' },
+        { status: 401 }
+        );
+    }
+
     const formData = await request.formData();
     const file = formData.get('avatar');
-
     if (!file || !(file instanceof File)) {
-      return HttpResponse.json(
+        return HttpResponse.json(
         { message: 'No avatar file provided' },
         { status: 400 }
-      );
+        );
     }
 
     if (file.type !== 'image/webp') {
-      return HttpResponse.json(
+        return HttpResponse.json(
         { message: 'File must be a WebP image' },
         { status: 422 }
-      );
+        );
     }
 
-    // Return a fake URL simulating what the server would store
     return HttpResponse.json(
-      { photoUrl: `https://vtrna.com/avatars/mock-${Date.now()}.webp` },
-      { status: 201 }
+        { photoUrl: `https://vtrna.com/avatars/mock-${Date.now()}.webp` },
+        { status: 201 }
     );
-  }),
+    })
 ];

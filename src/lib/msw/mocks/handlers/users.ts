@@ -1,5 +1,5 @@
-import { http, HttpResponse } from 'msw';
-import { getMockUser } from '../scenario';
+import { http, HttpResponse, delay } from 'msw';
+import { getMockUser, getErrorScenario } from '../scenario';
 
 type MockUser = {
   id: string;
@@ -64,24 +64,55 @@ const USERS: Record<string, MockUser> = {
   },
 };
 
-// In-memory state so PATCH persists within the same session
 let currentUser: MockUser = { ...USERS[getMockUser()] };
 
 export const usersHandlers = [
-  http.get('*/api/users/me', () => {
+  http.get('*/user', () => {
     const scenario = getMockUser();
-    // Reset if scenario changed
     if (currentUser.id !== USERS[scenario].id) {
       currentUser = { ...USERS[scenario] };
     }
     return HttpResponse.json(currentUser);
   }),
 
-  http.patch('*/api/users/me', async ({ request }) => {
-    const data = await request.json();
-    if (typeof data === 'object' && data !== null) {
-      currentUser = { ...currentUser, ...(data as Partial<MockUser>) };
+  http.patch('*/user', async ({ request }) => {
+    const scenario = getErrorScenario();
+
+    if (scenario === 'PATCH_401') {
+      return HttpResponse.json({ message: 'Unauthorized' }, { status: 401 });
     }
-    return HttpResponse.json(currentUser);
-  }),
+    if (scenario === 'PATCH_409') {
+      return HttpResponse.json({ message: 'Username already taken', field: 'username' }, { status: 409 });
+    }
+    if (scenario === 'PATCH_500') {
+      return HttpResponse.json({ message: 'Internal server error' }, { status: 500 });
+    }
+    if (scenario === 'PATCH_TIMEOUT') {
+      await delay('infinite');
+    }
+    if (scenario === 'PATCH_NETWORK') {
+      return HttpResponse.error();
+    }
+
+    const token = request.headers.get('Authorization');
+    if (!token) {
+        return HttpResponse.json(
+        { message: 'Unauthorized' },
+        { status: 401 }
+        );
+    }
+
+    const data = await request.json();
+    if (!data || typeof data !== 'object') {
+        return HttpResponse.json(
+        { message: 'Invalid request body' },
+        { status: 400 }
+        );
+    }
+
+    if (typeof data === 'object' && data !== null) {
+        currentUser = { ...currentUser, ...(data as Partial<MockUser>) };
+    }
+    return HttpResponse.json(currentUser, { status: 200 });
+    })
 ];
