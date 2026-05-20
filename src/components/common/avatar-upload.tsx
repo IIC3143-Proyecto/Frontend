@@ -140,6 +140,7 @@ export const AvatarUpload = React.forwardRef<
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
+    onFileDialogCancel,
     accept: { "image/*": [".jpg", ".jpeg", ".png", ".gif", ".webp", ".avif"] },
     maxFiles: 1,
     maxSize: maxDropzoneSize,
@@ -178,7 +179,6 @@ export const AvatarUpload = React.forwardRef<
             hasError && (isFocused || isHovered) && "shadow-[0_0_0_3px_oklch(from_var(--destructive)_l_c_h_/_0.12)]"
         )}
         role="img"
-        aria-required={required}
         aria-label={`Subir imagen de usuario${required ? " (required)" : ""}`}
         >
         <input
@@ -186,6 +186,7 @@ export const AvatarUpload = React.forwardRef<
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
           aria-label="Subir imagen de usuario"
+          aria-required={required}
         />
 
         <Avatar className={cn(avatarImageVariants({ size }), "size-full")}>
