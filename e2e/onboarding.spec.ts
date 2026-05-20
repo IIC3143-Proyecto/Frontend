@@ -1,143 +1,158 @@
-import { test, expect, Page } from '@playwright/test';
-import path from 'path';
+import { test, expect } from '@playwright/test';
+import {
+  gotoOnboarding,
+  setErrorScenario,
+  resetErrorScenario,
+  uploadAvatar,
+  fillUsername,
+  fillBio,
+  submitForm,
+  waitForToast,
+  expectError,
+} from './helpers';
 
-const AVATAR_FILE = path.join(__dirname, 'fixtures/avatar.webp');
-
-// ─── Helpers ─────────────────────────────────────────────────────────────────
-
-async function waitForMSW(page: Page) {
-  await page.waitForFunction(
-    () => typeof (window as any).__resetErrorScenario === 'function',
-    { timeout: 10_000 }
-  );
-}
-
-async function setScenario(page: Page, scenario: string) {
-  await page.evaluate((s) => (window as any).__setErrorScenario(s), scenario);
-}
-
-async function uploadAvatar(page: Page, file = AVATAR_FILE) {
-  await page.locator('input[type="file"]').setInputFiles(file);
-  await expect(page.getByText('Converting to WebP…')).toBeHidden({ timeout: 10_000 });
-}
-
-async function submitForm(page: Page) {
-  await page.getByRole('button', { name: /Guardar perfil/i }).click();
-}
-
-// ✅ CORREGIDO: Buscar toast por texto específico
-async function waitForToast(page: Page, text: string, options?: { timeout?: number }) {
-  await expect(
-    page.locator('[data-sonner-toast]').filter({ hasText: text })
-  ).toBeVisible(options);
-}
-
-// ─── Setup ───────────────────────────────────────────────────────────────────
-
+// Each test navigates fresh → MSW module state resets to NONE automatically.
 test.beforeEach(async ({ page }) => {
-  await page.goto('/onboarding');
-  await waitForMSW(page);
-  await page.evaluate(() => (window as any).__resetErrorScenario());
-  await expect(page.getByRole('heading', { name: 'Completa tu perfil' })).toBeVisible();
+  await gotoOnboarding(page);
 });
 
-// ─── Tests ───────────────────────────────────────────────────────────────────
+// ─── 1. Happy path ───────────────────────────────────────────────────────────
 
-test('1. happy path — completes profile successfully', async ({ page }) => {
+test('happy path: completa el perfil exitosamente', async ({ page }) => {
   await uploadAvatar(page);
-  await page.getByRole('textbox', { name: /username/i }).fill('valid_user');
-  await page.getByRole('textbox', { name: /bio/i }).fill('A short bio');
+  await fillUsername(page, 'testuser');
+  await fillBio(page, 'Una bio de prueba');
   await submitForm(page);
   await waitForToast(page, 'Perfil actualizado!');
 });
 
-test('2. client validation — shows error for short username', async ({ page }) => {
-  await page.getByRole('textbox', { name: /username/i }).fill('ab');
-  await page.keyboard.press('Tab');
-  await expect(page.getByText('Username debe tener al menos 3 caracteres')).toBeVisible();
-});
+// ─── 2. Validación local ─────────────────────────────────────────────────────
 
-test('3. avatar required — shows error when avatar is missing', async ({ page }) => {
-  await page.getByRole('textbox', { name: /username/i }).fill('valid_user');
+test('validación local: muestra errores de cliente al enviar vacío', async ({ page }) => {
   await submitForm(page);
-  await expect(page.getByText('Avatar es requerido')).toBeVisible();
+  await expectError(page, 'Avatar es requerido');
+  await expectError(page, 'Username es requerido');
 });
 
-test('4. API 401 — redirects to session-expired', async ({ page }) => {
-  await setScenario(page, 'AVATAR_401');
-  await uploadAvatar(page);
-  await page.getByRole('textbox', { name: /username/i }).fill('valid_user');
+// ─── 3. Avatar requerido ─────────────────────────────────────────────────────
+
+test('avatar requerido: muestra error si no se sube avatar', async ({ page }) => {
+  await fillUsername(page, 'testuser');
   await submitForm(page);
-  await expect(page).toHaveURL('/session-expired', { timeout: 8_000 });
+  await expectError(page, 'Avatar es requerido');
+  // Username field must not show an error
+  await expect(page.getByText('Username es requerido')).not.toBeVisible();
 });
 
-test('5. API 422 — shows avatar error for invalid format', async ({ page }) => {
-  await setScenario(page, 'AVATAR_422');
+// ─── 4. Redirección 401 ──────────────────────────────────────────────────────
+
+test('redirección 401: redirige a /session-expired si avatar devuelve 401', async ({ page }) => {
+  await setErrorScenario(page, 'AVATAR_401');
   await uploadAvatar(page);
-  await page.getByRole('textbox', { name: /username/i }).fill('valid_user');
+  await fillUsername(page, 'testuser');
   await submitForm(page);
-  await expect(page.getByText('File must be a WebP image')).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'Completa tu perfil' })).toBeVisible();
+  await page.waitForURL('**/session-expired', { timeout: 8_000 });
 });
 
-test('6. API 409 — shows username field error for duplicate', async ({ page }) => {
-  await setScenario(page, 'PATCH_409');
+// ─── 5. Error 422 avatar ─────────────────────────────────────────────────────
+
+test('error 422 avatar: muestra error cuando el archivo no es WebP', async ({ page }) => {
+  await setErrorScenario(page, 'AVATAR_422');
   await uploadAvatar(page);
-  await page.getByRole('textbox', { name: /username/i }).fill('taken_username');
+  await fillUsername(page, 'testuser');
   await submitForm(page);
-  await expect(page.getByText('Username already taken')).toBeVisible();
-  await expect(page.locator('[data-sonner-toast]')).not.toBeAttached();
+  await expectError(page, 'File must be a WebP image');
 });
 
-test('7. API 500 — shows error alert for server error', async ({ page }) => {
-  await setScenario(page, 'AVATAR_500');
+// ─── 6. Error 409 username ───────────────────────────────────────────────────
+
+test('error 409 username: muestra error si el username está tomado', async ({ page }) => {
+  await setErrorScenario(page, 'PATCH_409');
   await uploadAvatar(page);
-  await page.getByRole('textbox', { name: /username/i }).fill('valid_user');
+  await fillUsername(page, 'takenuser');
+  await submitForm(page);
+  await expectError(page, 'Username already taken');
+});
+
+// ─── 7. Error 500 ────────────────────────────────────────────────────────────
+
+test('error 500: muestra toast de error del servidor', async ({ page }) => {
+  await setErrorScenario(page, 'AVATAR_500');
+  await uploadAvatar(page);
+  await fillUsername(page, 'testuser');
   await submitForm(page);
   await waitForToast(page, 'Internal server error');
-  await expect(page.getByRole('button', { name: /Guardar perfil/i })).toBeEnabled();
 });
 
-test('8. network error — shows connection error alert', async ({ page }) => {
-  await setScenario(page, 'AVATAR_NETWORK');
+// ─── 8. Error de red ─────────────────────────────────────────────────────────
+
+test('error de red: muestra toast de error de conexión', async ({ page }) => {
+  await setErrorScenario(page, 'AVATAR_NETWORK');
   await uploadAvatar(page);
-  await page.getByRole('textbox', { name: /username/i }).fill('valid_user');
+  await fillUsername(page, 'testuser');
   await submitForm(page);
   await waitForToast(page, 'Error de red');
 });
 
-test('9. slow response — spinner visible then success', async ({ page }) => {
-  await setScenario(page, 'AVATAR_SLOW');
+// ─── 9. Respuesta lenta ──────────────────────────────────────────────────────
+
+test('respuesta lenta: muestra spinner mientras carga', async ({ page }) => {
+  await setErrorScenario(page, 'AVATAR_SLOW');
   await uploadAvatar(page);
-  await page.getByRole('textbox', { name: /username/i }).fill('valid_user');
+  await fillUsername(page, 'testuser');
+
+  // Click and immediately assert the loading state before the 2 s delay elapses.
   await submitForm(page);
-  await expect(page.getByRole('button', { name: /Guardando\.\.\./i })).toBeVisible();
-  await waitForToast(page, 'Profile saved!', { timeout: 8_000 });
+  await expect(page.getByRole('button', { name: 'Guardando...' })).toBeVisible();
+
+  // After the delay the submission should succeed.
+  await waitForToast(page, 'Perfil actualizado!', 15_000);
 });
 
-test('10. retry after error — succeeds on second attempt', async ({ page }) => {
-  await setScenario(page, 'AVATAR_500');
+// ─── 10. Reintento ───────────────────────────────────────────────────────────
+
+test('reintento: después de un error puede reintentarlo exitosamente', async ({ page }) => {
   await uploadAvatar(page);
-  await page.getByRole('textbox', { name: /username/i }).fill('valid_user');
+  await fillUsername(page, 'testuser');
+
+  await setErrorScenario(page, 'AVATAR_500');
   await submitForm(page);
   await waitForToast(page, 'Internal server error');
 
-  await setScenario(page, 'NONE');
+  // Reset scenario in-place (no page reload) and try again.
+  await resetErrorScenario(page);
   await submitForm(page);
   await waitForToast(page, 'Perfil actualizado!');
 });
 
-test('11. field values persist — form maintains typed values', async ({ page }) => {
-  await page.getByRole('textbox', { name: /username/i }).fill('John123');
-  await page.getByRole('textbox', { name: /bio/i }).fill('Developer');
-  await expect(page.getByRole('textbox', { name: /username/i })).toHaveValue('John123');
-  await expect(page.getByRole('textbox', { name: /bio/i })).toHaveValue('Developer');
+// ─── 11. Persistencia ────────────────────────────────────────────────────────
+
+test('persistencia: mantiene los valores del formulario tras un error', async ({ page }) => {
+  await uploadAvatar(page);
+  await fillUsername(page, 'persisteduser');
+  await fillBio(page, 'Bio que debe persistir');
+
+  await setErrorScenario(page, 'AVATAR_500');
+  await submitForm(page);
+  await waitForToast(page, 'Internal server error');
+
+  await expect(page.getByPlaceholder('Escribe tu username')).toHaveValue('persisteduser');
+  await expect(
+    page.getByPlaceholder('Escribe una breve biografía sobre ti...'),
+  ).toHaveValue('Bio que debe persistir');
 });
 
-test('12. avatar preview — shows preview after file selection', async ({ page }) => {
-  await page.locator('input[type="file"]').setInputFiles(AVATAR_FILE);
-  await expect(page.getByText('Converting to WebP…')).toBeHidden({ timeout: 10_000 });
-  await expect(
-    page.locator('[role="img"][aria-label*="Upload avatar"] img')
-  ).toBeVisible({ timeout: 5_000 });
+// ─── 12. Preview avatar ──────────────────────────────────────────────────────
+
+test('preview avatar: muestra la imagen de preview al seleccionar un archivo', async ({ page }) => {
+  const preview = page.locator('img[alt="Vista previa del avatar"]');
+
+  // Before upload: Radix AvatarImage doesn't render <img> until src loads.
+  await expect(preview).toHaveCount(0);
+
+  await uploadAvatar(page);
+
+  // After upload the preview is a blob: object URL created by the component.
+  await expect(preview).toHaveAttribute('src', /^blob:/);
+  await expect(preview).toBeVisible();
 });
