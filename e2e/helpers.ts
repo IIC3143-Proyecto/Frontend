@@ -17,7 +17,6 @@ export type ErrorScenario =
   | 'PATCH_TIMEOUT'
   | 'PATCH_NETWORK';
 
-/** Navigate to /onboarding and wait for MSW + form to be ready. */
 export async function gotoOnboarding(page: Page) {
   await page.goto('/onboarding');
   await expect(page.getByRole('heading', { name: 'Completa tu perfil' })).toBeVisible({
@@ -28,14 +27,14 @@ export async function gotoOnboarding(page: Page) {
 /** Set an MSW error scenario in the running page context. */
 export async function setErrorScenario(page: Page, scenario: ErrorScenario) {
   await page.evaluate((s) => {
-    (window as Window & { __setErrorScenario: (s: string) => void }).__setErrorScenario(s);
+    (window as unknown as Window & { __setErrorScenario: (s: string) => void }).__setErrorScenario(s);
   }, scenario);
 }
 
 /** Reset the MSW error scenario to NONE without navigating away. */
 export async function resetErrorScenario(page: Page) {
   await page.evaluate(() => {
-    (window as Window & { __resetErrorScenario: () => void }).__resetErrorScenario();
+    (window as unknown as Window & { __resetErrorScenario: () => void }).__resetErrorScenario();
   });
 }
 
