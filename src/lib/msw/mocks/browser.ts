@@ -6,9 +6,17 @@ export const worker = setupWorker(...handlers);
 
 const MSW_ENABLED = process.env.NEXT_PUBLIC_ENABLE_MSW === 'true';
 
+type WindowWithMSW = Window & {
+  __setErrorScenario: typeof setErrorScenario;
+  __resetErrorScenario: typeof resetErrorScenario;
+  __setMockUser: typeof setMockUser;
+  __resetMockUser: typeof resetMockUser;
+};
+
 if (typeof window !== 'undefined' && MSW_ENABLED) {
-  (window as any).__setErrorScenario = setErrorScenario;
-  (window as any).__resetErrorScenario = resetErrorScenario;
-  (window as any).__setMockUser = setMockUser;
-  (window as any).__resetMockUser = resetMockUser;
+  const w = window as unknown as WindowWithMSW;
+  w.__setErrorScenario = setErrorScenario;
+  w.__resetErrorScenario = resetErrorScenario;
+  w.__setMockUser = setMockUser;
+  w.__resetMockUser = resetMockUser;
 }
