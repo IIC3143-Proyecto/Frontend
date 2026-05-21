@@ -2,7 +2,6 @@
 
 import { MSWProvider } from '@/lib/msw/msw-provider';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { TooltipProvider } from '@/components/ui/tooltip';
 import { useState } from 'react';
 
 export function Providers({ children }: { children: React.ReactNode }) {
@@ -20,9 +19,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <QueryClientProvider client={queryClient}>
       <MSWProvider>
-        <TooltipProvider>
-          {children}
-        </TooltipProvider>
+        {children}
       </MSWProvider>
     </QueryClientProvider>
   );
