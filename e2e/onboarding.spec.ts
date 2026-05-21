@@ -15,7 +15,7 @@ test.beforeEach(async ({ page }) => {
   await gotoOnboarding(page);
 });
 
-test('happy path: completa el perfil exitosamente', async ({ page }) => {
+test('should complete onboarding successfully', async ({ page }) => {
   await uploadAvatar(page);
   await fillUsername(page, 'testuser');
   await fillBio(page, 'Una bio de prueba');
@@ -23,13 +23,13 @@ test('happy path: completa el perfil exitosamente', async ({ page }) => {
   await waitForToast(page, 'Perfil actualizado!');
 });
 
-test('validación local: muestra errores de cliente al enviar vacío', async ({ page }) => {
+test('should show validation errors when submitting empty form', async ({ page }) => {
   await submitForm(page);
   await expectError(page, 'Avatar es requerido');
   await expectError(page, 'Username es requerido');
 });
 
-test('avatar requerido: muestra error si no se sube avatar', async ({ page }) => {
+test('should require avatar before form submission', async ({ page }) => {
   await fillUsername(page, 'testuser');
   await submitForm(page);
   await expectError(page, 'Avatar es requerido');
@@ -37,7 +37,7 @@ test('avatar requerido: muestra error si no se sube avatar', async ({ page }) =>
   await expect(page.getByText('Username es requerido')).not.toBeVisible();
 });
 
-test('redirección 401: redirige a /session-expired si avatar devuelve 401', async ({ page }) => {
+test('should redirect to session-expired when avatar returns 401', async ({ page }) => {
   await setErrorScenario(page, 'AVATAR_401');
   await uploadAvatar(page);
   await fillUsername(page, 'testuser');
@@ -45,7 +45,7 @@ test('redirección 401: redirige a /session-expired si avatar devuelve 401', asy
   await page.waitForURL('**/session-expired', { timeout: 8_000 });
 });
 
-test('error 422 avatar: muestra error cuando el archivo no es WebP', async ({ page }) => {
+test('should show error when file is not valid WebP', async ({ page }) => {
   await setErrorScenario(page, 'AVATAR_422');
   await uploadAvatar(page);
   await fillUsername(page, 'testuser');
@@ -53,7 +53,7 @@ test('error 422 avatar: muestra error cuando el archivo no es WebP', async ({ pa
   await expectError(page, 'File must be a WebP image');
 });
 
-test('error 409 username: muestra error si el username está tomado', async ({ page }) => {
+test('should show error when username is already taken', async ({ page }) => {
   await setErrorScenario(page, 'PATCH_409');
   await uploadAvatar(page);
   await fillUsername(page, 'takenuser');
@@ -61,7 +61,7 @@ test('error 409 username: muestra error si el username está tomado', async ({ p
   await expectError(page, 'Username already taken');
 });
 
-test('error 500: muestra toast de error del servidor', async ({ page }) => {
+test('should show server error toast on 500 response', async ({ page }) => {
   await setErrorScenario(page, 'AVATAR_500');
   await uploadAvatar(page);
   await fillUsername(page, 'testuser');
@@ -69,7 +69,7 @@ test('error 500: muestra toast de error del servidor', async ({ page }) => {
   await waitForToast(page, 'Internal server error');
 });
 
-test('error de red: muestra toast de error de conexión', async ({ page }) => {
+test('should show network error toast on connection failure', async ({ page }) => {
   await setErrorScenario(page, 'AVATAR_NETWORK');
   await uploadAvatar(page);
   await fillUsername(page, 'testuser');
@@ -77,7 +77,7 @@ test('error de red: muestra toast de error de conexión', async ({ page }) => {
   await waitForToast(page, 'Error de red');
 });
 
-test('respuesta lenta: muestra spinner mientras carga', async ({ page }) => {
+test('should show loading spinner on slow response', async ({ page }) => {
   await setErrorScenario(page, 'AVATAR_SLOW');
   await uploadAvatar(page);
   await fillUsername(page, 'testuser');
@@ -88,7 +88,7 @@ test('respuesta lenta: muestra spinner mientras carga', async ({ page }) => {
   await waitForToast(page, 'Perfil actualizado!', 15_000);
 });
 
-test('reintento: después de un error puede reintentarlo exitosamente', async ({ page }) => {
+test('should allow retry after error', async ({ page }) => {
   await uploadAvatar(page);
   await fillUsername(page, 'testuser');
 
@@ -101,7 +101,7 @@ test('reintento: después de un error puede reintentarlo exitosamente', async ({
   await waitForToast(page, 'Perfil actualizado!');
 });
 
-test('persistencia: mantiene los valores del formulario tras un error', async ({ page }) => {
+test('should persist form values after error', async ({ page }) => {
   await uploadAvatar(page);
   await fillUsername(page, 'persisteduser');
   await fillBio(page, 'Bio que debe persistir');
@@ -116,7 +116,7 @@ test('persistencia: mantiene los valores del formulario tras un error', async ({
   ).toHaveValue('Bio que debe persistir');
 });
 
-test('preview avatar: muestra la imagen de preview al seleccionar un archivo', async ({ page }) => {
+test('should show avatar preview after file selection', async ({ page }) => {
   const preview = page.locator('img[alt="Vista previa del avatar"]');
 
   await expect(preview).toHaveCount(0);

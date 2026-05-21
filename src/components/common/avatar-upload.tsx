@@ -230,7 +230,7 @@ export const AvatarUpload = React.forwardRef<
             {disabled
               ? "Subida de avatar deshabilitada"
               : isConverting
-                ? "Convirtiendo a WebP…"
+                ? "Cargando…"
                 : "Haz clic o arrastra para cambiar la imagen"}
           </p>
         )}

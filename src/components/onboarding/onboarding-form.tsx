@@ -29,9 +29,7 @@ type OnboardingFormSchema = z.infer<typeof onboardingSchema>;
 
 export interface OnboardingFormProps
   extends React.HTMLAttributes<HTMLDivElement> {
-  /** Called after a successful profile save. */
   onSuccess?: () => void | Promise<void>;
-  /** Disables all form inputs and the submit button. */
   disabled?: boolean;
 }
 
@@ -111,15 +109,16 @@ export const OnboardingForm = React.forwardRef<
     return () => URL.revokeObjectURL(url);
   }, []);
 
-  const handleSubmitClick = () => {
-    if (!avatarFile) setAvatarError("Avatar es requerido");
-  };
-
-  const handleFormSubmit = async (data: OnboardingFormSchema) => {
+  const validateAvatar = React.useCallback(() => {
     if (!avatarFile) {
       setAvatarError("Avatar es requerido");
-      return;
+      return false;
     }
+    return true;
+  }, [avatarFile]);
+
+  const handleFormSubmit = async (data: OnboardingFormSchema) => {
+    if (!validateAvatar()) return;
 
     setIsSubmitting(true);
 
@@ -127,7 +126,7 @@ export const OnboardingForm = React.forwardRef<
       let photoUrl: string;
 
       try {
-        photoUrl = await uploadAvatar(avatarFile);
+        photoUrl = await uploadAvatar(avatarFile!);
       } catch (err) {
         const status = (err as { status?: number }).status;
         const message = err instanceof Error ? err.message : "Error al subir la foto de usuario";
@@ -237,7 +236,7 @@ export const OnboardingForm = React.forwardRef<
 
             <Button
               type="submit"
-              onMouseDown={handleSubmitClick}
+              onMouseDown={validateAvatar}
               disabled={disabled || isLoading}
               size="lg"
               className="w-full"
