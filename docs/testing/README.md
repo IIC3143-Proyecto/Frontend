@@ -1,145 +1,118 @@
 # Testing Guide
 
-This folder contains documentation on testing strategies used in VTRNA Frontend.
+This folder contains documentation on testing strategies and test suites.
+
+---
+
+## Overview
+
+VTRNA implements different testing layers using Playwright for E2E testing.
+
+---
+
+## Installation
+
+Before running E2E tests for the first time, install Playwright and its dependencies:
+
+```bash
+npx playwright install --with-deps    # Install Playwright + browser dependencies
+```
+
+Or use the npm script (if available):
+```bash
+npm run e2e:install                   # Alternative: install via npm script
+```
+
+---
 
 ## Running Tests
 
-### All Tests
+### E2E Tests
 ```bash
-npm test              # Run all tests (unit + integration)
-npm run e2e           # Run E2E tests
+npm run e2e                    # Run all E2E tests (headless)
+npm run e2e -- --ui           # Interactive UI mode
+npm run e2e -- --headed       # Run with browser visible
+npm run e2e -- --debug        # Debug mode with inspector
+npm run e2e:report            # Open last HTML report
 ```
 
-### Specific Test Suite
+### Specific Test File
 ```bash
-# E2E
-npm run e2e                    # Run all E2E tests
-npm run e2e -- auth.spec.ts    # Run specific E2E file
-npm run e2e -- --project chromium  # Run specific browser
-
-# Watch mode (not recommended for E2E)
-npm run e2e -- --ui            # Interactive UI mode
-npm run e2e:ui                 # Same as above
-
-# Reports
-npm run e2e:report             # Open last HTML report
+npm run e2e -- onboarding.spec.ts    # Run specific test
+npm run e2e -- -g "pattern"           # Run tests matching pattern
 ```
 
 ---
 
-## Current Test Distribution
+## Configuration
 
-### E2E Tests: 23 tests
-**Location:** `e2e/`
-
-```
-e2e/
-├── auth.setup.ts                 # Setup fixture (Auth0 login)
-├── auth.spec.ts                  # Auth flow tests
-├── routes.spec.ts                # Route protection tests
-├── sync-user-errors.spec.ts      # Sync-user error handling tests
-├── debug-auth0.spec.ts           # Debug utilities
-└── helpers/
-    └── auth.ts                   # Test helpers
-```
-
-**Configuration:** `playwright.config.ts`
+See `playwright.config.ts` for:
+- Test directory: `./e2e`
+- Base URL: `http://localhost:3000`
+- Browser: Chromium
+- Sequential execution (1 worker)
+- HTML reporting
+- Auto-start dev server
 
 ---
 
-## Test Types
+## Best Practices
 
-### 1. Integration Tests
-**Purpose:** Validate component interactions and data flow
+### E2E Tests
+- ✓ Use semantic locators (role, text) over CSS selectors
+- ✓ Wait for content visibility before assertions
+- ✓ Reset state in `beforeEach` or `beforeAll`
+- ✗ Avoid fixed delays (`sleep`)
+- ✗ Don't make actual API calls (use MSW mocks)
 
-Example:
-```typescript
-describe('useAuth hook', () => {
-  it('should sync user from VTRNA on login', () => {
-    // Test hook integration
-  });
-});
+### Debugging
+```bash
+npx playwright test --debug        # Step-by-step debugging
+npm run e2e:ui                     # Interactive test runner
+npx playwright test --trace on     # Generate traces
 ```
 
-### 2. E2E Tests (Playwright)
-**Purpose:** Validate full user flows end-to-end
-
-Example:
-```typescript
-test('user can login and access profile', async ({ page }) => {
-  await page.goto('/login');
-  await loginWithAuth0(page, email, password);
-  await expect(page).toHaveURL('/profile');
-});
-```
+### Performance
+- Tests run sequentially for reliability
+- MSW mocks intercept all network calls
+- Typical run: 20-30 seconds
 
 ---
 
-## E2E Testing Details
+## CI/CD Integration
 
-### Setup
-- **Browser:** Chromium (single worker to avoid flakiness)
-- **Parallelization:** Sequential (not parallel) to avoid race conditions
-- **Retries:** 0 in dev, 2 in CI
-- **Service Workers:** Blocked (MSW mocks API)
-
-### Authentication Flow (for E2E)
-1. **Setup Phase** (`auth.setup.ts`):
-   - Authenticates with Auth0 using test credentials
-   - Stores session in `e2e/.auth/user.json`
-   - All subsequent tests reuse this session
-
-2. **Test Phase**:
-   - Tests use stored Auth0 session
-   - Can also test unauthenticated flow with `NO_AUTH` context
-
-### MSW in E2E
-During E2E tests:
-```
-Playwright Browser → Next.js Dev Server (with MSW enabled)
-                      ↓
-                   MSW intercepts requests
-                      ↓
-                   Returns mock responses
-```
-
-**Key:** Tests start server with `NEXT_PUBLIC_ENABLE_MSW=true`
+In CI environment:
+- `forbidOnly: true` — prevents skipped tests
+- 1 retry on failure
+- HTML report generated
+- Traces on first retry
 
 ---
 
-## For Specific E2E Test Details
+## Prerequisites
 
-See: **[E2E Testing - Auth0](./auth0-e2e-tests.md)**
+Ensure `.env.local` contains:
+```
+NEXT_PUBLIC_ENABLE_MSW=true
+```
+
+MSW must be enabled for tests to work correctly.
 
 ---
 
-## Maintenance
+## Adding New Tests
 
-### Adding New E2E Tests
-1. Create `.spec.ts` file in `e2e/`
-2. Import test utilities from `e2e/helpers/auth.ts`
-3. Use existing fixtures for auth state
-4. Test new user flows
-
-### Updating Mocks
-MSW mocks are configured in:
-```
-src/lib/msw/
-├── mocks/
-│   ├── handlers/
-│   │   └── sync-user.ts        # Main handler for /auth/sync-user
-│   ├── scenario.ts             # User scenarios (FULL, ONBOARDING_PENDING, etc)
-│   └── data/
-│       └── mock-users.ts       # Mock user data
-```
-
-See: `docs/msw.md` for MSW details
+1. **Call helpers first** — ensure MSW and page state ready
+2. **Reset scenarios** — each test starts clean
+3. **Use explicit waits** — `await expect(...).toBeVisible()`
+4. **Add fixtures to `e2e/fixtures/`** — for images, PDFs, etc
+5. **Reference the feature E2E doc** — for available helpers and scenarios
 
 ---
 
-## Resources
+## References
 
 - [Playwright Documentation](https://playwright.dev)
 - [Playwright Best Practices](https://playwright.dev/docs/best-practices)
-- [Auth0 Testing Guide](../auth0.md)
 - [MSW Documentation](../msw.md)
+
