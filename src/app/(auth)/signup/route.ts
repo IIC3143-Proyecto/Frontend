@@ -1,4 +1,3 @@
-// src/app/signup/route.ts
 import { redirect } from 'next/navigation';
 
 export async function GET() {

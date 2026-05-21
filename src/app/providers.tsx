@@ -2,9 +2,9 @@
 
 import { MSWProvider } from '@/lib/msw/msw-provider';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { Auth0Provider } from '@auth0/nextjs-auth0'; // Auth0 v4 import
+import { Auth0Provider } from '@auth0/nextjs-auth0'; 
 import { useState } from 'react';
-import { AuthWrapper } from '@/components/auth/auth-wrapper'; // The sync logic we discussed
+import { AuthWrapper } from '@/components/auth/auth-wrapper'; 
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(() => new QueryClient({

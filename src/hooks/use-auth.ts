@@ -1,25 +1,44 @@
-// src/hooks/use-auth.ts
 import { useUser } from '@auth0/nextjs-auth0';
 import { useQuery } from '@tanstack/react-query';
 import { useRouter, usePathname } from 'next/navigation';
 import { useEffect } from 'react';
+
+export type SyncError = Error & { code: number };
+
+type DbUser = { onboardingCompleted: boolean };
 
 export function useAuth() {
   const { user, isLoading: authLoading } = useUser();
   const router = useRouter();
   const pathname = usePathname();
 
-  const { data: dbUser, isLoading: syncLoading } = useQuery({
+  const { data: dbUser, isLoading: syncLoading, error: syncError } = useQuery<DbUser, SyncError>({
     queryKey: ['dbUser', user?.sub],
     queryFn: async () => {
       const res = await fetch('/auth/sync-user');
-      if (!res.ok) throw new Error('Error al sincronizar');
-      return res.json();
+      if (res.status === 401) {
+        throw Object.assign(new Error('AUTH_EXPIRED'), { code: 401 });
+      }
+      if (!res.ok) {
+        throw Object.assign(new Error('SYNC_FAILED'), { code: res.status });
+      }
+      const data = await res.json();
+      return {
+        ...data,
+        onboardingCompleted: data.onboardingCompleted ?? false,
+      };
     },
-    enabled: !!user, 
+    enabled: !!user,
+    staleTime: 5 * 60 * 1000,
+    retry: (count, error) => error.code === 401 ? false : count < 2,
   });
 
   useEffect(() => {
+    if (syncError && syncError.code === 401) {
+      window.location.replace('/login');
+      return;
+    }
+
     if (!authLoading && !syncLoading && dbUser) {
       const isOnboardingPage = pathname === '/onboarding';
 
@@ -31,12 +50,13 @@ export function useAuth() {
         router.push('/profile');
       }
     }
-  }, [dbUser, authLoading, syncLoading, pathname, router]);
+  }, [dbUser, authLoading, syncLoading, syncError, pathname, router]);
 
   return {
     user,
     dbUser,
     isLoading: authLoading || (!!user && syncLoading),
     isAuthenticated: !!user,
+    syncError,
   };
 }
