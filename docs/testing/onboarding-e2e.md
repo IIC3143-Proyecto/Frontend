@@ -1,6 +1,25 @@
-# E2E Tests (Playwright)
+# E2E Testing - Onboarding Form
 
-End-to-end tests live in `e2e/` and run against the Next.js dev server using [Playwright](https://playwright.dev/).
+This document details the E2E test suite for the onboarding profile completion flow.
+
+---
+
+## Test Architecture
+
+### Files
+```
+e2e/
+├── onboarding.spec.ts          # Onboarding form tests
+├── helpers.ts                  # Shared test utilities
+└── fixtures/
+    └── avatar.webp             # Test image for avatar upload
+```
+
+### Test Results (Current)
+```
+Tests: Multiple scenarios covering happy path and error cases
+Runtime: ~20-30 seconds
+```
 
 ---
 
@@ -68,7 +87,7 @@ The tests control mock scenarios through `window.__setErrorScenario` / `window._
 
 ---
 
-## Test Helpers (`e2e/onboarding.spec.ts`)
+## Test Helpers (`e2e/helpers.ts`)
 
 | Helper | Description |
 |---|---|
@@ -83,6 +102,8 @@ The tests control mock scenarios through `window.__setErrorScenario` / `window._
 ## Test Coverage (`e2e/onboarding.spec.ts`)
 
 All tests navigate to `/onboarding` and reset the error scenario in `beforeEach`.
+
+### Test Scenarios
 
 | # | Name | Scenario | Key Assertion |
 |---|---|---|---|
@@ -108,3 +129,33 @@ All tests navigate to `/onboarding` and reset the error scenario in `beforeEach`
 3. **Use `waitForToast`** for Sonner notifications — select by `[data-sonner-toast]` and filter with `hasText` rather than matching the exact toast structure, which can change between Sonner versions.
 4. **Avoid fixed `sleep`** — use `await expect(...).toBeVisible()` with a timeout instead.
 5. **Add fixtures** for any binary assets (images, PDFs) to `e2e/fixtures/` and reference them with `path.join(__dirname, 'fixtures/filename')`.
+
+---
+
+## Debugging
+
+### Run Single Test
+```bash
+npx playwright test e2e/onboarding.spec.ts -g "Happy path"
+```
+
+### Debug Mode
+```bash
+npx playwright test --debug
+# Browser opens, can inspect, step through code
+```
+
+### View Traces
+```bash
+# Traces saved on failure (playwright.config.ts: trace: 'on-first-retry')
+npm run e2e:report
+# Click failed test → see trace with network/DOM/console
+```
+
+---
+
+## References
+
+- [Playwright Documentation](https://playwright.dev)
+- [Playwright Best Practices](https://playwright.dev/docs/best-practices)
+- [MSW Documentation](../msw.md)
