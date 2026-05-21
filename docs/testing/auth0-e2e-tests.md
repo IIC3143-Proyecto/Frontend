@@ -9,28 +9,34 @@ This document details the E2E test suite that validates Auth0 authentication and
 ### Files
 ```
 e2e/
-├── auth.setup.ts              # Setup fixture - Auth0 authentication
-├── auth.spec.ts               # Auth flow tests
-├── routes.spec.ts             # Route protection tests  
+├── auth.setup.ts                  # Setup fixture - Auth0 authentication
+├── auth.spec.ts                   # Auth flow tests
+├── routes.spec.ts                 # Route protection tests  
+├── onboarding.spec.ts             # Onboarding form tests with Auth0
 ├── sync-user-errors.spec.ts       # Sync-user error handling
-├── debug-auth0.spec.ts        # Debug utilities
 ├── .auth/
-│   └── user.json              # Persisted auth state (generated)
+│   └── user.json                  # Persisted auth state (generated)
 └── helpers/
-    └── auth.ts                # Shared test utilities
+    ├── auth.ts                    # Auth utilities & mocking
+    └── form-errors.ts             # Onboarding form error scenarios
 ```
 
 ### Test Results (Current)
 ```
-Total: 23 passed
-Runtime: ~60 seconds
+Total: 35 passed
+Runtime: ~75 seconds
+Coverage: auth flow + route protection + onboarding form + error handling
 ```
 
 ### Coverage
 - ✓ Public routes accessible without auth
 - ✓ Private routes redirect to login
 - ✓ Auth0 login flow
-- ✓ Onboarding redirects
+- ✓ Onboarding form validation and submission
+- ✓ Avatar upload with error scenarios (401, 422, 500)
+- ✓ Username conflict detection (409)
+- ✓ Form persistence after errors
+- ✓ Loading states and network errors
 - ✓ Sync-user error scenarios (401, 403, 500, 503)
 
 ---
@@ -131,6 +137,59 @@ await gotoAuthenticated(page, '/profile', 'FULL');
 // 2. Navigate to /profile
 // 3. Wait for MSW
 // 4. Wait for auth sync
+```
+
+### `helpers/form-errors.ts`
+
+Utilities for mocking onboarding form request scenarios:
+
+#### `mockDefaultHandlers(page)`
+Sets up default success handlers for avatar upload and profile update.
+
+```typescript
+await mockDefaultHandlers(page);  // Setup default mocks
+```
+
+#### `mockAvatarSuccess(page)`
+Re-enables successful avatar upload after a previous error scenario.
+
+```typescript
+await mockAvatarError(page, 500);  // Simulate error
+await submitForm(page);
+await mockAvatarSuccess(page);  // Reset to success
+await submitForm(page);  // Should succeed
+```
+
+#### `mockAvatarError(page, status)`
+Mocks avatar upload endpoint (`POST /profile/avatar`) with error responses.
+
+```typescript
+await mockAvatarError(page, 401);   // Unauthorized
+await mockAvatarError(page, 422);   // Unprocessable (invalid file)
+await mockAvatarError(page, 500);   // Server error
+```
+
+#### `mockAvatarNetwork(page)`
+Simulates network error on avatar upload.
+
+```typescript
+await mockAvatarNetwork(page);
+// Request will fail without a response
+```
+
+#### `mockAvatarSlow(page)`
+Simulates slow avatar upload response (for testing loading states).
+
+```typescript
+await mockAvatarSlow(page);  // Slow response, shows spinner
+```
+
+#### `mockPatchError(page, status)`
+Mocks profile update endpoint (`PATCH /user`) with error responses.
+
+```typescript
+await mockPatchError(page, 409);   // Conflict (username taken)
+await mockPatchError(page, 500);   // Server error
 ```
 
 ---
@@ -299,6 +358,158 @@ test('sync-user 500 → show error, no redirect', async ({ page }) => {
 - `403` → Forbidden (error message)
 - `500` → Server error (error message)
 - `503` → Unavailable (retry logic)
+
+---
+
+### 6. Onboarding Form Submission (`onboarding.spec.ts`)
+
+**What:** Validate onboarding form functionality, validation, and error handling.
+
+**Setup:** All tests use `gotoAuthenticated(page, '/onboarding', 'NEW')` to access as new user.
+
+#### Form Validation Tests
+
+```typescript
+test('should complete onboarding successfully', async ({ page }) => {
+  await uploadAvatar(page);
+  await fillUsername(page, 'testuser');
+  await fillBio(page, 'My bio');
+  await submitForm(page);
+  
+  // Both avatar and PATCH /user succeed
+  await waitForToast(page, 'Perfil actualizado!');
+});
+
+test('should require avatar before form submission', async ({ page }) => {
+  await fillUsername(page, 'testuser');
+  await submitForm(page);
+  
+  // No avatar selected
+  await expectError(page, 'Avatar es requerido');
+});
+
+test('should show validation errors when submitting empty form', async ({ page }) => {
+  await submitForm(page);
+  await expectError(page, 'Avatar es requerido');
+  await expectError(page, 'Username es requerido');
+});
+```
+
+#### Avatar Upload Error Scenarios
+
+```typescript
+test('should redirect to session-expired when avatar returns 401', 
+  async ({ page }) => {
+    await mockAvatarError(page, 401);  // Unauthorized
+    await uploadAvatar(page);
+    await fillUsername(page, 'testuser');
+    await submitForm(page);
+    
+    // Auth expired during upload
+    await expect(page).toHaveURL('/session-expired');
+  }
+);
+
+test('should show error when file is not valid WebP', async ({ page }) => {
+  await mockAvatarError(page, 422);  // Unprocessable
+  await uploadAvatar(page);
+  await submitForm(page);
+  
+  await waitForToast(page, 'Invalid file');
+});
+
+test('should show network error toast on connection failure',
+  async ({ page }) => {
+    await mockAvatarNetwork(page);  // Network error
+    await uploadAvatar(page);
+    await submitForm(page);
+    
+    await waitForToast(page, 'Error de red');
+  }
+);
+
+test('should show loading spinner on slow response', async ({ page }) => {
+  await mockAvatarSlow(page);  // Delayed response
+  await uploadAvatar(page);
+  await submitForm(page);
+  
+  // Spinner visible during wait
+  await expect(page.getByRole('progressbar')).toBeVisible();
+});
+```
+
+#### Profile Update Error Scenarios
+
+```typescript
+test('should show error when username is already taken', async ({ page }) => {
+  await mockPatchError(page, 409);  // Conflict
+  await uploadAvatar(page);
+  await fillUsername(page, 'takenuser');
+  await submitForm(page);
+  
+  // Username validation error
+  await expectError(page, 'username already taken');
+});
+
+test('should show server error toast on 500 response', async ({ page }) => {
+  await mockAvatarError(page, 500);  // Server error
+  await uploadAvatar(page);
+  await fillUsername(page, 'testuser');
+  await submitForm(page);
+  
+  await waitForToast(page, 'Internal server error');
+});
+```
+
+#### Form State Recovery
+
+```typescript
+test('should allow retry after error', async ({ page }) => {
+  await uploadAvatar(page);
+  await fillUsername(page, 'testuser');
+  
+  // First attempt fails
+  await mockAvatarError(page, 500);
+  await submitForm(page);
+  await waitForToast(page, 'Internal server error');
+  
+  // Reset mock to success
+  await mockAvatarSuccess(page);
+  // Form values persist
+  await submitForm(page);
+  
+  await waitForToast(page, 'Perfil actualizado!');
+});
+
+test('should persist form values after error', async ({ page }) => {
+  await fillUsername(page, 'persisteduser');
+  await fillBio(page, 'Persistent bio');
+  
+  await mockAvatarError(page, 500);
+  await uploadAvatar(page);
+  await submitForm(page);
+  
+  // Values still present after error
+  await expect(page.getByDisplayValue('persisteduser')).toBeVisible();
+  await expect(page.getByDisplayValue('Persistent bio')).toBeVisible();
+});
+
+test('should show avatar preview after file selection', async ({ page }) => {
+  await uploadAvatar(page);
+  
+  // Avatar image visible as preview
+  await expect(page.getByRole('img')).toBeVisible();
+});
+```
+
+**Coverage:**
+- ✓ Form validation (required fields, format)
+- ✓ Avatar upload success/failure
+- ✓ Profile update with conflict handling
+- ✓ Network error resilience
+- ✓ Loading states
+- ✓ Error toast notifications
+- ✓ Form state persistence
 
 ---
 
