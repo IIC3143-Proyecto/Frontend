@@ -27,14 +27,14 @@ export async function mockSyncUserError(page: Page, status: 401 | 403 | 500 | 50
 export async function waitForMSW(page: Page) {
   await page.waitForFunction(
     () => !document.body.innerText.includes('Cargando'),
-    { timeout: 15_000 }
+    { timeout: 15_000 },
   );
 }
 
 export async function waitForAuthSync(page: Page) {
   await page.waitForFunction(
     () => !document.body.innerText.includes('Sincronizando con VTRNA'),
-    { timeout: 10_000 }
+    { timeout: 10_000 },
   );
 }
 

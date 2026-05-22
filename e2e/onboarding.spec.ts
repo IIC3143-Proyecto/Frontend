@@ -18,8 +18,8 @@ import {
 } from './helpers/form-errors';
 
 test.beforeEach(async ({ page }) => {
-  await gotoAuthenticated(page, '/onboarding', 'NEW');
   await mockDefaultHandlers(page);
+  await gotoAuthenticated(page, '/onboarding', 'NEW');
   await expect(page.getByRole('heading', { name: 'Completa tu perfil' })).toBeVisible({
     timeout: 15_000,
   });
@@ -43,7 +43,6 @@ test('should require avatar before form submission', async ({ page }) => {
   await fillUsername(page, 'testuser');
   await submitForm(page);
   await expectError(page, 'Avatar es requerido');
-  // Username field must not show an error
   await expect(page.getByText('Username es requerido')).not.toBeVisible();
 });
 
@@ -93,7 +92,7 @@ test('should show loading spinner on slow response', async ({ page }) => {
   await fillUsername(page, 'testuser');
 
   await submitForm(page);
-  await expect(page.getByRole('button', { name: 'Guardando...' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Guardando...' })).toBeVisible({ timeout: 3_000 });
 
   await waitForToast(page, 'Perfil actualizado!', 15_000);
 });

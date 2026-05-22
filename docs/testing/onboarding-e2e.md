@@ -10,14 +10,17 @@ This document details the E2E test suite for the onboarding profile completion f
 ```
 e2e/
 ├── onboarding.spec.ts          # Onboarding form tests
-├── helpers.ts                  # Shared test utilities
+├── helpers.ts                  # Shared test utilities (uploadAvatar, fillUsername, etc.)
+├── helpers/
+│   ├── auth.ts                 # Auth helpers: gotoAuthenticated, mockSyncUser, waiters
+│   └── form-errors.ts          # page.route() mocks for avatar and PATCH /user
 └── fixtures/
     └── avatar.webp             # Test image for avatar upload
 ```
 
 ### Test Results (Current)
 ```
-Tests: Multiple scenarios covering happy path and error cases
+Tests: 12 tests covering happy path and error cases
 Runtime: ~20-30 seconds
 ```
 
@@ -59,10 +62,12 @@ npx playwright show-report
 | `baseURL` | `http://localhost:3000` |
 | Browser | Chromium only |
 | `fullyParallel` | `false` — tests run sequentially |
-| `webServer` | Auto-starts `npm run dev`; reuses an existing server if already running |
+| `serviceWorkers` | `'block'` — prevents Auth0 SW from interfering; MSW does not run in tests |
+| `storageState` | `e2e/.auth/user.json` — loaded from `auth.setup.ts` |
+| `webServer` | Auto-starts `NEXT_PUBLIC_ENABLE_MSW=true npm run dev`; reuses an existing server if already running |
 | `reporter` | HTML — report written to `playwright-report/` |
 | `trace` | `on-first-retry` |
-| CI (`retries`) | 1 retry on failure |
+| CI (`retries`) | 2 retries on failure |
 | CI (`forbidOnly`) | `true` — `test.only` causes the run to fail |
 
 ---
@@ -75,7 +80,7 @@ MSW must be enabled. Ensure `.env.local` contains:
 NEXT_PUBLIC_ENABLE_MSW=true
 ```
 
-The tests control mock scenarios through `window.__setErrorScenario` / `window.__resetErrorScenario`, which are only available when MSW is active. See [`docs/msw.md`](../msw.md) for the full scenario reference.
+> **Note:** `playwright.config.ts` sets `serviceWorkers: 'block'`, which prevents the MSW Service Worker from intercepting requests during tests. All mocking in `onboarding.spec.ts` uses Playwright's `page.route()` instead of `window.__setErrorScenario`. The MSW window helpers are still available in the browser DevTools for manual development.
 
 ---
 
@@ -87,48 +92,74 @@ The tests control mock scenarios through `window.__setErrorScenario` / `window._
 
 ---
 
-## Test Helpers (`e2e/helpers.ts`)
+## Test Helpers
+
+### `e2e/helpers.ts` — Form interaction utilities
 
 | Helper | Description |
 |---|---|
-| `waitForMSW(page)` | Polls until `window.__resetErrorScenario` is available — confirms MSW has initialised |
-| `setScenario(page, scenario)` | Calls `window.__setErrorScenario(scenario)` to inject an error condition |
-| `uploadAvatar(page)` | Sets the file input to `fixtures/avatar.webp` and waits for the WebP conversion to finish |
+| `uploadAvatar(page)` | Sets the file input to `fixtures/avatar.webp` and waits for the blob preview |
+| `fillUsername(page, value)` | Fills the username placeholder input |
+| `fillBio(page, value)` | Fills the bio textarea |
 | `submitForm(page)` | Clicks the `"Guardar perfil"` button |
-| `waitForToast(page, text)` | Asserts a `[data-sonner-toast]` element containing `text` becomes visible |
+| `waitForToast(page, text, timeout?)` | Asserts a `[data-sonner-toast]` element containing `text` becomes visible |
+| `expectError(page, message)` | Asserts a validation or server error message is visible on the page |
+
+### `e2e/helpers/auth.ts` — Auth utilities
+
+| Helper | Description |
+|---|---|
+| `gotoAuthenticated(page, path, scenario?)` | Mocks `sync-user`, navigates, and waits for MSW + auth sync to complete |
+| `mockSyncUser(page, scenario)` | Registers a `page.route()` for `GET /auth/sync-user` returning the given scenario |
+| `mockSyncUserError(page, status)` | Registers a `page.route()` that returns an error on `sync-user` |
+| `waitForMSW(page)` | Waits until the MSW loading spinner disappears |
+| `waitForAuthSync(page)` | Waits until the "Sincronizando con VTRNA" spinner disappears |
+
+### `e2e/helpers/form-errors.ts` — Mock error conditions via `page.route()`
+
+| Helper | Description |
+|---|---|
+| `mockDefaultHandlers(page)` | Registers success-path routes for `POST /profile/avatar` (201) and `PATCH /user` (200). Call in `beforeEach` before any error overrides. |
+| `mockAvatarSuccess(page)` | Re-registers the avatar success handler on top of the stack. Use after an error mock to restore success behavior. |
+| `mockAvatarError(page, status)` | Fulfills `POST /profile/avatar` with 401, 422, or 500 |
+| `mockAvatarNetwork(page)` | Aborts the avatar request (network failure) |
+| `mockAvatarSlow(page)` | Delays avatar response by 2 s then returns success |
+| `mockPatchError(page, status)` | Fulfills `PATCH /user` with 409 or 500 |
 
 ---
 
 ## Test Coverage (`e2e/onboarding.spec.ts`)
 
-All tests navigate to `/onboarding` and reset the error scenario in `beforeEach`.
+`beforeEach` registers default success handlers via `mockDefaultHandlers`, navigates to `/onboarding` as a `NEW` user (onboarding incomplete), and asserts the heading is visible before each test.
 
 ### Test Scenarios
 
-| # | Name | Scenario | Key Assertion |
+| # | Name | Mock | Key Assertion |
 |---|---|---|---|
-| 1 | Happy path | `NONE` | Toast `"Perfil actualizado!"` visible |
-| 2 | Short username | — (client) | `"Username debe tener al menos 3 caracteres"` visible after blur |
-| 3 | Avatar required | — (client) | `"Avatar es requerido"` visible after submit without file |
-| 4 | API 401 | `AVATAR_401` | Page redirects to `/session-expired` |
-| 5 | API 422 | `AVATAR_422` | `"File must be a WebP image"` on avatar field, heading still visible |
-| 6 | API 409 | `PATCH_409` | `"Username already taken"` on username field, no toast |
-| 7 | API 500 | `AVATAR_500` | Toast `"Internal server error"`, submit button re-enabled |
-| 8 | Network error | `AVATAR_NETWORK` | Toast `"Error de red"` visible |
-| 9 | Slow response | `AVATAR_SLOW` | Button shows `"Guardando..."`, then toast `"Perfil actualizado!"` |
-| 10 | Retry after error | `AVATAR_500` → `NONE` | Fails first, succeeds on second submit |
-| 11 | Field persistence | — | Username and bio retain typed values |
-| 12 | Avatar preview | — | `<img>` inside the avatar role element becomes visible after selection |
+| 1 | Happy path | default (success) | Toast `"Perfil actualizado!"` visible |
+| 2 | Empty form validation | — (client) | `"Avatar es requerido"` and `"Username es requerido"` visible after submit |
+| 3 | Avatar required | — (client) | `"Avatar es requerido"` visible; no username error |
+| 4 | API 401 | `mockAvatarError(401)` | Page redirects to `/session-expired` |
+| 5 | API 422 | `mockAvatarError(422)` | `"File must be a WebP image"` visible |
+| 6 | API 409 | `mockPatchError(409)` | `"Username already taken"` on username field |
+| 7 | API 500 | `mockAvatarError(500)` | Toast `"Internal server error"` |
+| 8 | Network error | `mockAvatarNetwork()` | Toast `"Error de red"` visible |
+| 9 | Slow response | `mockAvatarSlow()` | Button shows `"Guardando..."`, then toast `"Perfil actualizado!"` |
+| 10 | Retry after error | `mockAvatarError(500)` → `mockAvatarSuccess()` | Fails first, succeeds on second submit |
+| 11 | Field persistence | `mockAvatarError(500)` | Username and bio retain typed values after error |
+| 12 | Avatar preview | — | `<img alt="Vista previa del avatar">` has a `blob:` src after file selection |
 
 ---
 
 ## Writing New Tests
 
-1. **Always call `waitForMSW(page)` in `beforeEach`** before interacting with the page — MSW starts asynchronously and the window helpers may not exist yet.
-2. **Reset the scenario** with `page.evaluate(() => window.__resetErrorScenario())` at the start of each test (the shared `beforeEach` already does this).
-3. **Use `waitForToast`** for Sonner notifications — select by `[data-sonner-toast]` and filter with `hasText` rather than matching the exact toast structure, which can change between Sonner versions.
-4. **Avoid fixed `sleep`** — use `await expect(...).toBeVisible()` with a timeout instead.
-5. **Add fixtures** for any binary assets (images, PDFs) to `e2e/fixtures/` and reference them with `path.join(__dirname, 'fixtures/filename')`.
+1. **Call `mockDefaultHandlers(page)` before `gotoAuthenticated`** in `beforeEach` — registers success-path `page.route()` handlers so the form can submit successfully by default.
+2. **Use `gotoAuthenticated(page, '/onboarding', 'NEW')`** instead of navigating directly — mocks `sync-user` and waits for `AuthWrapper` to clear before asserting page content.
+3. **Override with error mocks in the test body**: call `mockAvatarError`, `mockPatchError`, etc. after `beforeEach`. Because `page.route()` uses LIFO order, the last registered handler takes precedence over the default.
+4. **Use `mockAvatarSuccess(page)` to restore success behavior** within a test after an error mock — do not call `page.unroute()`, which would also remove the default handler from `beforeEach`.
+5. **Use `waitForToast`** for Sonner notifications — select by `[data-sonner-toast]` and filter with `hasText`.
+6. **Avoid fixed `sleep`** — use `await expect(...).toBeVisible()` with a timeout instead.
+7. **Add fixtures** for any binary assets to `e2e/fixtures/` and reference them with `path.join(__dirname, 'fixtures/filename')`.
 
 ---
 
@@ -136,7 +167,7 @@ All tests navigate to `/onboarding` and reset the error scenario in `beforeEach`
 
 ### Run Single Test
 ```bash
-npx playwright test e2e/onboarding.spec.ts -g "Happy path"
+npx playwright test e2e/onboarding.spec.ts -g "happy path"
 ```
 
 ### Debug Mode

@@ -63,11 +63,12 @@ export async function mockPatchError(page: Page, status: 409 | 500) {
     409: { message: 'Username already taken', field: 'username' },
     500: { message: 'Internal server error' },
   };
-  await page.route(USER_URL, (route) =>
-    route.fulfill({
+  await page.route(USER_URL, (route) => {
+    if (route.request().method() !== 'PATCH') return route.continue();
+    return route.fulfill({
       status,
       contentType: 'application/json',
       body: JSON.stringify(bodies[status]),
-    })
-  );
+    });
+  });
 }

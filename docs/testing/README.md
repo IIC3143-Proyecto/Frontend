@@ -63,7 +63,7 @@ See `playwright.config.ts` for:
 - ✓ Wait for content visibility before assertions
 - ✓ Reset state in `beforeEach` or `beforeAll`
 - ✗ Avoid fixed delays (`sleep`)
-- ✗ Don't make actual API calls (use MSW mocks)
+- ✗ Don't make actual API calls (use `page.route()` mocks)
 
 ### Debugging
 ```bash
@@ -74,7 +74,7 @@ npx playwright test --trace on     # Generate traces
 
 ### Performance
 - Tests run sequentially for reliability
-- MSW mocks intercept all network calls
+- `page.route()` intercepts all network calls (MSW service worker is blocked during tests)
 - Typical run: 20-30 seconds
 
 ---
@@ -83,7 +83,7 @@ npx playwright test --trace on     # Generate traces
 
 In CI environment:
 - `forbidOnly: true` — prevents skipped tests
-- 1 retry on failure
+- 2 retries on failure
 - HTML report generated
 - Traces on first retry
 

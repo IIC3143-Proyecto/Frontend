@@ -415,7 +415,7 @@ test('should show error when file is not valid WebP', async ({ page }) => {
   await uploadAvatar(page);
   await submitForm(page);
   
-  await waitForToast(page, 'Invalid file');
+  await waitForToast(page, 'File must be a WebP image');
 });
 
 test('should show network error toast on connection failure',
@@ -434,7 +434,7 @@ test('should show loading spinner on slow response', async ({ page }) => {
   await submitForm(page);
   
   // Spinner visible during wait
-  await expect(page.getByRole('progressbar')).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Guardando...' })).toBeVisible({ timeout: 3_000 });
 });
 ```
 
@@ -634,11 +634,11 @@ npm run e2e:report
 ### Timing
 - Setup phase: ~15 seconds (Auth0 login)
 - Per test: ~2-3 seconds average
-- Total: ~60 seconds for 23 tests
+- Total: ~75 seconds for 35 tests
 
 ### Optimization
 - Tests run sequentially (1 worker) for stability
-- MSW blocks service workers (faster, deterministic)
+- `serviceWorkers: 'block'` prevents MSW service worker from running; all mocks use `page.route()`
 - reusable session reduces redundant Auth0 logins
 
 ---
