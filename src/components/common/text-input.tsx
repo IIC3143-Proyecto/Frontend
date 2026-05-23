@@ -13,6 +13,7 @@ import {
   useFormField,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -132,7 +133,8 @@ InputControl.displayName = "InputControl";
  * @property description Optional description below the input.
  * @property type Input type (text, password, etc).
  * @property size Input size (sm, default, lg).
- * @property icon Optional icon to display inside the input.
+ * @property icon Optional icon to display inside the input (input only, not for textarea).
+ * @property isTextarea If true, renders a textarea instead of an input.
  * @property inputClassName Additional class names for the input element.
  * @property labelClassName Additional class names for the label.
  * @property messageClassName Additional class names for the message.
@@ -146,6 +148,7 @@ interface TextInputProps<TFieldValues extends FieldValues>
   type?: InputType;
   size?: TextInputSize;
   icon?: TablerIcon;
+  isTextarea?: boolean;
   inputClassName?: string;
   labelClassName?: string;
   messageClassName?: string;
@@ -154,6 +157,7 @@ interface TextInputProps<TFieldValues extends FieldValues>
 /**
  * Form input component with optional icon, password toggle, and size support.
  * Integrates with react-hook-form.
+ * Can render as either an input or textarea.
  */
 export function TextInput<TFieldValues extends FieldValues>({
   control,
@@ -163,6 +167,7 @@ export function TextInput<TFieldValues extends FieldValues>({
   type = "text",
   size = "default",
   icon,
+  isTextarea = false,
   disabled, 
   inputClassName,
   labelClassName,
@@ -191,17 +196,35 @@ export function TextInput<TFieldValues extends FieldValues>({
               {label}
             </FormLabel>
           )}
-          <InputControl
-            {...props}
-            {...field}
-            type={type}
-            size={size}
-            icon={icon}
-            disabled={disabled} 
-            isPassword={type === "password"}
-            inputClassName={inputClassName}
-            value={field.value ?? ""}
-          />
+
+          {isTextarea ? (
+            <FormControl>
+              <Textarea
+                {...(props as React.ComponentProps<"textarea">)}
+                {...field}
+                disabled={disabled}
+                className={cn(
+                  "resize-none",
+                  s.input,
+                  inputClassName
+                )}
+                value={field.value ?? ""}
+              />
+            </FormControl>
+          ) : (
+            <InputControl
+              {...props}
+              {...field}
+              type={type}
+              size={size}
+              icon={icon}
+              disabled={disabled} 
+              isPassword={type === "password"}
+              inputClassName={inputClassName}
+              value={field.value ?? ""}
+            />
+          )}
+
           {description && <FormDescription>{description}</FormDescription>}
           <div className="min-h-[1.1em]">
             <FormMessage className={cn("font-bold", s.message, messageClassName)} />

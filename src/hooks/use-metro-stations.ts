@@ -45,7 +45,6 @@ export function useMetroStations() {
   const [error, setError] = React.useState<string | null>(null);
 
   React.useEffect(() => {
-    // Only fetch if not already loaded from cache
     if (!loading) return;
 
     fetch('/api/metro/stations')

@@ -1,4 +1,3 @@
-// src/components/common/metro-input.tsx
 "use client";
 
 import * as React from "react";
