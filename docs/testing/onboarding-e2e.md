@@ -161,6 +161,7 @@ NEXT_PUBLIC_ENABLE_MSW=true
 6. **Avoid fixed `sleep`** — use `await expect(...).toBeVisible()` with a timeout instead.
 7. **Add fixtures** for any binary assets to `e2e/fixtures/` and reference them with `path.join(__dirname, 'fixtures/filename')`.
 
+
 ---
 
 ## Debugging
