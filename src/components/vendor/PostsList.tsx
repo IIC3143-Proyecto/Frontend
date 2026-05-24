@@ -1,6 +1,6 @@
 "use client";
 
-import { usePosts } from "@/hooks/usePosts";
+import { usePosts } from "@/hooks/use-posts";
 
 export function PostsList() {
   const { data: posts, isLoading, isError } = usePosts();
