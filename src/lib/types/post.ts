@@ -12,6 +12,7 @@ export type Post = {
   likesCount: number;
   savesCount: number;
   viewsCount: number;
+  offersCount: number;
   images?: string;
   isActive: boolean;
   createdAtUtcMinus3: string;

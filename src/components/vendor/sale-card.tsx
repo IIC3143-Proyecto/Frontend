@@ -1,0 +1,252 @@
+"use client";
+
+import { Info, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
+import type { Post } from "@/lib/types/post";
+import { PostStatus } from "@/lib/types/post-status.enum";
+import { cn } from "@/lib/utils";
+
+export type SaleView = "list" | "grid2" | "grid4";
+
+type SaleCardProps = {
+  post: Post;
+  view: SaleView;
+};
+
+const ACCENT = "#ff0000";
+const STEPS = ["Con ofertas", "Oferta aceptada", "Venta realizada"] as const;
+
+function getSteps(post: Post): [boolean, boolean, boolean] {
+  const isSold = post.status === PostStatus.SOLD;
+  const isAccepted = post.status === PostStatus.RESERVED || isSold;
+  const hasOffers = post.offersCount > 0 || isAccepted;
+  return [hasOffers, isAccepted, isSold];
+}
+
+function VerticalTimeline({ steps }: { steps: [boolean, boolean, boolean] }) {
+  const lineHeight = steps[2] ? "100%" : steps[1] ? "50%" : "0%";
+  const lineClass = "absolute mt-3 ml-[4.5px] w-0.5";
+
+  return (
+    <div className="relative">
+      <span
+        aria-hidden
+        className={`${lineClass} bg-muted-foreground`}
+        style={{ height: "calc(100% - 20px)" }}
+      />
+      <span
+        aria-hidden
+        className={`${lineClass} bg-chart-3 transition-all duration-500`}
+        style={{ height: `calc(${lineHeight} - 20px)` }}
+      />
+      {STEPS.map((label, i) => {
+        const done = steps[i];
+        return (
+          <div
+            key={label}
+            className={cn(
+              "relative mb-2",
+              done ? "text-chart-3" : "text-muted-foreground",
+            )}
+          >
+            <span
+              className={cn(
+                "inline-block w-3 h-3 mr-2 rounded-full border-2 border-card transition-colors duration-500",
+                done ? "bg-chart-3" : "bg-muted-foreground",
+              )}
+            />
+            {label}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function HorizontalTimeline({ steps }: { steps: [boolean, boolean, boolean] }) {
+  const seg1Done = steps[1];
+  const seg2Done = steps[2];
+  let bg: string;
+  if (seg1Done && seg2Done) {
+    bg = ACCENT;
+  } else if (seg1Done) {
+    bg = `linear-gradient(90deg, ${ACCENT} 0%, ${ACCENT} 50%, #eee 50%, #eee 100%)`;
+  } else if (seg2Done) {
+    bg = `linear-gradient(90deg, #eee 0%, #eee 50%, ${ACCENT} 50%, ${ACCENT} 100%)`;
+  } else {
+    bg = "#eee";
+  }
+
+  return (
+    <div className="relative w-[50px] flex justify-between items-center my-3">
+      <span
+        aria-hidden
+        className="absolute top-1/2 left-[10px] right-[10px] h-[2px] -translate-y-1/2 z-[1]"
+        style={{ background: bg }}
+      />
+      {steps.map((done, i) => (
+        <span
+          key={i}
+          className="w-[10px] h-[10px] rounded-full border border-white z-[2]"
+          style={{ background: done ? ACCENT : "#eee" }}
+        />
+      ))}
+    </div>
+  );
+}
+
+function PillButton({
+  children,
+  variant = "action",
+  className,
+  ...rest
+}: React.ButtonHTMLAttributes<HTMLButtonElement> & {
+  variant?: "action" | "secondary";
+}) {
+  const variants: Record<string, string> = {
+    action: "bg-primary text-primary-foreground border-primary",
+    secondary: "bg-transparent text-secondary-foreground",
+  };
+  return (
+    <button
+      type="button"
+      className={cn(
+        "flex-1 px-3 py-2 font-bold text-xs uppercase cursor-pointer rounded-full border-2 transition active:scale-95",
+        variants[variant],
+        className,
+      )}
+      {...rest}
+    >
+      {children}
+    </button>
+  );
+}
+
+function MiniRoundButton({
+  children,
+  className,
+  ...rest
+}: React.ButtonHTMLAttributes<HTMLButtonElement>) {
+  return (
+    <button
+      type="button"
+      className={cn(
+        "flex items-center justify-center p-2 rounded-full border-0 bg-popover cursor-pointer shadow-sm transition active:scale-95",
+        className,
+      )}
+      {...rest}
+    >
+      {children}
+    </button>
+  );
+}
+
+export function SaleCard({ post, view }: SaleCardProps) {
+  const steps = getSteps(post);
+  const isSold = post.status === PostStatus.SOLD;
+  const isAccepted = post.status === PostStatus.RESERVED;
+  const showBadge = post.offersCount > 0 && !isAccepted && !isSold;
+
+  const cardClasses = cn(
+    "relative bg-card border border-border flex flex-col overflow-hidden",
+    view === "list" && "w-full flex-row p-3 gap-4",
+    view === "grid2" && "p-3",
+    view === "grid4" && "p-3",
+  );
+
+  const thumbClasses = cn(
+    "bg-muted aspect-[5/6] flex items-center justify-center text-xs text-muted-foreground shrink-0",
+    view === "list" ? "h-full w-40" : "w-full",
+  );
+
+  const isCompact = view === "grid4";
+  const showTopActions = !isCompact;
+
+  return (
+    <article className={cardClasses}>
+      {showBadge && (
+        <span className="absolute top-1 left-1 z-10 w-8 h-8 rounded-full text-card flex items-center justify-center border-2 border-card bg-[#0044ff]">
+          {post.offersCount}
+        </span>
+      )}
+
+      {showTopActions && (
+        <div className="absolute top-2 right-2 z-20 flex flex-col gap-1">
+          {!isSold && !isAccepted ? (
+            <>
+              <MiniRoundButton aria-label="Editar">
+                <Pencil className="w-4 h-4" />
+              </MiniRoundButton>
+              <MiniRoundButton
+                aria-label="Eliminar"
+                className="text-destructive"
+              >
+                <Trash2 className="w-4 h-4" />
+              </MiniRoundButton>
+            </>
+          ) : (
+            <>
+              <MiniRoundButton aria-label="Ver detalle">
+                <Info className="w-4 h-4" />
+              </MiniRoundButton>
+              {!isSold && (
+                <MiniRoundButton
+                  aria-label="Eliminar"
+                  className="text-destructive"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </MiniRoundButton>
+              )}
+            </>
+          )}
+        </div>
+      )}
+
+      <div className={thumbClasses}>5:6</div>
+
+      <div className="flex-1 flex flex-col justify-between">
+        {!isCompact ? (
+          <div>
+            <p className="text-lg font-bold uppercase truncate">{post.title}</p>
+            <p className="font-bold text-chart-3">{post.priceClp}</p>
+            <VerticalTimeline steps={steps} />
+          </div>
+        ) : (
+          <div className="flex flex-col items-center">
+            <HorizontalTimeline steps={steps} />
+          </div>
+        )}
+
+        <div
+          className={cn(
+            "flex gap-2 mt-auto w-full pt-1",
+            view === "grid4" && "justify-center pb-2",
+            view === "grid2" && "flex-col md:flex-row",
+          )}
+        >
+          {isCompact ? (
+            <button
+              type="button"
+              aria-label="Acciones"
+              className="w-9 h-9 rounded-full border-2 border-border bg-muted flex items-center justify-center cursor-pointer active:scale-95"
+            >
+              <MoreHorizontal className="w-5 h-5" />
+            </button>
+          ) : isSold ? (
+            <PillButton variant="action" className="w-full">
+              Ver venta
+            </PillButton>
+          ) : isAccepted ? (
+            <>
+              <PillButton variant="secondary">Oferta</PillButton>
+              <PillButton variant="action">Entregado</PillButton>
+            </>
+          ) : post.offersCount > 0 ? (
+            <PillButton variant="action" className="w-full">
+              Ofertas
+            </PillButton>
+          ) : null}
+        </div>
+      </div>
+    </article>
+  );
+}
