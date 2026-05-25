@@ -23,38 +23,25 @@ function getSteps(post: Post): [boolean, boolean, boolean] {
 }
 
 function VerticalTimeline({ steps }: { steps: [boolean, boolean, boolean] }) {
-  const lineHeight = steps[2] ? "100%" : steps[1] ? "50%" : "0%";
-  const lineClass = "absolute mt-3 ml-[4.5px] w-0.5";
-
   return (
     <div className="relative">
-      <span
-        aria-hidden
-        className={`${lineClass} bg-muted-foreground`}
-        style={{ height: "calc(100% - 20px)" }}
-      />
-      <span
-        aria-hidden
-        className={`${lineClass} bg-chart-3 transition-all duration-500`}
-        style={{ height: `calc(${lineHeight} - 20px)` }}
-      />
       {STEPS.map((label, i) => {
         const done = steps[i];
         return (
           <div
             key={label}
             className={cn(
-              "relative mb-2",
+              "relative flex items-center gap-2 mb-2",
               done ? "text-chart-3" : "text-muted-foreground",
             )}
           >
             <span
               className={cn(
-                "inline-block w-3 h-3 mr-2 rounded-full border-2 border-card transition-colors duration-500",
+                "w-3 h-3 rounded-full border-2 border-card shrink-0 transition-colors duration-500",
                 done ? "bg-chart-3" : "bg-muted-foreground",
               )}
             />
-            {label}
+            <span>{label}</span>
           </div>
         );
       })}
@@ -110,7 +97,7 @@ function PillButton({
     <button
       type="button"
       className={cn(
-        "flex-1 px-3 py-2 font-bold text-xs uppercase cursor-pointer rounded-full border-2 transition active:scale-95",
+        "flex-1 py-2 font-bold text-xs uppercase cursor-pointer rounded-full border-2 transition active:scale-95",
         variants[variant],
         className,
       )}
@@ -148,14 +135,14 @@ export function SaleCard({ post, view }: SaleCardProps) {
 
   const cardClasses = cn(
     "relative bg-card border border-border flex flex-col overflow-hidden",
-    view === "list" && "w-full flex-row p-3 gap-4",
+    view === "list" && "w-full flex-row p-3 gap-3",
     view === "grid2" && "p-3",
     view === "grid4" && "p-3",
   );
 
   const thumbClasses = cn(
-    "bg-muted aspect-[5/6] flex items-center justify-center text-xs text-muted-foreground shrink-0",
-    view === "list" ? "h-full w-40" : "w-full",
+    "bg-muted aspect-[5/6] flex items-center justify-center text-xs text-muted-foreground",
+    view === "list" ? "h-auto w-2/5 max-w-40 shrink-0" : "w-full",
   );
 
   const isCompact = view === "grid4";
@@ -170,7 +157,7 @@ export function SaleCard({ post, view }: SaleCardProps) {
       )}
 
       {showTopActions && (
-        <div className="absolute top-2 right-2 z-20 flex flex-col gap-1">
+        <div className="absolute top-1 right-2 z-20 flex flex-col gap-1">
           {!isSold && !isAccepted ? (
             <>
               <MiniRoundButton aria-label="Editar">
@@ -201,9 +188,9 @@ export function SaleCard({ post, view }: SaleCardProps) {
         </div>
       )}
 
-      <div className={thumbClasses}>5:6</div>
+      <div className={thumbClasses}>Imagen</div>
 
-      <div className="flex-1 flex flex-col justify-between">
+      <div className="flex-1 flex flex-col justify-between min-w-0">
         {!isCompact ? (
           <div>
             <p className="text-lg font-bold uppercase truncate">{post.title}</p>
@@ -220,7 +207,7 @@ export function SaleCard({ post, view }: SaleCardProps) {
           className={cn(
             "flex gap-2 mt-auto w-full pt-1",
             view === "grid4" && "justify-center pb-2",
-            view === "grid2" && "flex-col md:flex-row",
+            view === "grid2" && "flex-col sm:flex-row",
           )}
         >
           {isCompact ? (

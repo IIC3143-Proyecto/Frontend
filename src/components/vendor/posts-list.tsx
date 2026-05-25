@@ -78,8 +78,8 @@ export function PostsList() {
         className={cn(
           "w-full p-4",
           view === "list" && "flex flex-col gap-3",
-          view === "grid2" && "grid grid-cols-2 gap-4",
-          view === "grid4" && "grid grid-cols-4 gap-2",
+          view === "grid2" && "grid grid-cols-2 gap-3",
+          view === "grid4" && "grid grid-cols-4 gap-1 sm:gap-2",
         )}
       >
         {isLoading && (
@@ -88,7 +88,7 @@ export function PostsList() {
           </p>
         )}
         {isError && (
-          <p className="w-full text-center text-xs text-red-500 py-8">
+          <p className="w-full text-center text-xs text-destructive py-8">
             Error al cargar los posts.
           </p>
         )}
