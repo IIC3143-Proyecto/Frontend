@@ -100,12 +100,12 @@ export function ToggleInputGroup<TFieldValues extends FieldValues>({
       render={({ field }) => (
         <FormItem className={cn("w-full space-y-3", className, disabled && "opacity-60")}>
           {label && (
-            <>
+            <div className="flex items-baseline gap-2">
               <FormLabel
                 className={cn(
                   "font-bold uppercase tracking-wider text-muted-foreground",
                   s.label,
-                  disabled && "text-muted-foreground/50" 
+                  disabled && "text-muted-foreground/50"
                 )}
               >
                 {label}
@@ -119,7 +119,7 @@ export function ToggleInputGroup<TFieldValues extends FieldValues>({
               >
                 {type === "single" ? "Selecciona una opción" : "Selecciona una o más opciones"}
               </FormDescription>
-            </>
+            </div>
           )}
 
           <FormControl>
