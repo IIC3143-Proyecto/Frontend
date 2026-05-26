@@ -59,18 +59,13 @@ function NegotiableSwitch({ control }: StepBaseProps) {
       control={control}
       name="isNegotiable"
       render={({ field }) => (
-        // w-max: FormItem width = "NEGOCIABLE" label text width.
-        // Switch w-full then fills that exact width.
         <FormItem className="space-y-1.5 w-max shrink-0">
           <FormLabel className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
             Negociable
           </FormLabel>
           <FormControl>
             <Switch
-              // relative + h-10 + w-full: fills FormItem width, matches input height
               className="relative w-full h-10"
-              // Absolute thumb: slides via `left` so it works at any width.
-              // size-8 + left-1 = 2.25rem → calc(100% - 2.25rem) lands thumb flush-right.
               thumbClassName={cn(
                 "pointer-events-none absolute top-0.65 left-1 size-8 rounded-full",
                 "bg-background shadow-lg",
@@ -248,7 +243,6 @@ function DesktopStep1({
         inputClassName="min-h-[80px] max-h-[120px]"
       />
 
-      {/* Photos — full width, single row of 6 */}
       <div>
         <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-2">
           Fotos * <span className="font-normal text-muted-foreground/50">(mín. 3)</span>

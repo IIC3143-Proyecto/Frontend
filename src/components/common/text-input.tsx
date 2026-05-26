@@ -86,7 +86,6 @@ const InputControl = React.forwardRef<HTMLInputElement, InputControlProps>(
     const finalType = isPassword ? (showPassword ? "text" : "password") : type;
     const s = sizeClasses[size];
 
-    // Clear max error after 3 seconds
     React.useEffect(() => {
       if (maxError) {
         const timer = setTimeout(() => setMaxError(false), 3000);
@@ -94,24 +93,19 @@ const InputControl = React.forwardRef<HTMLInputElement, InputControlProps>(
       }
     }, [maxError]);
 
-    // Format number display if enabled
     const displayValue = formatNumber && type === "number" && (typeof value === 'string' || typeof value === 'number')
       ? formatNumberWithSeparators(value as string | number)
       : value;
 
-    // Handle change for formatted numbers
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       if (formatNumber && type === "number") {
-        // Only allow digits
         const numericValue = e.target.value.replace(/\D/g, '');
-        
-        // Check max value if specified
+
         if (maxValue && parseInt(numericValue) > maxValue) {
           setMaxError(true);
           return;
         }
 
-        // Create a synthetic event with the clean numeric value
         const syntheticEvent = {
           ...e,
           target: {
@@ -242,10 +236,7 @@ export function TextInput<TFieldValues extends FieldValues>({
       control={control}
       name={name}
       disabled={disabled}
-      render={({ field }) => {
-        const { error } = useFormField();
-        
-        return (
+      render={({ field, fieldState }) => (
         <FormItem className={cn("w-full space-y-1.5", className, disabled && "opacity-60 cursor-not-allowed")}>
           {label && (
             <FormLabel
@@ -272,7 +263,7 @@ export function TextInput<TFieldValues extends FieldValues>({
                   "resize-none",
                   s.input,
                   inputClassName,
-                  error && !disabled && isFocused && "shadow-sm shadow-destructive/30"
+                  fieldState.error && !disabled && isFocused && "shadow-sm shadow-destructive/30"
                 )}
                 value={field.value ?? ""}
               />
@@ -298,8 +289,7 @@ export function TextInput<TFieldValues extends FieldValues>({
             <FormMessage className={cn("font-bold", s.message, messageClassName)} />
           </div>
         </FormItem>
-        );
-      }}
+      )}
     />
   );
 }

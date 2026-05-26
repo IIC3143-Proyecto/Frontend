@@ -109,7 +109,7 @@ function mobileToDesktop(step: number): number {
     case 3: return 2;
     case 4:
     case 5: return 3;
-    default: return 1; // steps 1 and 2 both live in desktop step 1
+    default: return 1;
   }
 }
 
@@ -143,9 +143,10 @@ export function useCreatePost(onClose: () => void): UseCreatePostReturn {
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const uploadedUrlsRef = React.useRef<string[]>([]);
 
-  // Keep photos accessible in the resize effect without adding it to deps.
   const photosRef = React.useRef(photos);
-  photosRef.current = photos;
+  React.useLayoutEffect(() => {
+    photosRef.current = photos;
+  }, [photos]);
 
   const isLastStep = step === totalSteps;
   const isPhotoStep = isMobile ? step === 2 : step === 1;
@@ -294,7 +295,6 @@ export function useCreatePost(onClose: () => void): UseCreatePostReturn {
 
     setIsSubmitting(true);
 
-    // Error handling lives inside onValid: form.handleSubmit swallows thrown errors
     await form.handleSubmit(
       async (data: CreatePostSchema) => {
         let accessToken: string;
