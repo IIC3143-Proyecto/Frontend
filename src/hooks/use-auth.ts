@@ -34,11 +34,6 @@ export function useAuth() {
   });
 
   useEffect(() => {
-    if (syncError && syncError.code === 401) {
-      window.location.replace('/login');
-      return;
-    }
-
     if (!authLoading && !syncLoading && dbUser) {
       const isOnboardingPage = pathname === '/onboarding';
 
@@ -50,7 +45,7 @@ export function useAuth() {
         router.push('/profile');
       }
     }
-  }, [dbUser, authLoading, syncLoading, syncError, pathname, router]);
+  }, [dbUser, authLoading, syncLoading, pathname, router]);
 
   return {
     user,

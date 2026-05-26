@@ -279,5 +279,6 @@ Verify that `/auth/sync-user` is available and responds correctly.
 
 ## References
 
-- [Auth0 Next.js SDK](https://auth0.com/docs/get-started/authentication-and-authorization-flow/regular-web-app-login-flow)
+- [Auth0 Next.js Quickstart](https://auth0.com/docs/quickstart/webapp/nextjs)
+- [nextjs-auth0 SDK Docs](https://auth0.github.io/nextjs-auth0/)
 - [Next.js 16 Proxy Documentation](https://nextjs.org/docs)

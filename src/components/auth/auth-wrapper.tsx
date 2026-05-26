@@ -1,17 +1,22 @@
 'use client';
 
 import { useAuth } from '@/hooks/use-auth';
-import { usePathname } from 'next/navigation';
-
-const PUBLIC_ROUTES = ['/', '/about-us', '/faq'];
+import { useEffect } from 'react';
 
 export function AuthWrapper({ children }: { children: React.ReactNode }) {
   const { isLoading, syncError } = useAuth();
-  const pathname = usePathname();
 
-  const isPublicRoute = PUBLIC_ROUTES.includes(pathname);
+  useEffect(() => {
+    if (syncError && syncError.code === 401) {
+      window.location.replace('/session-expired');
+    }
+  }, [syncError]);
 
-  if (syncError && syncError.code !== 401 && !isPublicRoute) {
+  if (syncError && syncError.code === 401) {
+    return null;
+  }
+
+  if (syncError) {
     return (
       <div className="flex h-screen flex-col items-center justify-center bg-black text-white gap-4">
         <p className="text-sm font-medium tracking-widest uppercase animate-pulse">
@@ -27,7 +32,7 @@ export function AuthWrapper({ children }: { children: React.ReactNode }) {
     );
   }
 
-  if (isLoading && !isPublicRoute) {
+  if (isLoading) {
     return (
       <div className="flex h-screen flex-col items-center justify-center bg-black text-white">
         <div className="h-8 w-8 animate-spin rounded-full border-4 border-white border-t-transparent mb-4" />

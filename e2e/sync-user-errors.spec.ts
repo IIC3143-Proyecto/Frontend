@@ -4,11 +4,11 @@ import { mockSyncUserError, waitForMSW } from './helpers/auth';
 test.describe('Errores de sync-user', () => {
   test.setTimeout(30_000);
 
-  test('401 (AUTH_EXPIRED): redirige a /login sin reintentos', async ({ page }) => {
+  test('401 (AUTH_EXPIRED): redirige a /session-expired sin reintentos', async ({ page }) => {
     await mockSyncUserError(page, 401);
     await page.goto('/profile');
     await waitForMSW(page);
-    await expect(page).toHaveURL(/\/login/, { timeout: 5_000 });
+    await expect(page).toHaveURL(/\/session-expired/, { timeout: 5_000 });
   });
 
   test('500 (SERVER_ERROR): muestra "Error al conectar con el servidor"', async ({ page }) => {
