@@ -16,7 +16,7 @@ export const createPostSchema = z.object({
   isNegotiable: z.boolean().default(false),
   description: z.string().max(500, "Máximo 500 caracteres"),
   Talla: z.array(z.string()).min(1, "Selecciona al menos una talla"),
-  Condición: z.string().min(1, "Selecciona una condición").transform(v => [v]),
+  Condición: z.string().min(1, "Selecciona una condición"),
   "Tipo de prenda": z.array(z.string()).min(1, "Selecciona al menos un tipo de prenda"),
   Marca: z.array(z.string()).default([]),
   Color: z.array(z.string()).default([]),
@@ -55,10 +55,13 @@ async function uploadPhotos(photos: PhotoItem[], accessToken: string): Promise<s
   return photoUrls;
 }
 
+/**
+ * @param data.Condición Single string from the form; wrapped in an array because the API expects string[].
+ */
 async function createPost(
   data: CreatePostSchema & { photoUrls: string[]; accessToken: string }
 ): Promise<void> {
-  const { accessToken, ...rest } = data;
+  const { Condición, accessToken, ...rest } = data;
 
   const res = await fetch("/post", {
     method: "POST",
@@ -66,7 +69,7 @@ async function createPost(
       Authorization: `Bearer ${accessToken}`,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify(rest),
+    body: JSON.stringify({ ...rest, Condición: [Condición] }),
   });
 
   if (!res.ok) {
