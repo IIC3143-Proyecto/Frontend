@@ -41,7 +41,8 @@ src/lib/msw/
 │       ├── users.ts        GET /user, PATCH /user
 │       ├── avatar.ts       POST /profile/avatar
 │       ├── metros.ts       GET /metro/stations
-│       └── sync-user.ts    GET /auth/sync-user
+│       ├── sync-user.ts    GET /auth/sync-user
+│       └── posts.ts        GET /tags, POST /upload, POST /post
 ```
 
 ### `browser.ts`
@@ -71,6 +72,9 @@ Handles `GET /metro/stations`. Returns a flat list of stations loaded from a loc
 
 ### `handlers/sync-user.ts`
 Handles `GET /auth/sync-user`. Returns the mock user payload for the active `MockUserScenario` from `data/mock-users.ts`.
+
+### `handlers/posts.ts`
+Handles `GET /tags`, `POST /upload`, and `POST /post`. All three endpoints validate the `Authorization` header and return 401 when it is absent. The upload handler parses `multipart/form-data` and returns generated WebP URLs; the post handler echoes the request body with a generated `id`.
 
 ---
 
