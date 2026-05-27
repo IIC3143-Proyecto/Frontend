@@ -3,7 +3,7 @@
 import { Info, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
 import type { Post } from "@/lib/types/post";
 import { PostStatus } from "@/lib/types/post-status.enum";
-import { cn } from "@/lib/utils";
+import { cn, formatPriceCLP } from "@/lib/utils";
 
 export type SaleView = "list" | "grid2" | "grid4";
 
@@ -12,7 +12,6 @@ type SaleCardProps = {
   view: SaleView;
 };
 
-const ACCENT = "#ff0000";
 const STEPS = ["Con ofertas", "Oferta aceptada", "Venta realizada"] as const;
 
 function getSteps(post: Post): [boolean, boolean, boolean] {
@@ -27,6 +26,8 @@ function VerticalTimeline({ steps }: { steps: [boolean, boolean, boolean] }) {
     <div className="relative">
       {STEPS.map((label, i) => {
         const done = steps[i];
+        const hasNext = i < STEPS.length - 1;
+        const nextDone = hasNext && steps[i + 1];
         return (
           <div
             key={label}
@@ -35,9 +36,18 @@ function VerticalTimeline({ steps }: { steps: [boolean, boolean, boolean] }) {
               done ? "text-chart-3" : "text-muted-foreground",
             )}
           >
+            {hasNext && (
+              <span
+                aria-hidden
+                className={cn(
+                  "absolute left-1.5 top-1/2 w-0.5 h-[calc(100%+0.5rem)] -translate-x-1/2",
+                  nextDone ? "bg-chart-3" : "bg-muted-foreground",
+                )}
+              />
+            )}
             <span
               className={cn(
-                "w-3 h-3 rounded-full border-2 border-card shrink-0 transition-colors duration-500",
+                "relative z-10 w-3 h-3 rounded-full border-2 border-card shrink-0",
                 done ? "bg-chart-3" : "bg-muted-foreground",
               )}
             />
@@ -52,29 +62,23 @@ function VerticalTimeline({ steps }: { steps: [boolean, boolean, boolean] }) {
 function HorizontalTimeline({ steps }: { steps: [boolean, boolean, boolean] }) {
   const seg1Done = steps[1];
   const seg2Done = steps[2];
-  let bg: string;
-  if (seg1Done && seg2Done) {
-    bg = ACCENT;
-  } else if (seg1Done) {
-    bg = `linear-gradient(90deg, ${ACCENT} 0%, ${ACCENT} 50%, #eee 50%, #eee 100%)`;
-  } else if (seg2Done) {
-    bg = `linear-gradient(90deg, #eee 0%, #eee 50%, ${ACCENT} 50%, ${ACCENT} 100%)`;
-  } else {
-    bg = "#eee";
-  }
 
   return (
-    <div className="relative w-[50px] flex justify-between items-center my-3">
+    <div className="relative w-12.5 flex justify-between items-center my-3">
       <span
         aria-hidden
-        className="absolute top-1/2 left-[10px] right-[10px] h-[2px] -translate-y-1/2 z-[1]"
-        style={{ background: bg }}
-      />
+        className="absolute top-1/2 left-2.5 right-2.5 h-0.5 -translate-y-1/2 z-1 flex"
+      >
+        <span className={cn("flex-1", seg1Done ? "bg-chart-3" : "bg-muted")} />
+        <span className={cn("flex-1", seg2Done ? "bg-chart-3" : "bg-muted")} />
+      </span>
       {steps.map((done, i) => (
         <span
           key={i}
-          className="w-[10px] h-[10px] rounded-full border border-white z-[2]"
-          style={{ background: done ? ACCENT : "#eee" }}
+          className={cn(
+            "w-2.5 h-2.5 rounded-full border border-card z-2",
+            done ? "bg-chart-3" : "bg-muted",
+          )}
         />
       ))}
     </div>
@@ -151,7 +155,7 @@ export function SaleCard({ post, view }: SaleCardProps) {
   return (
     <article className={cardClasses}>
       {showBadge && (
-        <span className="absolute top-1 left-1 z-10 w-8 h-8 rounded-full text-card flex items-center justify-center border-2 border-card bg-[#0044ff]">
+        <span className="absolute top-1 left-1 z-10 w-8 h-8 rounded-full text-card flex items-center justify-center border-2 border-card bg-chart-3">
           {post.offersCount}
         </span>
       )}
@@ -194,7 +198,9 @@ export function SaleCard({ post, view }: SaleCardProps) {
         {!isCompact ? (
           <div>
             <p className="text-lg font-bold uppercase truncate">{post.title}</p>
-            <p className="font-bold text-chart-3">{post.priceClp}</p>
+            <p className="font-bold text-chart-3">
+              {formatPriceCLP(post.priceClp)}
+            </p>
             <VerticalTimeline steps={steps} />
           </div>
         ) : (

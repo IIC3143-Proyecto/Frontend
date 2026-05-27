@@ -65,7 +65,7 @@ export function PostsList() {
             className={cn(
               "w-full text-xs font-black uppercase cursor-pointer pt-3 pb-3",
               tab === id
-                ? "opacity-100 border-b-2 border-primary -mb-[2px]"
+                ? "opacity-100 border-b-2 border-primary -mb-0.5"
                 : "opacity-30 hover:opacity-60",
             )}
           >
