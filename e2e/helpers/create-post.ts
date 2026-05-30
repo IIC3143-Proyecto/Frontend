@@ -3,7 +3,7 @@ import path from 'path';
 
 export const PHOTO_FILE = path.join(__dirname, '../fixtures/avatar.webp');
 
-const TAGS_URL = '**/tags';
+const TAGS_URL = '**/api/tag';
 const UPLOAD_URL = '**/image/post/**';
 const POST_URL = '**/post';
 
@@ -47,7 +47,7 @@ const POST_CREATE_BODY = mockPostDto('post-test-1');
 const PATCH_SUCCESS_BODY = mockPostDto('post-test-1');
 
 /**
- * Registers page.route() handlers for /api/tags, /image/post/:id, and /post (POST + PATCH).
+ * Registers page.route() handlers for /api/tag, /image/post/:id, and /post (POST + PATCH).
  * Must be called before navigating to avoid missing the initial /api/tags fetch.
  */
 export async function mockCreatePostHandlers(page: Page) {
