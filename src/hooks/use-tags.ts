@@ -1,8 +1,8 @@
 "use client";
 
 import * as React from "react";
-
-type TagCategories = Record<string, string[]>;
+import { fetchTags } from "@/lib/api/tag";
+import type { TagCategories } from "@/lib/types/tag";
 
 interface UseTagsReturn {
   categories: TagCategories;
@@ -46,15 +46,11 @@ export function useTags(): UseTagsReturn {
 
   React.useEffect(() => {
     if (!isLoading) return;
-    fetch('/api/tags')
-      .then((r) => {
-        if (!r.ok) throw new Error(`HTTP error: ${r.status}`);
-        return r.json();
-      })
-      .then((data: { tags: TagCategories }) => {
-        setCategories(data.tags);
+    fetchTags()
+      .then((tags: TagCategories) => {
+        setCategories(tags);
         try {
-          localStorage.setItem(CACHE_KEY, JSON.stringify(data.tags));
+          localStorage.setItem(CACHE_KEY, JSON.stringify(tags));
         } catch {}
       })
       .catch((err: Error) => setError(err.message ?? 'Error al cargar etiquetas'))
