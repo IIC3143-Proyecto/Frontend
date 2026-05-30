@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { auth0 } from '@/lib/auth0';
+import type { UserDto, SyncUserResponse } from '@/types/api';
 
 export async function GET() {
   const tokenResult = await auth0.getAccessToken();
@@ -12,7 +13,7 @@ export async function GET() {
     return NextResponse.json({ error: 'Backend not configured' }, { status: 503 });
   }
 
-  const res = await fetch(`${backendUrl}/api/auth/me`, {
+  const res = await fetch(`${backendUrl}/api/auth/sync-user`, {
     headers: { Authorization: `Bearer ${tokenResult.token}` },
   });
 
@@ -20,5 +21,13 @@ export async function GET() {
     return NextResponse.json({ error: 'Backend error' }, { status: res.status });
   }
 
-  return NextResponse.json(await res.json());
+  const user = await res.json() as UserDto;
+
+  // TODO: replace with a dedicated backend flag when available
+  const response: SyncUserResponse = {
+    ...user,
+    onboardingCompleted: !!user.bio,
+  };
+
+  return NextResponse.json(response);
 }

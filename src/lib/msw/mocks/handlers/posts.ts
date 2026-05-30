@@ -1,48 +1,18 @@
 import { http, HttpResponse } from 'msw';
-
-const mockPost = (id: string, body: Record<string, unknown>) => ({
-  id,
-  sellerId: 'seller-mock-1',
-  buyerId: null,
-  title: body.title ?? '',
-  description: body.description ?? '',
-  priceClp: body.priceClp ?? 0,
-  isNegotiable: body.isNegotiable ?? false,
-  status: 'Sin publicar',
-  likesCount: 0,
-  savesCount: 0,
-  viewsCount: 0,
-  isActive: true,
-  isDeleted: false,
-  images: null,
-  createdAtUtcMinus3: new Date().toISOString(),
-  interactions: [],
-});
+import { TAGS_MOCK } from '../data/mock-tags';
+import { mockPostDto } from '../data/mock-post';
 
 export const postsHandlers = [
-  http.get('*/tags', () =>
-    HttpResponse.json({
-      tags: {
-        'Marca': ['Nike', 'Adidas', 'Gucci', 'Zara', 'Polo', 'Otro'],
-        'Estilo': ['Casual', 'Formal', 'Deportivo', 'Streetwear', 'Vintage', 'Otro'],
-        'Color': ['Rojo', 'Azul', 'Verde', 'Negro', 'Blanco'],
-        'Temporada': ['Verano', 'Invierno', 'Primavera', 'Otoño'],
-        'Condición': ['Nuevo', 'Casi nuevo', 'Aceptable', 'Usado'],
-        'Talla': ['XS', 'S', 'M', 'L', 'XL', 'XXL'],
-        Género: ['Masculino', 'Femenino', 'Unisex'],
-        'Tipo de prenda': ['Polera', 'Pantalón', 'Vestido', 'Abrigo', 'Shorts', 'Falda', 'Camiseta', 'Chaqueta', 'Otro'],
-      },
-    })
-  ),
+  http.get('*/api/tag', () => HttpResponse.json(TAGS_MOCK)),
 
-  http.post('*/image/post/:id_post', async ({ request }) => {
+  http.post('*/api/image/post/:id_post', async ({ request }) => {
     const token = request.headers.get('Authorization');
     if (!token) {
       return HttpResponse.json({ message: 'Unauthorized' }, { status: 401 });
     }
 
     const fd = await request.formData();
-    const files = fd.getAll('photos');
+    const files = fd.getAll('images');
     if (!files.length) {
       return HttpResponse.json({ message: 'No se proporcionaron archivos' }, { status: 400 });
     }
@@ -53,7 +23,7 @@ export const postsHandlers = [
     );
   }),
 
-  http.post('*/post', async ({ request }) => {
+  http.post('*/api/post', async ({ request }) => {
     const token = request.headers.get('Authorization');
     if (!token) {
       return HttpResponse.json({ message: 'Unauthorized' }, { status: 401 });
@@ -61,10 +31,10 @@ export const postsHandlers = [
 
     const body = await request.json() as Record<string, unknown>;
     const id = `post-${Date.now()}`;
-    return HttpResponse.json(mockPost(id, body), { status: 201 });
+    return HttpResponse.json(mockPostDto(id, body), { status: 201 });
   }),
 
-  http.patch('*/post', async ({ request }) => {
+  http.patch('*/api/post', async ({ request }) => {
     const token = request.headers.get('Authorization');
     if (!token) {
       return HttpResponse.json({ message: 'Unauthorized' }, { status: 401 });
@@ -72,6 +42,16 @@ export const postsHandlers = [
 
     const body = await request.json() as Record<string, unknown>;
     const id = typeof body.id === 'string' ? body.id : `post-${Date.now()}`;
-    return HttpResponse.json(mockPost(id, body), { status: 200 });
+    return HttpResponse.json(mockPostDto(id, body), { status: 200 });
+  }),
+
+  http.patch('*/api/post/:id_post/tags', async ({ request, params }) => {
+    const token = request.headers.get('Authorization');
+    if (!token) {
+      return HttpResponse.json({ message: 'Unauthorized' }, { status: 401 });
+    }
+
+    const id = typeof params.id_post === 'string' ? params.id_post : `post-${Date.now()}`;
+    return HttpResponse.json(mockPostDto(id), { status: 200 });
   }),
 ];
