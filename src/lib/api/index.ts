@@ -19,9 +19,9 @@ export const api = {
   syncUser:      () => local('/auth/sync-user'),                   // BFF — always local
   tags:          () => remote('/api/tag'),                         // backend #39
   metroStations: () => local('/api/metro/stations'),               // frontend-only, never in backend
-  user:          (id: string) => local(`/api/user/${id}`),        // backend #46 — not ready
+  user:          (id: string) => remote(`/api/user/${id}`),
   userImage:     (id: string) => remote(`/api/image/user/${id}`), // backend #16
   post:          () => remote('/api/post'),                        // backend #19/#20
   postImages:    (id: string) => remote(`/api/image/post/${id}`), // backend #16
-  postTags:      (id: string) => local(`/api/post/${id}/tags`),   // backend #48 — not ready
+  postTags:      (id: string) => remote(`/api/post/${id}/tags`),
 };

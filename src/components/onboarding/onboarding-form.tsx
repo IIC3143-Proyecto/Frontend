@@ -12,6 +12,7 @@ import { AvatarUpload } from "../common/avatar-upload";
 import { TextInput } from "../common/text-input";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { getAccessToken } from "@/actions/auth";
 
@@ -38,7 +39,7 @@ export interface OnboardingFormProps
   userId?: string;
 }
 
-async function uploadAvatar(file: File, token: string, userId: string): Promise<string> {
+async function uploadAvatar(file: File, token: string, userId: string): Promise<void> {
   const body = new FormData();
   body.append("images", file);
 
@@ -52,13 +53,10 @@ async function uploadAvatar(file: File, token: string, userId: string): Promise<
     const json = await res.json().catch(() => ({}));
     throw Object.assign(new Error(json.message ?? "Failed to upload avatar"), { status: res.status });
   }
-
-  const { photoUrl } = await res.json();
-  return photoUrl as string;
 }
 
 async function patchUser(
-  data: { username: string; bio: string; photoUrl: string },
+  data: { username: string; bio: string },
   token: string,
   userId: string,
 ): Promise<void> {
@@ -91,6 +89,7 @@ export const OnboardingForm = React.forwardRef<
   OnboardingFormProps
 >(function OnboardingForm({ onSuccess, disabled = false, userId = 'me', className, ...props }, ref) {
   const router = useRouter();
+  const queryClient = useQueryClient();
 
   const form = useForm<OnboardingFormSchema>({
     resolver: zodResolver(onboardingSchema),
@@ -139,10 +138,8 @@ export const OnboardingForm = React.forwardRef<
     }
 
     try {
-      let photoUrl: string;
-
       try {
-        photoUrl = await uploadAvatar(avatarFile!, token, userId);
+        await uploadAvatar(avatarFile!, token, userId);
       } catch (err) {
         const status = (err as { status?: number }).status;
         const message = err instanceof Error ? err.message : "Error al subir la foto de usuario";
@@ -163,8 +160,10 @@ export const OnboardingForm = React.forwardRef<
         return;
       }
 
+      queryClient.invalidateQueries({ queryKey: ['dbUser'] });
+
       try {
-        await patchUser({ username: data.username, bio: data.bio, photoUrl }, token, userId);
+        await patchUser({ username: data.username, bio: data.bio }, token, userId);
       } catch (err) {
         const status = (err as { status?: number }).status;
         const field = (err as { field?: string }).field;

@@ -23,7 +23,7 @@ export const avatarHandlers = [
     if (scenario === 'AVATAR_SLOW') {
       await delay(2000);
       return HttpResponse.json(
-        { photoUrl: `https://vtrna.com/avatars/mock-${Date.now()}.webp` },
+        { message: 'Avatar uploaded successfully' },
         { status: 201 }
       );
     }
@@ -44,7 +44,7 @@ export const avatarHandlers = [
     }
 
     return HttpResponse.json(
-      { photoUrl: `https://vtrna.com/avatars/mock-${Date.now()}.webp` },
+      { message: 'Avatar uploaded successfully' },
       { status: 201 }
     );
   }),
