@@ -42,7 +42,7 @@ src/lib/msw/
 │       ├── avatar.ts       POST /profile/avatar
 │       ├── metros.ts       GET /metro/stations
 │       ├── sync-user.ts    GET /auth/sync-user
-│       └── posts.ts        GET /tags, POST /upload, POST /post
+│       └── posts.ts        GET /api/tags, POST /image/post/:id, POST /post, PATCH /post
 ```
 
 ### `browser.ts`
@@ -74,7 +74,7 @@ Handles `GET /metro/stations`. Returns a flat list of stations loaded from a loc
 Handles `GET /auth/sync-user`. Returns the mock user payload for the active `MockUserScenario` from `data/mock-users.ts`.
 
 ### `handlers/posts.ts`
-Handles `GET /tags`, `POST /upload`, and `POST /post`. All three endpoints validate the `Authorization` header and return 401 when it is absent. The upload handler parses `multipart/form-data` and returns generated WebP URLs; the post handler echoes the request body with a generated `id`.
+Handles `GET /api/tags`, `POST /image/post/:id_post`, `POST /post`, and `PATCH /post`. All endpoints except the tags fetch validate the `Authorization` header and return 401 when it is absent. The upload handler parses `multipart/form-data`; the post handler echoes the request body with a generated `id`; the patch handler echoes the body as an updated post.
 
 ---
 

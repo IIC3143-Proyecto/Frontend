@@ -148,6 +148,8 @@ export interface UseCreatePostReturn {
   totalSteps: number;
   isMobile: boolean;
   isUploading: boolean;
+  isPosting: boolean;
+  isPostCreated: boolean;
   isSubmitting: boolean;
   isLastStep: boolean;
   handleNext: () => Promise<void>;
@@ -167,7 +169,9 @@ export function useCreatePost(onClose: () => void): UseCreatePostReturn {
   const [isUploading, setIsUploading] = React.useState(false);
   const [isPosting, setIsPosting] = React.useState(false);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [isPostCreated, setIsPostCreated] = React.useState(false);
   const postIdRef = React.useRef<string>('');
+  const photosUploadedRef = React.useRef<boolean>(false);
 
   const photosRef = React.useRef(photos);
   React.useLayoutEffect(() => {
@@ -256,6 +260,7 @@ export function useCreatePost(onClose: () => void): UseCreatePostReturn {
   }, [isMobile, step, photos.length, form]);
 
   const doUpload = React.useCallback(async (): Promise<boolean> => {
+    if (photosUploadedRef.current) return true;
     setIsUploading(true);
     try {
       let accessToken: string;
@@ -266,6 +271,7 @@ export function useCreatePost(onClose: () => void): UseCreatePostReturn {
         return false;
       }
       await uploadPhotos(photos, accessToken, postIdRef.current);
+      photosUploadedRef.current = true;
       return true;
     } catch (err) {
       const status = (err as { status?: number }).status;
@@ -288,6 +294,7 @@ export function useCreatePost(onClose: () => void): UseCreatePostReturn {
   }, [photos, router]);
 
   const doCreatePost = React.useCallback(async (): Promise<boolean> => {
+    if (postIdRef.current) return true;
     setIsPosting(true);
     try {
       let accessToken: string;
@@ -302,11 +309,12 @@ export function useCreatePost(onClose: () => void): UseCreatePostReturn {
       const id = await postCreate({
         title: values.title,
         description: values.description,
-        priceClp: values.priceClp as unknown as number,
+        priceClp: Number(values.priceClp),
         isNegotiable: values.isNegotiable ?? false,
         accessToken,
       });
       postIdRef.current = id;
+      setIsPostCreated(true);
       return true;
     } catch (err) {
       const status = (err as { status?: number }).status;
@@ -358,6 +366,8 @@ export function useCreatePost(onClose: () => void): UseCreatePostReturn {
     setPhotoError(null);
     setStep(1);
     postIdRef.current = '';
+    photosUploadedRef.current = false;
+    setIsPostCreated(false);
   }, [form]);
 
   const handlePublish = React.useCallback(async () => {
@@ -426,7 +436,9 @@ export function useCreatePost(onClose: () => void): UseCreatePostReturn {
     step,
     totalSteps,
     isMobile,
-    isUploading: isUploading || isPosting,
+    isUploading,
+    isPosting,
+    isPostCreated,
     isSubmitting,
     isLastStep,
     handleNext,

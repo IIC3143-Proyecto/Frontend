@@ -1,6 +1,6 @@
 # E2E Testing - Create Post
 
-22 tests for the multi-step post creation modal (`e2e/create-post.spec.ts`).
+26 tests for the multi-step post creation modal (`e2e/create-post.spec.ts`).
 
 > All mocking uses `page.route()` — `serviceWorkers: 'block'` in `playwright.config.ts` prevents MSW from intercepting during tests.
 
@@ -20,12 +20,14 @@
 
 | Helper | Description |
 |--------|-------------|
-| `mockCreatePostHandlers(page)` | Success handlers for `GET /tags` (200), `POST /upload` (201), `POST /post` (201). Call in `beforeEach` before navigating. |
-| `mockUploadError(page, status)` | Overrides `POST /upload` to return 401 or 500 |
+| `mockCreatePostHandlers(page)` | Success handlers for `GET /api/tags` (200), `POST /image/post/:id` (201), `POST /post` (201), `PATCH /post` (200). Call in `beforeEach` before navigating. |
+| `mockUploadError(page, status)` | Overrides `POST /image/post/:id` to return 401 or 500 |
 | `mockUploadNetwork(page)` | Aborts the upload request (network failure) |
 | `mockUploadSlow(page)` | Delays the upload response 2s then returns success |
-| `mockPostError(page, status)` | Overrides `POST /post` to return 401 or 500 |
-| `mockPostNetwork(page)` | Aborts the post request (network failure) |
+| `mockCreateError(page, status)` | Overrides `POST /post` to return 401 or 500 |
+| `mockCreateNetwork(page)` | Aborts the post creation request (network failure) |
+| `mockPatchError(page, status)` | Overrides `PATCH /post` to return 401 or 500 |
+| `mockPatchNetwork(page)` | Aborts the patch request (network failure) |
 
 ### `e2e/helpers/create-post.ts` — UI helpers
 
@@ -46,7 +48,7 @@
 
 `beforeEach`: registers mock handlers via `mockCreatePostHandlers`, navigates to `/test` as a `FULL` user via `gotoAuthenticated`, opens the modal.
 
-### Desktop (1280px viewport) — 18 tests
+### Desktop (1280px viewport) — 19 tests
 
 | # | Name | Mock override | Key assertion |
 |---|------|---------------|---------------|
@@ -61,13 +63,14 @@
 | 9 | Upload 500 → error toast | `mockUploadError(500)` | Toast `"Error al subir fotos"` |
 | 10 | Upload network failure | `mockUploadNetwork()` | Toast `"Error de red"` |
 | 11 | Upload slow → loading state | `mockUploadSlow()` | Button shows `"Subiendo…"` during upload |
-| 12 | POST /post 401 → session-expired | `mockPostError(401)` | Redirects to `/session-expired` |
-| 13 | POST /post 500 → error toast | `mockPostError(500)` | Toast `"Error"` |
-| 14 | POST /post network failure | `mockPostNetwork()` | Toast `"Error de red"` |
+| 12 | POST /post 401 → session-expired | `mockCreateError(401)` | Redirects to `/session-expired` |
+| 13 | POST /post 500 → error toast | `mockCreateError(500)` | Toast `"Error"` |
+| 14 | POST /post network failure | `mockCreateNetwork()` | Toast `"Error de red"` |
 | 15 | Cancel closes modal | — | Dialog not visible |
-| 16 | Back navigation | — | Step decrements correctly |
-| 17 | No Atrás button on first step | — | `"Atrás"` not present on step 1 |
-| 18 | Reset on close and reopen | — | Reopened form is empty |
+| 16 | Atrás disabled on step 2 after post creation | — | `"Atrás"` is disabled on step 2 |
+| 17 | Back from step 3 to step 2 | — | Step decrements from optional to required tags |
+| 18 | No Atrás button on first step | — | `"Atrás"` not present on step 1 |
+| 19 | Reset on close and reopen | — | Reopened form is empty |
 
 ### Mobile (390px viewport) — 3 tests
 

@@ -46,7 +46,7 @@ export function useTags(): UseTagsReturn {
 
   React.useEffect(() => {
     if (!isLoading) return;
-    fetch('/tag')
+    fetch('/api/tags')
       .then((r) => {
         if (!r.ok) throw new Error(`HTTP error: ${r.status}`);
         return r.json();

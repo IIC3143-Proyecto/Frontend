@@ -20,7 +20,7 @@ const mockPost = (id: string, body: Record<string, unknown>) => ({
 });
 
 export const postsHandlers = [
-  http.get('*/tag', () =>
+  http.get('*/tags', () =>
     HttpResponse.json({
       tags: {
         'Marca': ['Nike', 'Adidas', 'Gucci', 'Zara', 'Polo', 'Otro'],

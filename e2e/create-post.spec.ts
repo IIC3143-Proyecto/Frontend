@@ -186,14 +186,26 @@ test.describe('Create Post — desktop', () => {
     await expect(page.getByRole('dialog')).not.toBeVisible();
   });
 
-  test('should navigate back to the previous step when Atrás is clicked', async ({ page }) => {
+  test('should disable Atrás on step 2 after the post is created', async ({ page }) => {
     await fillStep1(page, { title: 'Camiseta', price: 10000 });
     await uploadPhotos(page, 3);
     await clickNext(page);
 
     await expect(page.getByText('Tags obligatorios')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Atrás' })).toBeDisabled();
+  });
+
+  test('should navigate back from step 3 to step 2 when Atrás is clicked', async ({ page }) => {
+    await fillStep1(page, { title: 'Camiseta', price: 10000 });
+    await uploadPhotos(page, 3);
+    await clickNext(page);
+
+    await selectRequiredTags(page);
+    await clickNext(page);
+
+    await expect(page.getByText('Tags opcionales')).toBeVisible();
     await clickBack(page);
-    await expect(page.getByText('Información y fotos')).toBeVisible();
+    await expect(page.getByText('Tags obligatorios')).toBeVisible();
   });
 
   test('should not show Atrás button on the first step', async ({ page }) => {

@@ -283,6 +283,8 @@ export function CreatePostModal({ isOpen, onClose }: CreatePostModalProps) {
     totalSteps,
     isMobile,
     isUploading,
+    isPosting,
+    isPostCreated,
     isSubmitting,
     isLastStep,
     handleNext,
@@ -304,7 +306,7 @@ export function CreatePostModal({ isOpen, onClose }: CreatePostModalProps) {
     onClose();
   }, [reset, onClose]);
 
-  const isPending = isUploading || isSubmitting;
+  const isPending = isUploading || isPosting || isSubmitting;
 
   const stepLabel = isMobile
     ? ["Información básica", "Fotos", "Tags obligatorios", "Tags opcionales", "Tags opcionales"][step - 1]
@@ -391,7 +393,7 @@ export function CreatePostModal({ isOpen, onClose }: CreatePostModalProps) {
               <Button
                 variant="outline"
                 onClick={handleBack}
-                disabled={isPending}
+                disabled={isPending || (step === 2 && isPostCreated)}
               >
                 Atrás
               </Button>
@@ -407,9 +409,11 @@ export function CreatePostModal({ isOpen, onClose }: CreatePostModalProps) {
                 ? isSubmitting
                   ? "Publicando…"
                   : "Publicar"
-                : isUploading
-                  ? "Subiendo…"
-                  : "Siguiente"}
+                : isPosting
+                  ? "Creando…"
+                  : isUploading
+                    ? "Subiendo…"
+                    : "Siguiente"}
             </Button>
           </div>
         </div>

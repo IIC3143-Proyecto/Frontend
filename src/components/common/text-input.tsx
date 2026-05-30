@@ -79,11 +79,11 @@ type InputControlProps = Omit<React.ComponentProps<"input">, "size"> & {
  * Internal input control with icon and password toggle support.
  */
 const InputControl = React.forwardRef<HTMLInputElement, InputControlProps>(
-  function InputControl({ icon: Icon, isPassword, type, inputClassName, size = "default", formatNumber, onChange, value, maxValue, ...props }, ref) {
+  function InputControl({ icon: Icon, isPassword, type, inputClassName, size = "default", formatNumber, onChange, value, maxValue, inputMode, ...props }, ref) {
     const { error } = useFormField();
     const [showPassword, setShowPassword] = React.useState(false);
     const [maxError, setMaxError] = React.useState(false);
-    const finalType = isPassword ? (showPassword ? "text" : "password") : type;
+    const finalType = isPassword ? (showPassword ? "text" : "password") : formatNumber ? "text" : type;
     const s = sizeClasses[size];
 
     React.useEffect(() => {
@@ -93,17 +93,17 @@ const InputControl = React.forwardRef<HTMLInputElement, InputControlProps>(
       }
     }, [maxError]);
 
-    const displayValue = formatNumber && type === "number" && (typeof value === 'string' || typeof value === 'number')
+    const displayValue = formatNumber && (typeof value === 'string' || typeof value === 'number')
       ? formatNumberWithSeparators(value as string | number)
       : value;
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-      if (formatNumber && type === "number") {
-        const numericValue = e.target.value.replace(/\D/g, '');
+      if (formatNumber) {
+        let numericValue = e.target.value.replace(/\D/g, '');
 
         if (maxValue && parseInt(numericValue) > maxValue) {
           setMaxError(true);
-          return;
+          numericValue = String(maxValue);
         }
 
         const syntheticEvent = {
@@ -136,6 +136,7 @@ const InputControl = React.forwardRef<HTMLInputElement, InputControlProps>(
               {...props}
               ref={ref}
               type={finalType}
+              inputMode={formatNumber ? "numeric" : inputMode}
               value={displayValue}
               onChange={handleChange}
               className={cn(s.input, Icon && s.iconOffset, isPassword && "pr-10", inputClassName)}
@@ -278,7 +279,7 @@ export function TextInput<TFieldValues extends FieldValues>({
               disabled={disabled} 
               isPassword={type === "password"}
               inputClassName={inputClassName}
-              formatNumber={formatNumber && type === "number"}
+              formatNumber={formatNumber}
               maxValue={maxValue}
               value={field.value ?? ""}
             />
