@@ -108,7 +108,7 @@ const POSTS = [
 
 const currentPosts = [...POSTS];
 
-export const postHandlers = [
+export const postsHandlers = [
   http.get("*/posts", () => {
     return HttpResponse.json(currentPosts);
   }),
