@@ -6,8 +6,8 @@ import {
   submitForm,
   waitForToast,
   expectError,
-} from './helpers';
-import { gotoAuthenticated } from './helpers/auth';
+} from './helpers/onboarding';
+import { gotoAuthenticated } from '../e2e/helpers/auth';
 import {
   mockDefaultHandlers,
   mockAvatarSuccess,

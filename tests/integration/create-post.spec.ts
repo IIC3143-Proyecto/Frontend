@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
-import { waitForToast, expectError } from './helpers';
-import { gotoAuthenticated } from './helpers/auth';
+import { waitForToast, expectError } from './helpers/onboarding';
+import { gotoAuthenticated } from '../e2e/helpers/auth';
 import {
   mockCreatePostHandlers,
   mockUploadError,
