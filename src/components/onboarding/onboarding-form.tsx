@@ -24,6 +24,7 @@ const onboardingSchema = z.object({
     .regex(/^[a-zA-Z0-9_-]+$/, "Username solo puede contener letras, números, guiones y guiones bajos"),
   bio: z
     .string()
+    .min(1, "Bio es requerida")
     .max(500, "Bio debe tener como máximo 500 caracteres"),
 });
 
