@@ -166,7 +166,7 @@ test.describe('Create Post — desktop', () => {
 
     await mockPatchError(page, 500);
     await clickPublish(page);
-    await waitForToast(page, 'Error');
+    await waitForToast(page, 'Error al publicar');
   });
 
   test('should show network error toast when PATCH /post fails', async ({ page }) => {

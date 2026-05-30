@@ -57,7 +57,7 @@ async function postCreate(
 ): Promise<string> {
   const { accessToken, ...body } = data;
 
-  const res = await fetch("/post", {
+  const res = await fetch("/api/post", {
     method: "POST",
     headers: {
       Authorization: `Bearer ${accessToken}`,
@@ -85,7 +85,7 @@ async function patchTags(
 ): Promise<void> {
   const { Condición, accessToken, id, ...rest } = data;
 
-  const res = await fetch("/post", {
+  const res = await fetch("/api/post", {
     method: "PATCH",
     headers: {
       Authorization: `Bearer ${accessToken}`,
@@ -415,7 +415,7 @@ export function useCreatePost(onClose: () => void): UseCreatePostReturn {
           } else if (status === 401) {
             router.push("/session-expired");
           } else {
-            toast.error("Error", { description: message });
+            toast.error("Error al publicar", { description: message });
           }
         }
       },

@@ -64,7 +64,7 @@
 | 10 | Upload network failure | `mockUploadNetwork()` | Toast `"Error de red"` |
 | 11 | Upload slow → loading state | `mockUploadSlow()` | Button shows `"Subiendo…"` during upload |
 | 12 | POST /post 401 → session-expired | `mockCreateError(401)` | Redirects to `/session-expired` |
-| 13 | POST /post 500 → error toast | `mockCreateError(500)` | Toast `"Error"` |
+| 13 | POST /post 500 → error toast | `mockCreateError(500)` | Toast `"Error al crear publicación"` |
 | 14 | POST /post network failure | `mockCreateNetwork()` | Toast `"Error de red"` |
 | 15 | Cancel closes modal | — | Dialog not visible |
 | 16 | Atrás disabled on step 2 after post creation | — | `"Atrás"` is disabled on step 2 |
@@ -76,9 +76,9 @@
 
 | # | Name | Mock override | Key assertion |
 |---|------|---------------|---------------|
-| 19 | Publish across all 5 steps | — | Toast `"Publicación creada"`; dialog closes |
-| 20 | Validation: fewer than 3 photos on step 2 | — | `"Debes subir al menos 3 fotos"` |
-| 21 | Back from step 3 to step 2 (photos) | — | Photo grid visible again |
+| 20 | Publish across all 5 steps | — | Toast `"Publicación creada"`; dialog closes |
+| 21 | Validation: fewer than 3 photos on step 2 | — | `"Debes subir al menos 3 fotos"` |
+| 22 | Back from step 3 to step 2 (photos) | — | Photo grid visible again |
 
 ---
 
