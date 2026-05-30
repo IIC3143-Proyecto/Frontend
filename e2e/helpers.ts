@@ -3,41 +3,6 @@ import path from 'path';
 
 export const AVATAR_FILE = path.join(__dirname, 'fixtures/avatar.webp');
 
-export type ErrorScenario =
-  | 'NONE'
-  | 'AVATAR_401'
-  | 'AVATAR_422'
-  | 'AVATAR_500'
-  | 'AVATAR_TIMEOUT'
-  | 'AVATAR_NETWORK'
-  | 'AVATAR_SLOW'
-  | 'PATCH_401'
-  | 'PATCH_409'
-  | 'PATCH_500'
-  | 'PATCH_TIMEOUT'
-  | 'PATCH_NETWORK';
-
-export async function gotoOnboarding(page: Page) {
-  await page.goto('/onboarding');
-  await expect(page.getByRole('heading', { name: 'Completa tu perfil' })).toBeVisible({
-    timeout: 15_000,
-  });
-}
-
-/** Set an MSW error scenario in the running page context. */
-export async function setErrorScenario(page: Page, scenario: ErrorScenario) {
-  await page.evaluate((s) => {
-    (window as unknown as Window & { __setErrorScenario: (s: string) => void }).__setErrorScenario(s);
-  }, scenario);
-}
-
-/** Reset the MSW error scenario to NONE without navigating away. */
-export async function resetErrorScenario(page: Page) {
-  await page.evaluate(() => {
-    (window as unknown as Window & { __resetErrorScenario: () => void }).__resetErrorScenario();
-  });
-}
-
 /**
  * Upload the fixture avatar via the hidden react-dropzone input.
  * Waits for the WebP conversion to complete by asserting the blob preview.

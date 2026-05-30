@@ -22,7 +22,7 @@ MSW is enabled via an environment variable. It must be set in `.env.local`:
 NEXT_PUBLIC_ENABLE_MSW=true
 ```
 
-When this flag is `true`, `browser.ts` starts the service worker and attaches scenario control functions to `window` for use in the browser DevTools or Playwright tests.
+When this flag is `true`, `browser.ts` starts the service worker and attaches scenario control functions to `window` for use in the browser DevTools.
 
 ---
 
@@ -32,13 +32,16 @@ When this flag is `true`, `browser.ts` starts the service worker and attaches sc
 src/lib/msw/
 ├── mocks/
 │   ├── browser.ts          Worker setup + window helpers
-│   ├── handlers.ts         Aggregates all handlers
 │   ├── scenario.ts         Scenario state and accessors
+│   ├── data/
+│   │   ├── mock-users.ts       Payloads by MockUserScenario
+│   │   └── metro-stations.json Metro station fixtures
 │   └── handlers/
 │       ├── index.ts        Re-exports combined handlers array
 │       ├── users.ts        GET /user, PATCH /user
 │       ├── avatar.ts       POST /profile/avatar
-│       └── metros.ts       GET /metro/stations
+│       ├── metros.ts       GET /metro/stations
+│       └── sync-user.ts    GET /auth/sync-user
 ```
 
 ### `browser.ts`
@@ -66,13 +69,26 @@ Handles `POST /profile/avatar`. Reads `OnboardingErrorScenario` and returns `{ p
 ### `handlers/metros.ts`
 Handles `GET /metro/stations`. Returns a flat list of stations loaded from a local JSON fixture.
 
+### `handlers/sync-user.ts`
+Handles `GET /auth/sync-user`. Returns the mock user payload for the active `MockUserScenario` from `data/mock-users.ts`.
+
+---
+
+## Usage in E2E Tests
+
+`playwright.config.ts` sets `serviceWorkers: 'block'`, which prevents the MSW Service Worker from intercepting requests during tests. As a result, **MSW handlers do not run in the Playwright test environment**.
+
+Instead, tests use Playwright's `page.route()` to mock network requests directly. See `e2e/helpers/auth.ts` (`mockSyncUser`) and `e2e/helpers/form-errors.ts` (`mockDefaultHandlers`, `mockAvatarError`, etc.).
+
+The MSW Window API and scenario state are still available during manual development in the browser DevTools.
+
 ---
 
 ## Scenarios
 
 ### User Scenarios (`MockUserScenario`)
 
-Controls what `GET /user` returns.
+Controls what `GET /auth/sync-user` returns (used by `useAuth` to sync the Auth0 user with the VTRNA database). Also drives `GET /user` in `handlers/users.ts`.
 
 | Value | `username` | `photoUrl` | `onboardingCompleted` |
 |---|---|---|---|
