@@ -1,11 +1,13 @@
-import { usersHandlers } from "./users";
-import { avatarHandlers } from "./avatar";
-import { metroHandlers } from "./metros";
-import { postHandlers } from "./posts";
+import { syncUserHandlers } from './sync-user';
+import { usersHandlers } from './users';
+import { avatarHandlers } from './avatar';
+import { metroHandlers } from './metros';
+import { postsHandlers } from './posts';
 
 export const handlers = [
   ...usersHandlers,
   ...avatarHandlers,
   ...metroHandlers,
-  ...postHandlers,
+  ...syncUserHandlers,
+  ...postsHandlers,
 ];

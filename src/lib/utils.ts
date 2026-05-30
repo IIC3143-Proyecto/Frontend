@@ -14,3 +14,15 @@ export function formatPriceCLP(amount: number): string {
     maximumFractionDigits: 0,
   }).format(amount);
 }
+
+/**
+ * Format a number with thousand separators (dots).
+ * Removes all non-numeric characters and adds dots every 3 digits.
+ * @example formatNumberWithSeparators('25000') => '25.000'
+ * @example formatNumberWithSeparators('1234567') => '1.234.567'
+ */
+export function formatNumberWithSeparators(value: string | number): string {
+  if (!value && value !== 0) return '';
+  const numValue = String(value).replace(/\D/g, '');
+  return numValue.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+}
