@@ -4,6 +4,7 @@ import { Info, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
 import type { Post } from "@/lib/types/post";
 import { PostStatus } from "@/lib/types/post-status.enum";
 import { cn, formatPriceCLP } from "@/lib/utils";
+import { MiniRoundButton } from "@/components/common/mini-round-button";
 
 export type SaleView = "list" | "grid2" | "grid4";
 
@@ -103,25 +104,6 @@ function PillButton({
       className={cn(
         "flex-1 py-2 font-bold text-xs uppercase cursor-pointer rounded-full border-2 transition active:scale-95",
         variants[variant],
-        className,
-      )}
-      {...rest}
-    >
-      {children}
-    </button>
-  );
-}
-
-function MiniRoundButton({
-  children,
-  className,
-  ...rest
-}: React.ButtonHTMLAttributes<HTMLButtonElement>) {
-  return (
-    <button
-      type="button"
-      className={cn(
-        "flex items-center justify-center p-2 rounded-full border-0 bg-popover cursor-pointer shadow-sm transition active:scale-95",
         className,
       )}
       {...rest}

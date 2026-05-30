@@ -5,7 +5,7 @@ import { Grid3x3, LayoutGrid, Menu } from "lucide-react";
 import { usePosts } from "@/hooks/use-posts";
 import { PostStatus } from "@/lib/types/post-status.enum";
 import { cn } from "@/lib/utils";
-import { SaleCard, type SaleView } from "./sale-card";
+import { SaleCard, type SaleView } from "@/components/common/cards/sale-card";
 
 type Tab = "activas" | "vendidas";
 
