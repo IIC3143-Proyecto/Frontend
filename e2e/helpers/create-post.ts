@@ -1,54 +1,27 @@
 import { type Page, expect } from '@playwright/test';
 import path from 'path';
+import { TAGS_MOCK } from '../../src/lib/msw/mocks/data/mock-tags';
+import { mockPostDto } from '../../src/lib/msw/mocks/data/mock-post';
 
 export const PHOTO_FILE = path.join(__dirname, '../fixtures/avatar.webp');
 
 const TAGS_URL = '**/api/tag';
-const UPLOAD_URL = '**/image/post/**';
-const POST_URL = '**/post';
+const UPLOAD_URL = '**/api/image/post/**';
+const POST_CREATE_URL = '**/api/post';
+const PATCH_TAGS_URL = '**/api/post/*/tags';
 
-const TAGS_BODY = JSON.stringify({
-  tags: {
-    Marca: ['Nike', 'Adidas', 'Gucci', 'Zara', 'Polo', 'Otro'],
-    Estilo: ['Casual', 'Formal', 'Deportivo', 'Streetwear', 'Vintage', 'Otro'],
-    Color: ['Rojo', 'Azul', 'Verde', 'Negro', 'Blanco'],
-    Temporada: ['Verano', 'Invierno', 'Primavera', 'Otoño'],
-    Condición: ['Nuevo', 'Casi nuevo', 'Aceptable', 'Usado'],
-    Talla: ['XS', 'S', 'M', 'L', 'XL', 'XXL'],
-    Género: ['Masculino', 'Femenino', 'Unisex'],
-    'Tipo de prenda': ['Polera', 'Pantalón', 'Vestido', 'Abrigo', 'Shorts', 'Falda', 'Camiseta', 'Chaqueta', 'Otro'],
-  },
-});
-
+const TAGS_BODY = JSON.stringify(TAGS_MOCK);
 const UPLOAD_SUCCESS_BODY = JSON.stringify({
   message: 'Imágenes subidas y vinculadas a la publicación exitosamente.',
 });
-
-const mockPostDto = (id: string) => JSON.stringify({
-  id,
-  sellerId: 'seller-mock-1',
-  buyerId: null,
-  title: '',
-  description: '',
-  priceClp: 0,
-  isNegotiable: false,
-  status: 'Sin publicar',
-  likesCount: 0,
-  savesCount: 0,
-  viewsCount: 0,
-  isActive: true,
-  isDeleted: false,
-  images: null,
-  createdAtUtcMinus3: new Date().toISOString(),
-  interactions: [],
-});
-
-const POST_CREATE_BODY = mockPostDto('post-test-1');
-const PATCH_SUCCESS_BODY = mockPostDto('post-test-1');
+const MOCK_POST_BODY = JSON.stringify(mockPostDto('post-test-1'));
+const POST_CREATE_BODY = MOCK_POST_BODY;
+const PATCH_SUCCESS_BODY = MOCK_POST_BODY;
 
 /**
- * Registers page.route() handlers for /api/tag, /image/post/:id, and /post (POST + PATCH).
- * Must be called before navigating to avoid missing the initial /api/tags fetch.
+ * Registers page.route() handlers for /api/tag, /api/image/post/:id,
+ * POST /api/post and PATCH /api/post/:id/tags.
+ * Must be called before navigating to avoid missing the initial /api/tag fetch.
  */
 export async function mockCreatePostHandlers(page: Page) {
   await page.route(TAGS_URL, (route) =>
@@ -57,16 +30,16 @@ export async function mockCreatePostHandlers(page: Page) {
   await page.route(UPLOAD_URL, (route) =>
     route.fulfill({ status: 201, contentType: 'application/json', body: UPLOAD_SUCCESS_BODY })
   );
-  await page.route(POST_URL, (route) => {
-    const method = route.request().method();
-    if (method === 'POST') {
+  await page.route(POST_CREATE_URL, (route) => {
+    if (route.request().method() === 'POST') {
       route.fulfill({ status: 201, contentType: 'application/json', body: POST_CREATE_BODY });
-    } else if (method === 'PATCH') {
-      route.fulfill({ status: 200, contentType: 'application/json', body: PATCH_SUCCESS_BODY });
     } else {
       route.continue();
     }
   });
+  await page.route(PATCH_TAGS_URL, (route) =>
+    route.fulfill({ status: 200, contentType: 'application/json', body: PATCH_SUCCESS_BODY })
+  );
 }
 
 export async function mockUploadError(page: Page, status: 401 | 500) {
@@ -91,10 +64,10 @@ export async function mockUploadSlow(page: Page) {
   });
 }
 
-/** Simulates an error on POST /post (step-1 Next click). */
+/** Simulates an error on POST /api/post (step-1 Next click). */
 export async function mockCreateError(page: Page, status: 401 | 500) {
   const messages: Record<number, string> = { 401: 'Unauthorized', 500: 'Internal server error' };
-  await page.route(POST_URL, (route) => {
+  await page.route(POST_CREATE_URL, (route) => {
     if (route.request().method() === 'POST') {
       route.fulfill({
         status,
@@ -107,9 +80,9 @@ export async function mockCreateError(page: Page, status: 401 | 500) {
   });
 }
 
-/** Simulates a network failure on POST /post (step-1 Next click). */
+/** Simulates a network failure on POST /api/post (step-1 Next click). */
 export async function mockCreateNetwork(page: Page) {
-  await page.route(POST_URL, (route) => {
+  await page.route(POST_CREATE_URL, (route) => {
     if (route.request().method() === 'POST') {
       route.abort('failed');
     } else {
@@ -118,31 +91,21 @@ export async function mockCreateNetwork(page: Page) {
   });
 }
 
-/** Simulates an error on PATCH /post (final Publicar click). */
+/** Simulates an error on PATCH /api/post/:id/tags (final Publicar click). */
 export async function mockPatchError(page: Page, status: 401 | 500) {
   const messages: Record<number, string> = { 401: 'Unauthorized', 500: 'Internal server error' };
-  await page.route(POST_URL, (route) => {
-    if (route.request().method() === 'PATCH') {
-      route.fulfill({
-        status,
-        contentType: 'application/json',
-        body: JSON.stringify({ message: messages[status] }),
-      });
-    } else {
-      route.continue();
-    }
-  });
+  await page.route(PATCH_TAGS_URL, (route) =>
+    route.fulfill({
+      status,
+      contentType: 'application/json',
+      body: JSON.stringify({ message: messages[status] }),
+    })
+  );
 }
 
-/** Simulates a network failure on PATCH /post (final Publicar click). */
+/** Simulates a network failure on PATCH /api/post/:id/tags (final Publicar click). */
 export async function mockPatchNetwork(page: Page) {
-  await page.route(POST_URL, (route) => {
-    if (route.request().method() === 'PATCH') {
-      route.abort('failed');
-    } else {
-      route.continue();
-    }
-  });
+  await page.route(PATCH_TAGS_URL, (route) => route.abort('failed'));
 }
 
 export async function openModal(page: Page) {
