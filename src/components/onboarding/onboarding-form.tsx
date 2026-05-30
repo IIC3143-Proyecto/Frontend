@@ -12,6 +12,8 @@ import { AvatarUpload } from "../common/avatar-upload";
 import { TextInput } from "../common/text-input";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { api } from "@/lib/api";
+import { getAccessToken } from "@/actions/auth";
 
 const onboardingSchema = z.object({
   username: z
@@ -31,17 +33,17 @@ export interface OnboardingFormProps
   extends React.HTMLAttributes<HTMLDivElement> {
   onSuccess?: () => void | Promise<void>;
   disabled?: boolean;
+  /** User ID from dbUser.id — needed to build the avatar upload URL. */
+  userId?: string;
 }
 
-const AUTH_TOKEN = "Bearer mock-auth-token";
-
-async function uploadAvatar(file: File): Promise<string> {
+async function uploadAvatar(file: File, token: string, userId: string): Promise<string> {
   const body = new FormData();
-  body.append("avatar", file);
+  body.append("images", file);
 
-  const res = await fetch("/profile/avatar", {
+  const res = await fetch(api.userImage(userId), {
     method: "POST",
-    headers: { Authorization: AUTH_TOKEN },
+    headers: { Authorization: `Bearer ${token}` },
     body,
   });
 
@@ -54,11 +56,15 @@ async function uploadAvatar(file: File): Promise<string> {
   return photoUrl as string;
 }
 
-async function patchUser(data: { username: string; bio: string; photoUrl: string }): Promise<void> {
-  const res = await fetch("/user", {
+async function patchUser(
+  data: { username: string; bio: string; photoUrl: string },
+  token: string,
+  userId: string,
+): Promise<void> {
+  const res = await fetch(api.user(userId), {
     method: "PATCH",
     headers: {
-      Authorization: AUTH_TOKEN,
+      Authorization: `Bearer ${token}`,
       "Content-Type": "application/json",
     },
     body: JSON.stringify(data),
@@ -82,7 +88,7 @@ async function patchUser(data: { username: string; bio: string; photoUrl: string
 export const OnboardingForm = React.forwardRef<
   HTMLDivElement,
   OnboardingFormProps
->(function OnboardingForm({ onSuccess, disabled = false, className, ...props }, ref) {
+>(function OnboardingForm({ onSuccess, disabled = false, userId = 'me', className, ...props }, ref) {
   const router = useRouter();
 
   const form = useForm<OnboardingFormSchema>({
@@ -122,11 +128,20 @@ export const OnboardingForm = React.forwardRef<
 
     setIsSubmitting(true);
 
+    let token: string;
+    try {
+      token = await getAccessToken();
+    } catch {
+      router.push("/session-expired");
+      setIsSubmitting(false);
+      return;
+    }
+
     try {
       let photoUrl: string;
 
       try {
-        photoUrl = await uploadAvatar(avatarFile!);
+        photoUrl = await uploadAvatar(avatarFile!, token, userId);
       } catch (err) {
         const status = (err as { status?: number }).status;
         const message = err instanceof Error ? err.message : "Error al subir la foto de usuario";
@@ -148,7 +163,7 @@ export const OnboardingForm = React.forwardRef<
       }
 
       try {
-        await patchUser({ username: data.username, bio: data.bio, photoUrl });
+        await patchUser({ username: data.username, bio: data.bio, photoUrl }, token, userId);
       } catch (err) {
         const status = (err as { status?: number }).status;
         const field = (err as { field?: string }).field;

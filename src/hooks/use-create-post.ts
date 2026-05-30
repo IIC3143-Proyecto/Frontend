@@ -7,6 +7,7 @@ import { z } from "zod";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { getAccessToken } from "@/actions/auth";
+import { api } from "@/lib/api";
 
 export const createPostSchema = z.object({
   title: z.string().min(1, "Título requerido").max(100, "Máximo 100 caracteres"),
@@ -35,9 +36,9 @@ export interface PhotoItem {
 
 async function uploadPhotos(photos: PhotoItem[], accessToken: string, postId: string): Promise<void> {
   const fd = new FormData();
-  photos.forEach((p) => fd.append("photos", p.file));
+  photos.forEach((p) => fd.append("images", p.file));
 
-  const res = await fetch(`/api/image/post/${postId}`, {
+  const res = await fetch(api.postImages(postId), {
     method: "POST",
     headers: { Authorization: `Bearer ${accessToken}` },
     body: fd,
@@ -57,7 +58,7 @@ async function postCreate(
 ): Promise<string> {
   const { accessToken, ...body } = data;
 
-  const res = await fetch("/api/post", {
+  const res = await fetch(api.post(), {
     method: "POST",
     headers: {
       Authorization: `Bearer ${accessToken}`,
@@ -85,13 +86,13 @@ async function patchTags(
 ): Promise<void> {
   const { Condición, accessToken, id, ...rest } = data;
 
-  const res = await fetch("/api/post", {
+  const res = await fetch(api.postTags(id), {
     method: "PATCH",
     headers: {
       Authorization: `Bearer ${accessToken}`,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ id, ...rest, Condición: [Condición] }),
+    body: JSON.stringify({ ...rest, Condición: [Condición] }),
   });
 
   if (!res.ok) {
