@@ -6,8 +6,10 @@ import {
   mockUploadError,
   mockUploadNetwork,
   mockUploadSlow,
-  mockPostError,
-  mockPostNetwork,
+  mockCreateError,
+  mockCreateNetwork,
+  mockPatchError,
+  mockPatchNetwork,
   openModal,
   clickNext,
   clickBack,
@@ -17,8 +19,6 @@ import {
   selectRequiredTags,
   selectMultipleTags,
 } from './helpers/create-post';
-
-// ── Desktop (default 1280px from playwright.config.ts) ─────────────────────
 
 test.describe('Create Post — desktop', () => {
   test.beforeEach(async ({ page }) => {
@@ -121,38 +121,62 @@ test.describe('Create Post — desktop', () => {
     await expect(page.getByRole('button', { name: /Subiendo/ })).toBeVisible({ timeout: 3_000 });
   });
 
-  test('should redirect to session-expired when POST /post returns 401', async ({ page }) => {
+  test('should redirect to session-expired when POST /post returns 401 on step 1', async ({ page }) => {
+    await mockCreateError(page, 401);
+    await fillStep1(page, { title: 'Camiseta', price: 10000 });
+    await uploadPhotos(page, 3);
+    await clickNext(page);
+    await page.waitForURL('**/session-expired', { timeout: 8_000 });
+  });
+
+  test('should show error toast when POST /post returns 500 on step 1', async ({ page }) => {
+    await mockCreateError(page, 500);
+    await fillStep1(page, { title: 'Camiseta', price: 10000 });
+    await uploadPhotos(page, 3);
+    await clickNext(page);
+    await waitForToast(page, 'Error al crear publicación');
+  });
+
+  test('should show network error toast when POST /post fails on step 1', async ({ page }) => {
+    await mockCreateNetwork(page);
+    await fillStep1(page, { title: 'Camiseta', price: 10000 });
+    await uploadPhotos(page, 3);
+    await clickNext(page);
+    await waitForToast(page, 'Error de red');
+  });
+
+  test('should redirect to session-expired when PATCH /post returns 401', async ({ page }) => {
     await fillStep1(page, { title: 'Camiseta', price: 10000 });
     await uploadPhotos(page, 3);
     await clickNext(page);
     await selectRequiredTags(page);
     await clickNext(page);
 
-    await mockPostError(page, 401);
+    await mockPatchError(page, 401);
     await clickPublish(page);
     await page.waitForURL('**/session-expired', { timeout: 8_000 });
   });
 
-  test('should show error toast when POST /post returns 500', async ({ page }) => {
+  test('should show error toast when PATCH /post returns 500', async ({ page }) => {
     await fillStep1(page, { title: 'Camiseta', price: 10000 });
     await uploadPhotos(page, 3);
     await clickNext(page);
     await selectRequiredTags(page);
     await clickNext(page);
 
-    await mockPostError(page, 500);
+    await mockPatchError(page, 500);
     await clickPublish(page);
     await waitForToast(page, 'Error');
   });
 
-  test('should show network error toast when POST /post fails due to connection', async ({ page }) => {
+  test('should show network error toast when PATCH /post fails', async ({ page }) => {
     await fillStep1(page, { title: 'Camiseta', price: 10000 });
     await uploadPhotos(page, 3);
     await clickNext(page);
     await selectRequiredTags(page);
     await clickNext(page);
 
-    await mockPostNetwork(page);
+    await mockPatchNetwork(page);
     await clickPublish(page);
     await waitForToast(page, 'Error de red');
   });
@@ -191,8 +215,6 @@ test.describe('Create Post — desktop', () => {
   });
 });
 
-// ── Mobile (375×812) ────────────────────────────────────────────────────────
-
 test.describe('Create Post — mobile', () => {
   test.use({ viewport: { width: 375, height: 812 } });
 
@@ -203,22 +225,17 @@ test.describe('Create Post — mobile', () => {
   });
 
   test('should publish successfully across all 5 steps', async ({ page }) => {
-    // Step 1: basic info
     await fillStep1(page, { title: 'Camiseta Nike azul', price: 25000 });
     await clickNext(page);
 
-    // Step 2: photos
     await uploadPhotos(page, 3);
     await clickNext(page);
 
-    // Step 3: required tags
     await selectRequiredTags(page);
     await clickNext(page);
 
-    // Step 4: optional tags (Marca/Color/Género) — skip
     await clickNext(page);
 
-    // Step 5: optional tags (Temporada/Estilo) — publish
     await clickPublish(page);
     await waitForToast(page, 'Publicación creada');
     await expect(page.getByRole('dialog')).not.toBeVisible();

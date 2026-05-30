@@ -46,15 +46,15 @@ export function useTags(): UseTagsReturn {
 
   React.useEffect(() => {
     if (!isLoading) return;
-    fetch('/tags')
+    fetch('/tag')
       .then((r) => {
         if (!r.ok) throw new Error(`HTTP error: ${r.status}`);
         return r.json();
       })
-      .then((data: { categories: TagCategories }) => {
-        setCategories(data.categories);
+      .then((data: { tags: TagCategories }) => {
+        setCategories(data.tags);
         try {
-          localStorage.setItem(CACHE_KEY, JSON.stringify(data.categories));
+          localStorage.setItem(CACHE_KEY, JSON.stringify(data.tags));
         } catch {}
       })
       .catch((err: Error) => setError(err.message ?? 'Error al cargar etiquetas'))

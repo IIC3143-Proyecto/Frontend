@@ -1,13 +1,28 @@
 import { http, HttpResponse } from 'msw';
 
-/**
- * MSW handlers for post creation endpoints: GET /tags, POST /upload, POST /post.
- * All handlers validate the Authorization header and return 401 when absent.
- */
+const mockPost = (id: string, body: Record<string, unknown>) => ({
+  id,
+  sellerId: 'seller-mock-1',
+  buyerId: null,
+  title: body.title ?? '',
+  description: body.description ?? '',
+  priceClp: body.priceClp ?? 0,
+  isNegotiable: body.isNegotiable ?? false,
+  status: 'Sin publicar',
+  likesCount: 0,
+  savesCount: 0,
+  viewsCount: 0,
+  isActive: true,
+  isDeleted: false,
+  images: null,
+  createdAtUtcMinus3: new Date().toISOString(),
+  interactions: [],
+});
+
 export const postsHandlers = [
-  http.get('*/tags', () =>
+  http.get('*/tag', () =>
     HttpResponse.json({
-      categories: {
+      tags: {
         'Marca': ['Nike', 'Adidas', 'Gucci', 'Zara', 'Polo', 'Otro'],
         'Estilo': ['Casual', 'Formal', 'Deportivo', 'Streetwear', 'Vintage', 'Otro'],
         'Color': ['Rojo', 'Azul', 'Verde', 'Negro', 'Blanco'],
@@ -20,7 +35,7 @@ export const postsHandlers = [
     })
   ),
 
-  http.post('*/upload', async ({ request }) => {
+  http.post('*/image/post/:id_post', async ({ request }) => {
     const token = request.headers.get('Authorization');
     if (!token) {
       return HttpResponse.json({ message: 'Unauthorized' }, { status: 401 });
@@ -32,10 +47,10 @@ export const postsHandlers = [
       return HttpResponse.json({ message: 'No se proporcionaron archivos' }, { status: 400 });
     }
 
-    const photoUrls = files.map(
-      (_, i) => `https://vtrna.com/posts/mock-photo-${i}-${Date.now()}.webp`
+    return HttpResponse.json(
+      { message: 'Imágenes subidas y vinculadas a la publicación exitosamente.' },
+      { status: 201 }
     );
-    return HttpResponse.json({ photoUrls }, { status: 201 });
   }),
 
   http.post('*/post', async ({ request }) => {
@@ -45,6 +60,18 @@ export const postsHandlers = [
     }
 
     const body = await request.json() as Record<string, unknown>;
-    return HttpResponse.json({ id: `post-${Date.now()}`, ...body }, { status: 201 });
+    const id = `post-${Date.now()}`;
+    return HttpResponse.json(mockPost(id, body), { status: 201 });
+  }),
+
+  http.patch('*/post', async ({ request }) => {
+    const token = request.headers.get('Authorization');
+    if (!token) {
+      return HttpResponse.json({ message: 'Unauthorized' }, { status: 401 });
+    }
+
+    const body = await request.json() as Record<string, unknown>;
+    const id = typeof body.id === 'string' ? body.id : `post-${Date.now()}`;
+    return HttpResponse.json(mockPost(id, body), { status: 200 });
   }),
 ];

@@ -33,11 +33,11 @@ export interface PhotoItem {
   preview: string;
 }
 
-async function uploadPhotos(photos: PhotoItem[], accessToken: string): Promise<string[]> {
+async function uploadPhotos(photos: PhotoItem[], accessToken: string, postId: string): Promise<void> {
   const fd = new FormData();
   photos.forEach((p) => fd.append("photos", p.file));
 
-  const res = await fetch("/upload", {
+  const res = await fetch(`/api/image/post/${postId}`, {
     method: "POST",
     headers: { Authorization: `Bearer ${accessToken}` },
     body: fd,
@@ -50,18 +50,12 @@ async function uploadPhotos(photos: PhotoItem[], accessToken: string): Promise<s
       { status: res.status }
     );
   }
-
-  const { photoUrls } = (await res.json()) as { photoUrls: string[] };
-  return photoUrls;
 }
 
-/**
- * @param data.Condición Single string from the form; wrapped in an array because the API expects string[].
- */
-async function createPost(
-  data: CreatePostSchema & { photoUrls: string[]; accessToken: string }
-): Promise<void> {
-  const { Condición, accessToken, ...rest } = data;
+async function postCreate(
+  data: Pick<CreatePostSchema, "title" | "description" | "priceClp" | "isNegotiable"> & { accessToken: string }
+): Promise<string> {
+  const { accessToken, ...body } = data;
 
   const res = await fetch("/post", {
     method: "POST",
@@ -69,13 +63,41 @@ async function createPost(
       Authorization: `Bearer ${accessToken}`,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ ...rest, Condición: [Condición] }),
+    body: JSON.stringify(body),
   });
 
   if (!res.ok) {
     const json = await res.json().catch(() => ({}));
     throw Object.assign(
       new Error((json as { message?: string }).message ?? "Error al crear la publicación"),
+      { status: res.status }
+    );
+  }
+
+  const { id } = (await res.json()) as { id: string };
+  return id;
+}
+
+type TagFields = Omit<CreatePostSchema, "title" | "description" | "priceClp" | "isNegotiable">;
+
+async function patchTags(
+  data: TagFields & { id: string; accessToken: string }
+): Promise<void> {
+  const { Condición, accessToken, id, ...rest } = data;
+
+  const res = await fetch("/post", {
+    method: "PATCH",
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ id, ...rest, Condición: [Condición] }),
+  });
+
+  if (!res.ok) {
+    const json = await res.json().catch(() => ({}));
+    throw Object.assign(
+      new Error((json as { message?: string }).message ?? "Error al actualizar la publicación"),
       { status: res.status }
     );
   }
@@ -143,8 +165,9 @@ export function useCreatePost(onClose: () => void): UseCreatePostReturn {
   const [photos, setPhotos] = React.useState<PhotoItem[]>([]);
   const [photoError, setPhotoError] = React.useState<string | null>(null);
   const [isUploading, setIsUploading] = React.useState(false);
+  const [isPosting, setIsPosting] = React.useState(false);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
-  const uploadedUrlsRef = React.useRef<string[]>([]);
+  const postIdRef = React.useRef<string>('');
 
   const photosRef = React.useRef(photos);
   React.useLayoutEffect(() => {
@@ -242,8 +265,7 @@ export function useCreatePost(onClose: () => void): UseCreatePostReturn {
         router.push("/session-expired");
         return false;
       }
-      const urls = await uploadPhotos(photos, accessToken);
-      uploadedUrlsRef.current = urls;
+      await uploadPhotos(photos, accessToken, postIdRef.current);
       return true;
     } catch (err) {
       const status = (err as { status?: number }).status;
@@ -265,9 +287,55 @@ export function useCreatePost(onClose: () => void): UseCreatePostReturn {
     }
   }, [photos, router]);
 
+  const doCreatePost = React.useCallback(async (): Promise<boolean> => {
+    setIsPosting(true);
+    try {
+      let accessToken: string;
+      try {
+        accessToken = await getAccessToken();
+      } catch {
+        router.push("/session-expired");
+        return false;
+      }
+
+      const values = form.getValues();
+      const id = await postCreate({
+        title: values.title,
+        description: values.description,
+        priceClp: values.priceClp as unknown as number,
+        isNegotiable: values.isNegotiable ?? false,
+        accessToken,
+      });
+      postIdRef.current = id;
+      return true;
+    } catch (err) {
+      const status = (err as { status?: number }).status;
+      const message =
+        err instanceof Error ? err.message : "Error al crear la publicación";
+
+      if (status === undefined) {
+        toast.error("Error de red", {
+          description: "Verifica tu conexión e inténtalo de nuevo.",
+        });
+      } else if (status === 401) {
+        router.push("/session-expired");
+      } else {
+        toast.error("Error al crear publicación", { description: message });
+      }
+      return false;
+    } finally {
+      setIsPosting(false);
+    }
+  }, [form, router]);
+
   const handleNext = React.useCallback(async () => {
     const valid = await validateStep();
     if (!valid) return;
+
+    if (step === 1) {
+      const ok = await doCreatePost();
+      if (!ok) return;
+    }
 
     if (isPhotoStep) {
       const ok = await doUpload();
@@ -275,7 +343,7 @@ export function useCreatePost(onClose: () => void): UseCreatePostReturn {
     }
 
     setStep((s) => s + 1);
-  }, [validateStep, isPhotoStep, doUpload]);
+  }, [validateStep, step, doCreatePost, isPhotoStep, doUpload]);
 
   const handleBack = React.useCallback(() => {
     setStep((s) => Math.max(1, s - 1));
@@ -289,7 +357,7 @@ export function useCreatePost(onClose: () => void): UseCreatePostReturn {
     });
     setPhotoError(null);
     setStep(1);
-    uploadedUrlsRef.current = [];
+    postIdRef.current = '';
   }, [form]);
 
   const handlePublish = React.useCallback(async () => {
@@ -308,7 +376,18 @@ export function useCreatePost(onClose: () => void): UseCreatePostReturn {
           return;
         }
         try {
-          await createPost({ ...data, photoUrls: uploadedUrlsRef.current, accessToken });
+          await patchTags({
+            id: postIdRef.current,
+            Talla: data.Talla,
+            Condición: data.Condición,
+            "Tipo de prenda": data["Tipo de prenda"],
+            Marca: data.Marca,
+            Color: data.Color,
+            Género: data.Género,
+            Estilo: data.Estilo,
+            Temporada: data.Temporada,
+            accessToken,
+          });
           toast.success("Publicación creada", {
             description: "Tu prenda fue publicada exitosamente.",
           });
@@ -317,7 +396,7 @@ export function useCreatePost(onClose: () => void): UseCreatePostReturn {
         } catch (err) {
           const status = (err as { status?: number }).status;
           const message =
-            err instanceof Error ? err.message : "Error al crear la publicación";
+            err instanceof Error ? err.message : "Error al actualizar la publicación";
 
           if (status === undefined) {
             toast.error("Error de red", {
@@ -347,7 +426,7 @@ export function useCreatePost(onClose: () => void): UseCreatePostReturn {
     step,
     totalSteps,
     isMobile,
-    isUploading,
+    isUploading: isUploading || isPosting,
     isSubmitting,
     isLastStep,
     handleNext,
