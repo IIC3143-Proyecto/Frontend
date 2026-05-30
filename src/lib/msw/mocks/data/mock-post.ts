@@ -1,0 +1,33 @@
+import type { PostDto } from '@/types/api';
+
+export function mockPostDto(id: string, body: Record<string, unknown> = {}): PostDto {
+  return {
+    id,
+    sellerId: 'seller-mock-1',
+    seller: {
+      id: 'seller-mock-1',
+      name: 'Mock Seller',
+      username: 'mock_seller',
+      email: 'seller@mock.cl',
+      providerAuth0: 'auth0|seller_mock',
+      createdAtUtcMinus3: new Date().toISOString(),
+      updatedAtUtcMinus3: new Date().toISOString(),
+      posts: [],
+      interactions: [],
+      following: [],
+      followers: [],
+    },
+    title: typeof body.title === 'string' ? body.title : '',
+    description: typeof body.description === 'string' ? body.description : '',
+    priceClp: typeof body.priceClp === 'number' ? body.priceClp : 0,
+    isNegotiable: typeof body.isNegotiable === 'boolean' ? body.isNegotiable : false,
+    status: 'Sin publicar',
+    likesCount: 0,
+    savesCount: 0,
+    viewsCount: 0,
+    isActive: true,
+    isDeleted: false,
+    createdAtUtcMinus3: new Date().toISOString(),
+    interactions: [],
+  };
+}
