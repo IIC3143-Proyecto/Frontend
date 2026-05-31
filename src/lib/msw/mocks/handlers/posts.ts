@@ -1,11 +1,21 @@
 import { http, HttpResponse } from 'msw';
-import { TAGS_MOCK } from '../data/mock-tags';
-import { mockPostDto } from '../data/mock-post';
+import { mockPost, MOCK_SELLER_POSTS } from '../data/posts';
 
 export const postsHandlers = [
-  http.get('*/api/tag', () => HttpResponse.json(TAGS_MOCK)),
+  http.get('*/api/post/seller/:id_user', ({ request }) => {
+    const token = request.headers.get('Authorization');
+    if (!token) return HttpResponse.json({ message: 'Unauthorized' }, { status: 401 });
+    return HttpResponse.json(MOCK_SELLER_POSTS);
+  }),
 
-  http.post('*/api/image/post/:id_post', async ({ request }) => {
+  http.delete('*/post/:id', ({ params }) => {
+    const idx = MOCK_SELLER_POSTS.findIndex((p) => p.id === params.id);
+    if (idx === -1) return new HttpResponse(null, { status: 404 });
+    MOCK_SELLER_POSTS.splice(idx, 1);
+    return new HttpResponse(null, { status: 204 });
+  }),
+
+  http.post('*/image/post/:id_post', async ({ request }) => {
     const token = request.headers.get('Authorization');
     if (!token) {
       return HttpResponse.json({ message: 'Unauthorized' }, { status: 401 });
@@ -23,7 +33,7 @@ export const postsHandlers = [
     );
   }),
 
-  http.post('*/api/post', async ({ request }) => {
+  http.post('*/post', async ({ request }) => {
     const token = request.headers.get('Authorization');
     if (!token) {
       return HttpResponse.json({ message: 'Unauthorized' }, { status: 401 });
@@ -31,10 +41,10 @@ export const postsHandlers = [
 
     const body = await request.json() as Record<string, unknown>;
     const id = `post-${Date.now()}`;
-    return HttpResponse.json(mockPostDto(id, body), { status: 201 });
+    return HttpResponse.json(mockPost(id, body), { status: 201 });
   }),
 
-  http.patch('*/api/post', async ({ request }) => {
+  http.patch('*/post', async ({ request }) => {
     const token = request.headers.get('Authorization');
     if (!token) {
       return HttpResponse.json({ message: 'Unauthorized' }, { status: 401 });
@@ -42,16 +52,6 @@ export const postsHandlers = [
 
     const body = await request.json() as Record<string, unknown>;
     const id = typeof body.id === 'string' ? body.id : `post-${Date.now()}`;
-    return HttpResponse.json(mockPostDto(id, body), { status: 200 });
-  }),
-
-  http.patch('*/api/post/:id_post/tags', async ({ request, params }) => {
-    const token = request.headers.get('Authorization');
-    if (!token) {
-      return HttpResponse.json({ message: 'Unauthorized' }, { status: 401 });
-    }
-
-    const id = typeof params.id_post === 'string' ? params.id_post : `post-${Date.now()}`;
-    return HttpResponse.json(mockPostDto(id), { status: 200 });
+    return HttpResponse.json(mockPost(id, body), { status: 200 });
   }),
 ];

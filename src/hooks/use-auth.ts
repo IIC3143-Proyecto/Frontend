@@ -2,12 +2,11 @@ import { useUser } from '@auth0/nextjs-auth0';
 import { useQuery } from '@tanstack/react-query';
 import { useRouter, usePathname } from 'next/navigation';
 import { useEffect } from 'react';
-import { api } from '@/lib/api';
-import type { SyncUserResponse } from '@/types/api';
+import { syncUser } from '@/lib/api/auth';
 
 export type SyncError = Error & { code: number };
 
-type DbUser = Pick<SyncUserResponse, 'id' | 'onboardingCompleted'>;
+type DbUser = { id: string; onboardingCompleted: boolean };
 
 export function useAuth() {
   const { user, isLoading: authLoading } = useUser();
@@ -17,14 +16,7 @@ export function useAuth() {
   const { data: dbUser, isLoading: syncLoading, error: syncError } = useQuery<DbUser, SyncError>({
     queryKey: ['dbUser', user?.sub],
     queryFn: async () => {
-      const res = await fetch(api.syncUser());
-      if (res.status === 401) {
-        throw Object.assign(new Error('AUTH_EXPIRED'), { code: 401 });
-      }
-      if (!res.ok) {
-        throw Object.assign(new Error('SYNC_FAILED'), { code: res.status });
-      }
-      const data = await res.json();
+      const data = await syncUser();
       return {
         ...data,
         onboardingCompleted: data.onboardingCompleted ?? false,
