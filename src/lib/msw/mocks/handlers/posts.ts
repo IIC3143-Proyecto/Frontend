@@ -1,77 +1,98 @@
-import { http, HttpResponse } from 'msw';
+import { http, HttpResponse } from "msw";
+import { PostStatus } from "@/lib/types/post-status.enum";
+import { Post } from "@/lib/types/post";
 
-const mockPost = (id: string, body: Record<string, unknown>) => ({
-  id,
-  sellerId: 'seller-mock-1',
-  buyerId: null,
-  title: body.title ?? '',
-  description: body.description ?? '',
-  priceClp: body.priceClp ?? 0,
-  isNegotiable: body.isNegotiable ?? false,
-  status: 'Sin publicar',
-  likesCount: 0,
-  savesCount: 0,
-  viewsCount: 0,
-  isActive: true,
-  isDeleted: false,
-  images: null,
-  createdAtUtcMinus3: new Date().toISOString(),
-  interactions: [],
-});
+const POSTS: Post[] = [
+  {
+    id: "post_1",
+    sellerId: "user_123",
+    title: "Vintage 90s Jacket",
+    description: "Chaqueta vintage en excelente estado, sin defectos.",
+    priceClp: 25000,
+    isNegotiable: true,
+    status: PostStatus.PUBLISHED,
+    likesCount: 4,
+    savesCount: 1,
+    viewsCount: 12,
+    offersCount: 3,
+    isActive: true,
+    createdAtUtcMinus3: new Date().toISOString(),
+    // images omitido — es opcional
+  },
+  {
+    id: "post_2",
+    sellerId: "user_123",
+    title: "Levis 501 Custom",
+    description: "Talla M, usada dos veces.",
+    priceClp: 18000,
+    isNegotiable: false,
+    status: PostStatus.PUBLISHED,
+    likesCount: 0,
+    savesCount: 0,
+    viewsCount: 3,
+    offersCount: 0,
+    isActive: true,
+    createdAtUtcMinus3: new Date().toISOString(),
+  },
+  {
+    id: "post_3",
+    sellerId: "user_123",
+    buyerId: "user_456",
+    title: "Carhartt Detroit",
+    description: "Chaqueta Carhartt original.",
+    priceClp: 45000,
+    isNegotiable: true,
+    status: PostStatus.RESERVED,
+    likesCount: 8,
+    savesCount: 3,
+    viewsCount: 25,
+    offersCount: 1,
+    isActive: true,
+    createdAtUtcMinus3: new Date().toISOString(),
+  },
+  {
+    id: "post_4",
+    sellerId: "user_123",
+    title: "Polera Algodón Premium",
+    description: "Polera básica, talla M.",
+    priceClp: 12990,
+    isNegotiable: false,
+    status: PostStatus.UNPUBLISHED,
+    likesCount: 0,
+    savesCount: 0,
+    viewsCount: 0,
+    offersCount: 0,
+    isActive: false,
+    createdAtUtcMinus3: new Date().toISOString(),
+  },
+  {
+    id: "post_5",
+    sellerId: "user_123",
+    buyerId: "user_789",
+    title: "Archive Nike Bag",
+    description: "Bolso Nike de colección.",
+    priceClp: 30000,
+    isNegotiable: false,
+    status: PostStatus.SOLD,
+    likesCount: 10,
+    savesCount: 4,
+    viewsCount: 40,
+    offersCount: 1,
+    isActive: false,
+    createdAtUtcMinus3: new Date().toISOString(),
+  },
+];
+
+const currentPosts = [...POSTS];
 
 export const postsHandlers = [
-  http.get('*/tags', () =>
-    HttpResponse.json({
-      tags: {
-        'Marca': ['Nike', 'Adidas', 'Gucci', 'Zara', 'Polo', 'Otro'],
-        'Estilo': ['Casual', 'Formal', 'Deportivo', 'Streetwear', 'Vintage', 'Otro'],
-        'Color': ['Rojo', 'Azul', 'Verde', 'Negro', 'Blanco'],
-        'Temporada': ['Verano', 'Invierno', 'Primavera', 'Otoño'],
-        'Condición': ['Nuevo', 'Casi nuevo', 'Aceptable', 'Usado'],
-        'Talla': ['XS', 'S', 'M', 'L', 'XL', 'XXL'],
-        Género: ['Masculino', 'Femenino', 'Unisex'],
-        'Tipo de prenda': ['Polera', 'Pantalón', 'Vestido', 'Abrigo', 'Shorts', 'Falda', 'Camiseta', 'Chaqueta', 'Otro'],
-      },
-    })
-  ),
-
-  http.post('*/image/post/:id_post', async ({ request }) => {
-    const token = request.headers.get('Authorization');
-    if (!token) {
-      return HttpResponse.json({ message: 'Unauthorized' }, { status: 401 });
-    }
-
-    const fd = await request.formData();
-    const files = fd.getAll('photos');
-    if (!files.length) {
-      return HttpResponse.json({ message: 'No se proporcionaron archivos' }, { status: 400 });
-    }
-
-    return HttpResponse.json(
-      { message: 'Imágenes subidas y vinculadas a la publicación exitosamente.' },
-      { status: 201 }
-    );
+  http.get("*/posts", () => {
+    return HttpResponse.json(currentPosts);
   }),
-
-  http.post('*/post', async ({ request }) => {
-    const token = request.headers.get('Authorization');
-    if (!token) {
-      return HttpResponse.json({ message: 'Unauthorized' }, { status: 401 });
-    }
-
-    const body = await request.json() as Record<string, unknown>;
-    const id = `post-${Date.now()}`;
-    return HttpResponse.json(mockPost(id, body), { status: 201 });
-  }),
-
-  http.patch('*/post', async ({ request }) => {
-    const token = request.headers.get('Authorization');
-    if (!token) {
-      return HttpResponse.json({ message: 'Unauthorized' }, { status: 401 });
-    }
-
-    const body = await request.json() as Record<string, unknown>;
-    const id = typeof body.id === 'string' ? body.id : `post-${Date.now()}`;
-    return HttpResponse.json(mockPost(id, body), { status: 200 });
+  http.delete("*/post/:id", ({ params }) => {
+    const idx = currentPosts.findIndex((p) => p.id === params.id);
+    if (idx === -1) return new HttpResponse(null, { status: 404 });
+    currentPosts.splice(idx, 1);
+    return new HttpResponse(null, { status: 204 });
   }),
 ];
