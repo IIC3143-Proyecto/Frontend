@@ -7,7 +7,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import type { Post } from "@/lib/types/post";
+import type { PostDto as Post } from "@/lib/types/post";
 import { formatPriceCLP } from "@/lib/utils";
 
 type Props = {

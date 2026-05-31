@@ -7,7 +7,7 @@ import {
   IconTrash,
 } from "@tabler/icons-react";
 import { useState } from "react";
-import type { Post } from "@/lib/types/post";
+import type { PostDto as Post } from "@/lib/types/post";
 import { PostStatus } from "@/lib/types/post-status.enum";
 import { cn, formatPriceCLP } from "@/lib/utils";
 import { PostDetailModal } from "./post-detail-modal";
