@@ -41,9 +41,22 @@ export async function createPost(body: NewPostDto, accessToken: string): Promise
   return id;
 }
 
-// PATCH /api/post/:id/tags — waiting for backend #48
-export async function patchPostTags(_postId: string, _tags: Record<string, string | string[]>, _accessToken: string): Promise<void> {
-  return;
+export async function patchPostTags(postId: string, tags: Record<string, string | string[]>, accessToken: string): Promise<void> {
+  const res = await fetch(`/api/post/${postId}/tags`, {
+    method: 'PATCH',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(tags),
+  });
+  if (!res.ok) {
+    const json = await res.json().catch(() => ({}));
+    throw Object.assign(
+      new Error((json as { message?: string }).message ?? 'Error al actualizar la publicación'),
+      { status: res.status }
+    );
+  }
 }
 
 export async function patchPost(body: Record<string, unknown> & { id: string }, accessToken: string): Promise<void> {
