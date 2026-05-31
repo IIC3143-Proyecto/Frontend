@@ -1,65 +1,21 @@
 "use client";
 
-import * as React from "react";
+import { useQuery } from '@tanstack/react-query';
+import { fetchTags } from '@/lib/api/tag';
+import type { TagCategories } from '@/lib/types/tag';
 
-type TagCategories = Record<string, string[]>;
+export const TAGS_QUERY_KEY = ['tags-categories'] as const;
 
-interface UseTagsReturn {
-  categories: TagCategories;
-  isLoading: boolean;
-  error: string | null;
-}
-
-const CACHE_KEY = 'tags-categories';
-
-function isValidCache(data: unknown): data is TagCategories {
-  return (
-    typeof data === 'object' &&
-    data !== null &&
-    Object.values(data).every(
-      (v) => Array.isArray(v) && v.every((s) => typeof s === 'string')
-    )
-  );
-}
-
-export function useTags(): UseTagsReturn {
-  const [categories, setCategories] = React.useState<TagCategories>(() => {
-    try {
-      const cached = localStorage.getItem(CACHE_KEY);
-      if (cached) {
-        const parsed = JSON.parse(cached);
-        if (isValidCache(parsed)) return parsed;
-      }
-    } catch {}
-    return {};
+export function useTags() {
+  const { data, isLoading, error } = useQuery({
+    queryKey: TAGS_QUERY_KEY,
+    queryFn: fetchTags,
+    staleTime: 1000 * 60 * 10,
   });
 
-  const [isLoading, setIsLoading] = React.useState(() => {
-    try {
-      const cached = localStorage.getItem(CACHE_KEY);
-      if (cached && isValidCache(JSON.parse(cached))) return false;
-    } catch {}
-    return true;
-  });
-
-  const [error, setError] = React.useState<string | null>(null);
-
-  React.useEffect(() => {
-    if (!isLoading) return;
-    fetch('/api/tags')
-      .then((r) => {
-        if (!r.ok) throw new Error(`HTTP error: ${r.status}`);
-        return r.json();
-      })
-      .then((data: { tags: TagCategories }) => {
-        setCategories(data.tags);
-        try {
-          localStorage.setItem(CACHE_KEY, JSON.stringify(data.tags));
-        } catch {}
-      })
-      .catch((err: Error) => setError(err.message ?? 'Error al cargar etiquetas'))
-      .finally(() => setIsLoading(false));
-  }, [isLoading]);
-
-  return { categories, isLoading, error };
+  return {
+    categories: data ?? ({} as TagCategories),
+    isLoading,
+    error: error instanceof Error ? error.message : null,
+  };
 }
