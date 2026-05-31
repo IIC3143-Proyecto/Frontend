@@ -6,8 +6,22 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 import { getAccessToken } from "@/actions/auth";
 import { createPost, patchPostTags, uploadPostImages } from "@/lib/api/post";
+
+function handleApiError(err: unknown, label: string, router: { push: (url: string) => void }) {
+  const status = (err as { status?: number }).status;
+  const message = err instanceof Error ? err.message : `Error en ${label}`;
+
+  if (status === undefined) {
+    toast.error("Error de red", { description: "Verifica tu conexión e inténtalo de nuevo." });
+  } else if (status === 401) {
+    router.push("/session-expired");
+  } else {
+    toast.error(label, { description: message });
+  }
+}
 
 export const createPostSchema = z.object({
   title: z.string().min(1, "Título requerido").max(100, "Máximo 100 caracteres"),
@@ -91,6 +105,7 @@ export interface UseCreatePostReturn {
 
 export function useCreatePost(onClose: () => void): UseCreatePostReturn {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const isMobile = useIsMobile();
   const totalSteps = isMobile ? 5 : 3;
 
@@ -207,19 +222,7 @@ export function useCreatePost(onClose: () => void): UseCreatePostReturn {
       photosUploadedRef.current = true;
       return true;
     } catch (err) {
-      const status = (err as { status?: number }).status;
-      const message =
-        err instanceof Error ? err.message : "Error al subir las fotos";
-
-      if (status === undefined) {
-        toast.error("Error de red", {
-          description: "Verifica tu conexión e inténtalo de nuevo.",
-        });
-      } else if (status === 401) {
-        router.push("/session-expired");
-      } else {
-        toast.error("Error al subir fotos", { description: message });
-      }
+      handleApiError(err, "Error al subir fotos", router);
       return false;
     } finally {
       setIsUploading(false);
@@ -252,19 +255,7 @@ export function useCreatePost(onClose: () => void): UseCreatePostReturn {
       setIsPostCreated(true);
       return true;
     } catch (err) {
-      const status = (err as { status?: number }).status;
-      const message =
-        err instanceof Error ? err.message : "Error al crear la publicación";
-
-      if (status === undefined) {
-        toast.error("Error de red", {
-          description: "Verifica tu conexión e inténtalo de nuevo.",
-        });
-      } else if (status === 401) {
-        router.push("/session-expired");
-      } else {
-        toast.error("Error al crear publicación", { description: message });
-      }
+      handleApiError(err, "Error al crear publicación", router);
       return false;
     } finally {
       setIsPosting(false);
@@ -338,22 +329,11 @@ export function useCreatePost(onClose: () => void): UseCreatePostReturn {
           toast.success("Publicación creada", {
             description: "Tu prenda fue publicada exitosamente.",
           });
+          queryClient.invalidateQueries({ queryKey: ["posts"] });
           onClose();
           reset();
         } catch (err) {
-          const status = (err as { status?: number }).status;
-          const message =
-            err instanceof Error ? err.message : "Error al actualizar la publicación";
-
-          if (status === undefined) {
-            toast.error("Error de red", {
-              description: "Verifica tu conexión e inténtalo de nuevo.",
-            });
-          } else if (status === 401) {
-            router.push("/session-expired");
-          } else {
-            toast.error("Error al publicar", { description: message });
-          }
+          handleApiError(err, "Error al publicar", router);
         }
       },
       () => {

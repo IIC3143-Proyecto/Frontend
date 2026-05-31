@@ -20,8 +20,6 @@ export type PostDto = {
   interactions: unknown[];
 };
 
-export type Post = PostDto;
-
 export type NewPostDto = {
   title: string;
   description: string;
