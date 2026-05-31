@@ -1,6 +1,5 @@
 import type { TagCategories, TagsByCategoryDto } from '@/lib/types/tag';
-
-const BASE = process.env.NEXT_PUBLIC_API_URL ?? '';
+import { BASE } from './base';
 
 export async function fetchTags(): Promise<TagCategories> {
   const res = await fetch(`${BASE}/api/tag`);
