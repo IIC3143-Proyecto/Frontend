@@ -14,7 +14,7 @@ export default function Home() {
   });
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center gap-6 p-24">
+    <main className="flex-1 flex flex-col items-center justify-center gap-6 p-24">
       <button
         onClick={() => mutate()}
         disabled={isPending}
