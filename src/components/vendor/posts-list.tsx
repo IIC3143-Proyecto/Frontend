@@ -105,7 +105,7 @@ export function PostsList() {
             key={post.id}
             post={post}
             view={view}
-            onDelete={deletePost}
+            onDeleteAction={deletePost}
             isDeleting={isDeleting && deletingId === post.id}
           />
         ))}

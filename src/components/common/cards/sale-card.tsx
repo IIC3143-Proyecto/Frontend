@@ -13,6 +13,7 @@ import { cn, formatPriceCLP } from "@/lib/utils";
 import { PostDetailModal } from "./post-detail-modal";
 import { PostEditModal } from "./post-edit-modal";
 import { MiniRoundButton } from "@/components/common/mini-round-button";
+import { PillButton } from "@/components/common/pill-button";
 import { ConfirmDialog } from "@/components/common/confirm-dialog";
 
 export type SaleView = "list" | "grid2" | "grid4";
@@ -94,33 +95,6 @@ function HorizontalTimeline({ steps }: { steps: [boolean, boolean, boolean] }) {
         />
       ))}
     </div>
-  );
-}
-
-function PillButton({
-  children,
-  variant = "action",
-  className,
-  ...rest
-}: React.ButtonHTMLAttributes<HTMLButtonElement> & {
-  variant?: "action" | "secondary";
-}) {
-  const variants: Record<string, string> = {
-    action: "bg-primary text-primary-foreground border-primary",
-    secondary: "bg-transparent text-secondary-foreground",
-  };
-  return (
-    <button
-      type="button"
-      className={cn(
-        "flex-1 py-2 font-bold text-xs uppercase cursor-pointer rounded-full border-2 transition active:scale-95",
-        variants[variant],
-        className,
-      )}
-      {...rest}
-    >
-      {children}
-    </button>
   );
 }
 
@@ -241,8 +215,12 @@ export function SaleCard({
             </PillButton>
           ) : isAccepted ? (
             <>
-              <PillButton variant="secondary">Oferta</PillButton>
-              <PillButton variant="action">Entregado</PillButton>
+              <PillButton variant="secondary" className="flex-1">
+                Oferta
+              </PillButton>
+              <PillButton variant="action" className="flex-1">
+                Entregado
+              </PillButton>
             </>
           ) : post.offersCount > 0 ? (
             <PillButton variant="action" className="w-full">
