@@ -22,6 +22,11 @@ export async function createPost(body: NewPostDto, accessToken: string): Promise
   return id;
 }
 
+// PATCH /api/post/:id/tags — waiting for backend #48
+export async function patchPostTags(_postId: string, _tags: Record<string, string | string[]>, _accessToken: string): Promise<void> {
+  return;
+}
+
 export async function patchPost(body: Record<string, unknown> & { id: string }, accessToken: string): Promise<void> {
   const res = await fetch(`${BASE}/api/post`, {
     method: 'PATCH',
