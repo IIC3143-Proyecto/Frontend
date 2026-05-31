@@ -89,7 +89,7 @@ export function MetroInput<TFieldValues extends FieldValues>({
   disabled,
   className,
 }: MetroInputProps<TFieldValues>) {
-  const { lines, loading, error } = useMetroStations();
+  const lines = useMetroStations();
   const [search, setSearch] = React.useState("");
   const [activeLine, setActiveLine] = React.useState<string>("");
   const s = sizeClasses[size];
@@ -189,11 +189,7 @@ export function MetroInput<TFieldValues extends FieldValues>({
                 />
                 <div className="border rounded-lg overflow-hidden">
                   <div className={cn("flex items-center bg-muted/40 border-b", s.linesRow)}>
-                    {loading && <span className={cn("text-muted-foreground", s.footer)}>Cargando líneas...</span>}
-                    {error && <span className={cn("text-destructive", s.footer)}>{error}</span>}
-                    {!loading && !error && (
-                      <>
-                        <ToggleGroup
+                    <ToggleGroup
                           type="single"
                           value={search.trim() ? "" : effectiveActiveLine}
                           onValueChange={val => { if (val) setActiveLine(val); }}
@@ -217,8 +213,6 @@ export function MetroInput<TFieldValues extends FieldValues>({
                             </ToggleGroupItem>
                           ))}
                         </ToggleGroup>
-                      </>
-                    )}
                   </div>
                   <div
                     className={cn(
