@@ -14,6 +14,12 @@ import { PostDetailModal } from "./post-detail-modal";
 import { PostEditModal } from "./post-edit-modal";
 import { MiniRoundButton } from "@/components/common/mini-round-button";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { ConfirmDialog } from "@/components/common/confirm-dialog";
 
 export type SaleView = "list" | "grid2" | "grid4";
@@ -127,6 +133,53 @@ export function SaleCard({
   const isCompact = view === "grid4";
   const showTopActions = !isCompact;
 
+  const compactActions = (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button
+          variant="outline"
+          size="icon"
+          aria-label="Acciones"
+          className="rounded-full"
+        >
+          <IconDots className="w-5 h-5" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="center">
+        <DropdownMenuItem onSelect={() => setDetailOpen(true)}>
+          <IconInfoCircle className="w-4 h-4" /> Ver detalle
+        </DropdownMenuItem>
+        {!isSold && !isAccepted && (
+          <DropdownMenuItem onSelect={() => setEditOpen(true)}>
+            <IconPencil className="w-4 h-4" /> Editar
+          </DropdownMenuItem>
+        )}
+        {!isSold && (
+          <DropdownMenuItem
+            variant="destructive"
+            disabled={isDeleting}
+            onSelect={() => setDeleteOpen(true)}
+          >
+            <IconTrash className="w-4 h-4" /> Eliminar
+          </DropdownMenuItem>
+        )}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+
+  const defaultActions = isSold ? (
+    <Button className="w-full">Ver venta</Button>
+  ) : isAccepted ? (
+    <>
+      <Button variant="outline" className="flex-1">
+        Oferta
+      </Button>
+      <Button className="flex-1">Entregado</Button>
+    </>
+  ) : post.offersCount > 0 ? (
+    <Button className="w-full">Ofertas</Button>
+  ) : null;
+
   return (
     <article className={cardClasses}>
       {showBadge && (
@@ -190,27 +243,7 @@ export function SaleCard({
             view === "grid2" && "flex-col sm:flex-row",
           )}
         >
-          {isCompact ? (
-            <Button
-              variant="outline"
-              size="icon"
-              aria-label="Acciones"
-              className="rounded-full"
-            >
-              <IconDots className="w-5 h-5" />
-            </Button>
-          ) : isSold ? (
-            <Button className="w-full">Ver venta</Button>
-          ) : isAccepted ? (
-            <>
-              <Button variant="outline" className="flex-1">
-                Oferta
-              </Button>
-              <Button className="flex-1">Entregado</Button>
-            </>
-          ) : post.offersCount > 0 ? (
-            <Button className="w-full">Ofertas</Button>
-          ) : null}
+          {isCompact ? compactActions : defaultActions}
         </div>
       </div>
 
