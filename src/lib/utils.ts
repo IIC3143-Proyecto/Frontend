@@ -20,6 +20,14 @@ export function formatPriceCLP(amount: number): string {
  * @example formatNumberWithSeparators('25000') => '25.000'
  * @example formatNumberWithSeparators('1234567') => '1.234.567'
  */
+export function formatPriceCLP(amount: number): string {
+  return new Intl.NumberFormat('es-CL', {
+    style: 'currency',
+    currency: 'CLP',
+    maximumFractionDigits: 0,
+  }).format(amount);
+}
+
 export function formatNumberWithSeparators(value: string | number): string {
   if (!value && value !== 0) return "";
   const numValue = String(value).replace(/\D/g, "");

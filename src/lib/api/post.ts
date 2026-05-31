@@ -12,6 +12,21 @@ export const deletePost = async (postId: string): Promise<void> => {
   if (!res.ok) throw new Error('Error al eliminar post');
 };
 
+// GET /api/post/seller/{id_user} — endpoint pendiente de documentación backend
+export async function getPostsBySeller(sellerId: string, accessToken: string): Promise<PostDto[]> {
+  const res = await fetch(`${BASE}/api/post/seller/${sellerId}`, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
+  if (!res.ok) {
+    const json = await res.json().catch(() => ({}));
+    throw Object.assign(
+      new Error((json as { message?: string }).message ?? 'Error al obtener publicaciones'),
+      { status: res.status }
+    );
+  }
+  return res.json() as Promise<PostDto[]>;
+}
+
 export async function createPost(body: NewPostDto, accessToken: string): Promise<string> {
   const res = await fetch(`${BASE}/api/post`, {
     method: 'POST',
