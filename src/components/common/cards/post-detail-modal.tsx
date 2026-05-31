@@ -41,7 +41,7 @@ export function PostDetailModal({ open, onClose, post }: Props) {
 
         <div className="grid grid-cols-1 md:grid-cols-[2fr_3fr] gap-6">
           <div className="flex flex-col gap-3">
-            <div className="bg-muted aspect-[5/6] flex items-center justify-center text-xs text-muted-foreground">
+            <div className="bg-muted aspect-5/6 flex items-center justify-center text-xs text-muted-foreground">
               Imagen
             </div>
             <PillButton variant="secondary" className="w-full">

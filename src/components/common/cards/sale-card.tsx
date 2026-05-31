@@ -137,42 +137,31 @@ export function SaleCard({
 
       {showTopActions && (
         <div className="absolute top-1 right-2 z-20 flex flex-col gap-1">
-          {!isSold && !isAccepted ? (
-            <>
-              <MiniRoundButton
-                aria-label="Editar"
-                onClick={() => setEditOpen(true)}
-              >
-                <IconPencil className="w-4 h-4" />
-              </MiniRoundButton>
-              <MiniRoundButton
-                aria-label="Eliminar"
-                className="text-destructive"
-                disabled={isDeleting}
-                onClick={() => setDeleteOpen(true)}
-              >
-                <IconTrash className="w-4 h-4" />
-              </MiniRoundButton>
-            </>
-          ) : (
-            <>
-              <MiniRoundButton
-                aria-label="Ver detalle"
-                onClick={() => setDetailOpen(true)}
-              >
-                <IconInfoCircle className="w-4 h-4" />
-              </MiniRoundButton>
-              {!isSold && (
-                <MiniRoundButton
-                  aria-label="Eliminar"
-                  className="text-destructive"
-                  disabled={isDeleting}
-                  onClick={() => setDeleteOpen(true)}
-                >
-                  <IconTrash className="w-4 h-4" />
-                </MiniRoundButton>
-              )}
-            </>
+          <MiniRoundButton
+            aria-label="Ver detalle"
+            onClick={() => setDetailOpen(true)}
+          >
+            <IconInfoCircle className="w-4 h-4" />
+          </MiniRoundButton>
+
+          {!isSold && !isAccepted && (
+            <MiniRoundButton
+              aria-label="Editar"
+              onClick={() => setEditOpen(true)}
+            >
+              <IconPencil className="w-4 h-4" />
+            </MiniRoundButton>
+          )}
+
+          {!isSold && (
+            <MiniRoundButton
+              aria-label="Eliminar"
+              className="text-destructive"
+              disabled={isDeleting}
+              onClick={() => setDeleteOpen(true)}
+            >
+              <IconTrash className="w-4 h-4" />
+            </MiniRoundButton>
           )}
         </div>
       )}
