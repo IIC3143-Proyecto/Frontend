@@ -7,7 +7,7 @@ import { z } from "zod";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { getAccessToken } from "@/actions/auth";
-import { createPost, patchPost, uploadPostImages } from "@/lib/api/post";
+import { createPost, patchPostTags, uploadPostImages } from "@/lib/api/post";
 
 export const createPostSchema = z.object({
   title: z.string().min(1, "Título requerido").max(100, "Máximo 100 caracteres"),
@@ -202,7 +202,7 @@ export function useCreatePost(onClose: () => void): UseCreatePostReturn {
         return false;
       }
       const fd = new FormData();
-      photos.forEach((p) => fd.append("photos", p.file));
+      photos.forEach((p) => fd.append("images", p.file));
       await uploadPostImages(postIdRef.current, fd, accessToken);
       photosUploadedRef.current = true;
       return true;
@@ -321,9 +321,9 @@ export function useCreatePost(onClose: () => void): UseCreatePostReturn {
           return;
         }
         try {
-          await patchPost(
+          await patchPostTags(
+            postIdRef.current,
             {
-              id: postIdRef.current,
               Talla: data.Talla,
               Condición: [data.Condición],
               "Tipo de prenda": data["Tipo de prenda"],
