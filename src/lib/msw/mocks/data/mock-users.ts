@@ -1,13 +1,7 @@
 import { type MockUserScenario } from '../scenario';
+import type { SyncUserResponse } from '@/lib/types/auth';
 
-export type SyncUserResponse = {
-  id: string;
-  username: string;
-  email: string;
-  onboardingCompleted: boolean;
-  name: string;
-  providerId: string;
-};
+export type { SyncUserResponse };
 
 export const MOCK_USERS: Record<MockUserScenario, SyncUserResponse> = {
   FULL: { id: 'auth0|full_123', username: 'Flo_Full', email: 'flo_full@vtrna.cl', onboardingCompleted: true, name: 'Flo_Full', providerId: 'auth0|full_123' },
