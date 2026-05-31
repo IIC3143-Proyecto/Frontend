@@ -5,7 +5,7 @@ import { useEffect } from 'react';
 
 export type SyncError = Error & { code: number };
 
-type DbUser = { onboardingCompleted: boolean };
+type DbUser = { id: string; onboardingCompleted: boolean };
 
 export function useAuth() {
   const { user, isLoading: authLoading } = useUser();

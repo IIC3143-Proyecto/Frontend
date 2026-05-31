@@ -1,11 +1,5 @@
-import type { Post, NewPostDto, PostDto } from '@/lib/types/post';
+import type { NewPostDto, PostDto } from '@/lib/types/post';
 import { BASE } from './base';
-
-export const getPosts = async (): Promise<Post[]> => {
-  const res = await fetch(`${BASE}/posts`);
-  if (!res.ok) throw new Error('Error al obtener posts');
-  return res.json();
-};
 
 export const deletePost = async (postId: string): Promise<void> => {
   const res = await fetch(`${BASE}/post/${postId}`, { method: 'DELETE' });

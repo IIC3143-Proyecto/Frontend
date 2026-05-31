@@ -36,7 +36,7 @@ const STEPS = ["Con ofertas", "Oferta aceptada", "Venta realizada"] as const;
 function getSteps(post: Post): [boolean, boolean, boolean] {
   const isSold = post.status === PostStatus.SOLD;
   const isAccepted = post.status === PostStatus.RESERVED || isSold;
-  const hasOffers = post.offersCount > 0 || isAccepted;
+  const hasOffers = (post.offersCount ?? 0) > 0 || isAccepted;
   return [hasOffers, isAccepted, isSold];
 }
 
@@ -116,7 +116,7 @@ export function SaleCard({
   const steps = getSteps(post);
   const isSold = post.status === PostStatus.SOLD;
   const isAccepted = post.status === PostStatus.RESERVED;
-  const showBadge = post.offersCount > 0 && !isAccepted && !isSold;
+  const showBadge = (post.offersCount ?? 0) > 0 && !isAccepted && !isSold;
 
   const cardClasses = cn(
     "relative bg-card border border-border flex flex-col overflow-hidden",
@@ -176,7 +176,7 @@ export function SaleCard({
       </Button>
       <Button className="flex-1">Entregado</Button>
     </>
-  ) : post.offersCount > 0 ? (
+  ) : (post.offersCount ?? 0) > 0 ? (
     <Button className="w-full">Ofertas</Button>
   ) : null;
 
@@ -184,7 +184,7 @@ export function SaleCard({
     <article className={cardClasses}>
       {showBadge && (
         <span className="absolute top-1 left-1 z-10 w-8 h-8 rounded-full text-card flex items-center justify-center border-2 border-card bg-chart-3">
-          {post.offersCount}
+          {post.offersCount ?? 0}
         </span>
       )}
 

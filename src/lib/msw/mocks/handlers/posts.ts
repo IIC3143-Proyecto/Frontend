@@ -8,6 +8,13 @@ export const postsHandlers = [
     return HttpResponse.json(MOCK_SELLER_POSTS);
   }),
 
+  http.delete('*/post/:id', ({ params }) => {
+    const idx = MOCK_SELLER_POSTS.findIndex((p) => p.id === params.id);
+    if (idx === -1) return new HttpResponse(null, { status: 404 });
+    MOCK_SELLER_POSTS.splice(idx, 1);
+    return new HttpResponse(null, { status: 204 });
+  }),
+
   http.post('*/image/post/:id_post', async ({ request }) => {
     const token = request.headers.get('Authorization');
     if (!token) {
