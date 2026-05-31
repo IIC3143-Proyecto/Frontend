@@ -1,5 +1,13 @@
 import { useQuery } from "@tanstack/react-query";
-import { getPosts } from "@/lib/api/post";
+import { getAccessToken } from "@/actions/auth";
+import { getPostsBySeller } from "@/lib/api/post";
 
-export const usePosts = () =>
-  useQuery({ queryKey: ["posts"], queryFn: getPosts });
+export const usePosts = (sellerId: string) =>
+  useQuery({
+    queryKey: ["posts", sellerId],
+    queryFn: async () => {
+      const accessToken = await getAccessToken();
+      return getPostsBySeller(sellerId, accessToken);
+    },
+    enabled: !!sellerId,
+  });

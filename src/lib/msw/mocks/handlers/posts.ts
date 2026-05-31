@@ -1,21 +1,19 @@
 import { http, HttpResponse } from 'msw';
-import { mockPost } from '../data/posts';
+import { mockPost, MOCK_SELLER_POSTS } from '../data/posts';
 
 export const postsHandlers = [
-  http.get('*/tags', () =>
-    HttpResponse.json({
-      tags: {
-        'Marca': ['Nike', 'Adidas', 'Gucci', 'Zara', 'Polo', 'Otro'],
-        'Estilo': ['Casual', 'Formal', 'Deportivo', 'Streetwear', 'Vintage', 'Otro'],
-        'Color': ['Rojo', 'Azul', 'Verde', 'Negro', 'Blanco'],
-        'Temporada': ['Verano', 'Invierno', 'Primavera', 'Otoño'],
-        'Condición': ['Nuevo', 'Casi nuevo', 'Aceptable', 'Usado'],
-        'Talla': ['XS', 'S', 'M', 'L', 'XL', 'XXL'],
-        Género: ['Masculino', 'Femenino', 'Unisex'],
-        'Tipo de prenda': ['Polera', 'Pantalón', 'Vestido', 'Abrigo', 'Shorts', 'Falda', 'Camiseta', 'Chaqueta', 'Otro'],
-      },
-    })
-  ),
+  http.get('*/api/post/seller/:id_user', ({ request }) => {
+    const token = request.headers.get('Authorization');
+    if (!token) return HttpResponse.json({ message: 'Unauthorized' }, { status: 401 });
+    return HttpResponse.json(MOCK_SELLER_POSTS);
+  }),
+
+  http.delete('*/post/:id', ({ params }) => {
+    const idx = MOCK_SELLER_POSTS.findIndex((p) => p.id === params.id);
+    if (idx === -1) return new HttpResponse(null, { status: 404 });
+    MOCK_SELLER_POSTS.splice(idx, 1);
+    return new HttpResponse(null, { status: 204 });
+  }),
 
   http.post('*/image/post/:id_post', async ({ request }) => {
     const token = request.headers.get('Authorization');
