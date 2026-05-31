@@ -1,9 +1,12 @@
 import { PostStatus } from './post-status.enum';
+import type { UserDto, InteractionDto } from './user';
 
 export type PostDto = {
   id: string;
   sellerId: string;
   buyerId?: string;
+  seller: UserDto;
+  buyer?: UserDto;
   title: string;
   description: string;
   priceClp: number;
@@ -17,7 +20,7 @@ export type PostDto = {
   isDeleted: boolean;
   images?: string;
   createdAtUtcMinus3: string;
-  interactions: unknown[];
+  interactions: InteractionDto[];
 };
 
 export type NewPostDto = {

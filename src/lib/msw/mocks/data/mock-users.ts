@@ -1,4 +1,4 @@
-import type { SyncUserResponse } from '@/types/api';
+import type { SyncUserResponse } from '@/lib/types/auth';
 import { type MockUserScenario } from '../scenario';
 
 

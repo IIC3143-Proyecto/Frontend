@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
 import { auth0 } from '@/lib/auth0';
 import { BASE } from '@/lib/api/base';
-import type { UserDto, SyncUserResponse } from '@/types/api';
+import type { UserDto } from '@/lib/types/user';
+import type { SyncUserResponse } from '@/lib/types/auth';
 
 export async function GET() {
   const tokenResult = await auth0.getAccessToken();

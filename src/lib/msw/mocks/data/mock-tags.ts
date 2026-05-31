@@ -1,4 +1,4 @@
-import type { TagsByCategoryDto } from '@/types/api';
+import type { TagsByCategoryDto } from '@/lib/types/tag';
 
 export const TAGS_MOCK: TagsByCategoryDto = {
   tags: {

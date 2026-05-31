@@ -1,10 +1,25 @@
 import { PostStatus } from '@/lib/types/post-status.enum';
 import type { PostDto } from '@/lib/types/post';
+import type { UserDto } from '@/lib/types/user';
+
+const MOCK_SELLER: UserDto = {
+  id: 'seller-mock-1',
+  name: 'Mock Seller',
+  username: 'mock_seller',
+  email: 'seller@mock.cl',
+  providerAuth0: 'auth0|seller_mock',
+  createdAtUtcMinus3: '2025-01-01T00:00:00.000Z',
+  updatedAtUtcMinus3: '2025-01-01T00:00:00.000Z',
+  posts: [],
+  interactions: [],
+  following: [],
+  followers: [],
+};
 
 export const mockPost = (id: string, body: Record<string, unknown> = {}): PostDto => ({
   id,
-  sellerId: 'seller-mock-1',
-  buyerId: undefined,
+  sellerId: MOCK_SELLER.id,
+  seller: MOCK_SELLER,
   title: body.title as string ?? '',
   description: body.description as string ?? '',
   priceClp: body.priceClp as number ?? 0,
@@ -15,7 +30,6 @@ export const mockPost = (id: string, body: Record<string, unknown> = {}): PostDt
   viewsCount: 0,
   isActive: true,
   isDeleted: false,
-  images: undefined,
   createdAtUtcMinus3: new Date().toISOString(),
   interactions: [],
 });

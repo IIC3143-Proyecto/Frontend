@@ -1,6 +1,6 @@
 import { http, HttpResponse, delay } from 'msw';
 import { getMockUser, getErrorScenario } from '../scenario';
-import type { SyncUserResponse } from '@/types/api';
+import type { SyncUserResponse } from '@/lib/types/auth';
 import { MOCK_USERS } from '../data/mock-users';
 
 let currentUser: SyncUserResponse = { ...MOCK_USERS[getMockUser()] };

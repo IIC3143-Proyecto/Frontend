@@ -145,7 +145,8 @@ test.describe('Create Post — desktop', () => {
     await waitForToast(page, 'Error de red');
   });
 
-  test('should redirect to session-expired when PATCH /post returns 401', async ({ page }) => {
+  // TODO: enable when backend #48 (PATCH /api/post/:id/tags) is implemented
+  test.fixme('should redirect to session-expired when PATCH /post returns 401', async ({ page }) => {
     await fillStep1(page, { title: 'Camiseta', price: 10000 });
     await uploadPhotos(page, 3);
     await clickNext(page);
@@ -157,7 +158,7 @@ test.describe('Create Post — desktop', () => {
     await page.waitForURL('**/session-expired', { timeout: 8_000 });
   });
 
-  test('should show error toast when PATCH /post returns 500', async ({ page }) => {
+  test.fixme('should show error toast when PATCH /post returns 500', async ({ page }) => {
     await fillStep1(page, { title: 'Camiseta', price: 10000 });
     await uploadPhotos(page, 3);
     await clickNext(page);
@@ -169,7 +170,7 @@ test.describe('Create Post — desktop', () => {
     await waitForToast(page, 'Error al publicar');
   });
 
-  test('should show network error toast when PATCH /post fails', async ({ page }) => {
+  test.fixme('should show network error toast when PATCH /post fails', async ({ page }) => {
     await fillStep1(page, { title: 'Camiseta', price: 10000 });
     await uploadPhotos(page, 3);
     await clickNext(page);

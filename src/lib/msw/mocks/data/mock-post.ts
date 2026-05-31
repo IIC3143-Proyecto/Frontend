@@ -1,4 +1,5 @@
-import type { PostDto } from '@/types/api';
+import type { PostDto } from '@/lib/types/post';
+import { PostStatus } from '@/lib/types/post-status.enum';
 
 export function mockPostDto(id: string, body: Record<string, unknown> = {}): PostDto {
   return {
@@ -21,7 +22,7 @@ export function mockPostDto(id: string, body: Record<string, unknown> = {}): Pos
     description: typeof body.description === 'string' ? body.description : '',
     priceClp: typeof body.priceClp === 'number' ? body.priceClp : 0,
     isNegotiable: typeof body.isNegotiable === 'boolean' ? body.isNegotiable : false,
-    status: 'Sin publicar',
+    status: PostStatus.UNPUBLISHED,
     likesCount: 0,
     savesCount: 0,
     viewsCount: 0,

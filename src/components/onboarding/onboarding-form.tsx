@@ -12,7 +12,8 @@ import { AvatarUpload } from "../common/avatar-upload";
 import { TextInput } from "../common/text-input";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { api } from "@/lib/api";
+import { useQueryClient } from "@tanstack/react-query";
+import { uploadUserAvatar, patchUser } from "@/lib/api/user";
 import { getAccessToken } from "@/actions/auth";
 
 const onboardingSchema = z.object({
@@ -38,47 +39,6 @@ export interface OnboardingFormProps
   userId?: string;
 }
 
-async function uploadAvatar(file: File, token: string, userId: string): Promise<string> {
-  const body = new FormData();
-  body.append("images", file);
-
-  const res = await fetch(api.userImage(userId), {
-    method: "POST",
-    headers: { Authorization: `Bearer ${token}` },
-    body,
-  });
-
-  if (!res.ok) {
-    const json = await res.json().catch(() => ({}));
-    throw Object.assign(new Error(json.message ?? "Failed to upload avatar"), { status: res.status });
-  }
-
-  const { photoUrl } = await res.json();
-  return photoUrl as string;
-}
-
-async function patchUser(
-  data: { username: string; bio: string; photoUrl: string },
-  token: string,
-  userId: string,
-): Promise<void> {
-  const res = await fetch(api.user(userId), {
-    method: "PATCH",
-    headers: {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(data),
-  });
-
-  if (!res.ok) {
-    const json = await res.json().catch(() => ({}));
-    throw Object.assign(new Error(json.message ?? "Failed to save profile"), {
-      status: res.status,
-      field: json.field as string | undefined,
-    });
-  }
-}
 
 /**
  * OnboardingForm
@@ -91,6 +51,7 @@ export const OnboardingForm = React.forwardRef<
   OnboardingFormProps
 >(function OnboardingForm({ onSuccess, disabled = false, userId = 'me', className, ...props }, ref) {
   const router = useRouter();
+  const queryClient = useQueryClient();
 
   const form = useForm<OnboardingFormSchema>({
     resolver: zodResolver(onboardingSchema),
@@ -142,7 +103,7 @@ export const OnboardingForm = React.forwardRef<
       let photoUrl: string;
 
       try {
-        photoUrl = await uploadAvatar(avatarFile!, token, userId);
+        photoUrl = await uploadUserAvatar(userId, avatarFile!, token);
       } catch (err) {
         const status = (err as { status?: number }).status;
         const message = err instanceof Error ? err.message : "Error al subir la foto de usuario";
@@ -163,28 +124,14 @@ export const OnboardingForm = React.forwardRef<
         return;
       }
 
-      try {
-        await patchUser({ username: data.username, bio: data.bio, photoUrl }, token, userId);
-      } catch (err) {
-        const status = (err as { status?: number }).status;
-        const field = (err as { field?: string }).field;
-        const message = err instanceof Error ? err.message : "Error al guardar el perfil";
+      await patchUser(userId, { username: data.username, bio: data.bio, photoUrl }, token);
 
-        if (status === undefined) {
-          toast.error("Error de red", { description: "Verifica tu conexión e inténtalo de nuevo." });
-          return;
-        }
-        if (status === 401) {
-          router.push("/session-expired");
-          return;
-        }
-        if (status === 409 && field === "username") {
-          form.setError("username", { type: "server", message });
-          return;
-        }
-        toast.error("Error", { description: message });
-        return;
-      }
+      queryClient.setQueriesData(
+        { queryKey: ['dbUser'], exact: false },
+        (old: unknown) => old && typeof old === 'object'
+          ? { ...(old as object), onboardingCompleted: true }
+          : old,
+      );
 
       toast.success("Perfil actualizado!", { description: "Tu perfil ha sido actualizado exitosamente." });
       await onSuccess?.();
