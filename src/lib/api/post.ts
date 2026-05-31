@@ -1,6 +1,5 @@
 import type { Post, NewPostDto, PostDto } from '@/lib/types/post';
-
-const BASE = process.env.NEXT_PUBLIC_API_URL ?? '';
+import { BASE } from './base';
 
 export const getPosts = async (): Promise<Post[]> => {
   const res = await fetch(`${BASE}/posts`);
