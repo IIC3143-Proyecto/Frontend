@@ -1,7 +1,7 @@
 import { type Page, expect } from '@playwright/test';
 import path from 'path';
 
-export const AVATAR_FILE = path.join(__dirname, '../../e2e/fixtures/avatar.webp');
+export const AVATAR_FILE = path.join(__dirname, 'fixtures/avatar.webp');
 
 /**
  * Upload the fixture avatar via the hidden react-dropzone input.

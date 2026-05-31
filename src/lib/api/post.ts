@@ -41,7 +41,7 @@ export async function createPost(body: NewPostDto, accessToken: string): Promise
   return id;
 }
 
-// PATCH /api/post/:id/tags — backend #48 not ready; always succeeds (demo)
+// PATCH /api/post/:id/tags — waiting for backend #48
 export async function patchPostTags(_postId: string, _tags: Record<string, string | string[]>, _accessToken: string): Promise<void> {
   return;
 }

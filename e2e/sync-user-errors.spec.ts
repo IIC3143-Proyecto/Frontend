@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { mockSyncUserError, waitForMSW } from '../e2e/helpers/auth';
+import { mockSyncUserError, waitForMSW } from './helpers/auth';
 
 test.describe('Errores de sync-user', () => {
   test.setTimeout(30_000);

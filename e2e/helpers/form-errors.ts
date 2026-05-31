@@ -1,7 +1,7 @@
 import { type Page } from '@playwright/test';
 
-const AVATAR_URL = '**/api/image/user/**';
-const USER_URL = '**/api/user/**';
+const AVATAR_URL = '**/profile/avatar';
+const USER_URL = '**/user';
 
 const AVATAR_SUCCESS_BODY = JSON.stringify({ photoUrl: 'https://vtrna.com/avatars/mock.webp' });
 const USER_SUCCESS_BODY = JSON.stringify({});
