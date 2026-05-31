@@ -7,6 +7,7 @@ import { z } from "zod";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { getAccessToken } from "@/actions/auth";
+import { createPost, patchPost, uploadPostImages } from "@/lib/api/post";
 
 export const createPostSchema = z.object({
   title: z.string().min(1, "Título requerido").max(100, "Máximo 100 caracteres"),
@@ -31,76 +32,6 @@ export type CreatePostInput = z.input<typeof createPostSchema>;
 export interface PhotoItem {
   file: File;
   preview: string;
-}
-
-async function uploadPhotos(photos: PhotoItem[], accessToken: string, postId: string): Promise<void> {
-  const fd = new FormData();
-  photos.forEach((p) => fd.append("photos", p.file));
-
-  const res = await fetch(`/api/image/post/${postId}`, {
-    method: "POST",
-    headers: { Authorization: `Bearer ${accessToken}` },
-    body: fd,
-  });
-
-  if (!res.ok) {
-    const json = await res.json().catch(() => ({}));
-    throw Object.assign(
-      new Error((json as { message?: string }).message ?? "Error al subir las fotos"),
-      { status: res.status }
-    );
-  }
-}
-
-async function postCreate(
-  data: Pick<CreatePostSchema, "title" | "description" | "priceClp" | "isNegotiable"> & { accessToken: string }
-): Promise<string> {
-  const { accessToken, ...body } = data;
-
-  const res = await fetch("/api/post", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(body),
-  });
-
-  if (!res.ok) {
-    const json = await res.json().catch(() => ({}));
-    throw Object.assign(
-      new Error((json as { message?: string }).message ?? "Error al crear la publicación"),
-      { status: res.status }
-    );
-  }
-
-  const { id } = (await res.json()) as { id: string };
-  return id;
-}
-
-type TagFields = Omit<CreatePostSchema, "title" | "description" | "priceClp" | "isNegotiable">;
-
-async function patchTags(
-  data: TagFields & { id: string; accessToken: string }
-): Promise<void> {
-  const { Condición, accessToken, id, ...rest } = data;
-
-  const res = await fetch("/api/post", {
-    method: "PATCH",
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ id, ...rest, Condición: [Condición] }),
-  });
-
-  if (!res.ok) {
-    const json = await res.json().catch(() => ({}));
-    throw Object.assign(
-      new Error((json as { message?: string }).message ?? "Error al actualizar la publicación"),
-      { status: res.status }
-    );
-  }
 }
 
 function useIsMobile() {
@@ -270,7 +201,9 @@ export function useCreatePost(onClose: () => void): UseCreatePostReturn {
         router.push("/session-expired");
         return false;
       }
-      await uploadPhotos(photos, accessToken, postIdRef.current);
+      const fd = new FormData();
+      photos.forEach((p) => fd.append("photos", p.file));
+      await uploadPostImages(postIdRef.current, fd, accessToken);
       photosUploadedRef.current = true;
       return true;
     } catch (err) {
@@ -306,13 +239,15 @@ export function useCreatePost(onClose: () => void): UseCreatePostReturn {
       }
 
       const values = form.getValues();
-      const id = await postCreate({
-        title: values.title,
-        description: values.description,
-        priceClp: Number(values.priceClp),
-        isNegotiable: values.isNegotiable ?? false,
+      const id = await createPost(
+        {
+          title: values.title,
+          description: values.description,
+          priceClp: Number(values.priceClp),
+          isNegotiable: values.isNegotiable ?? false,
+        },
         accessToken,
-      });
+      );
       postIdRef.current = id;
       setIsPostCreated(true);
       return true;
@@ -386,18 +321,20 @@ export function useCreatePost(onClose: () => void): UseCreatePostReturn {
           return;
         }
         try {
-          await patchTags({
-            id: postIdRef.current,
-            Talla: data.Talla,
-            Condición: data.Condición,
-            "Tipo de prenda": data["Tipo de prenda"],
-            Marca: data.Marca,
-            Color: data.Color,
-            Género: data.Género,
-            Estilo: data.Estilo,
-            Temporada: data.Temporada,
+          await patchPost(
+            {
+              id: postIdRef.current,
+              Talla: data.Talla,
+              Condición: [data.Condición],
+              "Tipo de prenda": data["Tipo de prenda"],
+              Marca: data.Marca,
+              Color: data.Color,
+              Género: data.Género,
+              Estilo: data.Estilo,
+              Temporada: data.Temporada,
+            },
             accessToken,
-          });
+          );
           toast.success("Publicación creada", {
             description: "Tu prenda fue publicada exitosamente.",
           });
