@@ -25,8 +25,7 @@ test.beforeEach(async ({ page }) => {
   });
 });
 
-// TODO: fix avatar preview — imageCompression uses WebWorkers that may be restricted in Playwright
-test.skip('should complete onboarding successfully', async ({ page }) => {
+test('should complete onboarding successfully', async ({ page }) => {
   await uploadAvatar(page);
   await fillUsername(page, 'testuser');
   await fillBio(page, 'Una bio de prueba');
