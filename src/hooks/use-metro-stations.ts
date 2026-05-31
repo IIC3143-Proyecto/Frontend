@@ -1,9 +1,8 @@
 import * as React from 'react';
+import { fetchMetroStations } from '@/lib/api/metro';
+import type { Station, MetroLine } from '@/lib/types/metro';
 
 const CACHE_KEY = 'metro-stations';
-
-type Station = { name: string; line: string };
-type MetroLine = { number: string; stations: string[] };
 
 function isValidCache(data: unknown): data is MetroLine[] {
   return (
@@ -47,11 +46,7 @@ export function useMetroStations() {
   React.useEffect(() => {
     if (!loading) return;
 
-    fetch('/api/metro/stations')
-      .then(r => {
-        if (!r.ok) throw new Error(`HTTP error! status: ${r.status}`);
-        return r.json();
-      })
+    fetchMetroStations()
       .then((stations: Station[]) => {
         const grouped = stations.reduce<Record<string, string[]>>((acc, { name, line }) => {
           if (!acc[line]) acc[line] = [];
