@@ -124,7 +124,12 @@ function PillButton({
   );
 }
 
-export function SaleCard({ post, view, onDelete, isDeleting }: SaleCardProps) {
+export function SaleCard({
+  post,
+  view,
+  onDeleteAction,
+  isDeleting,
+}: SaleCardProps) {
   const [editOpen, setEditOpen] = useState(false);
   const [detailOpen, setDetailOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -261,7 +266,7 @@ export function SaleCard({ post, view, onDelete, isDeleting }: SaleCardProps) {
         open={deleteOpen}
         onClose={() => setDeleteOpen(false)}
         onConfirm={() => {
-          onDelete?.(post.id);
+          onDeleteAction?.(post.id);
           setDeleteOpen(false);
         }}
         title="¿Eliminar publicación?"
