@@ -6,16 +6,22 @@ import {
   IconPencil,
   IconTrash,
 } from "@tabler/icons-react";
+import { useState } from "react";
 import type { Post } from "@/lib/types/post";
 import { PostStatus } from "@/lib/types/post-status.enum";
 import { cn, formatPriceCLP } from "@/lib/utils";
+import { PostDetailModal } from "./post-detail-modal";
+import { PostEditModal } from "./post-edit-modal";
 import { MiniRoundButton } from "@/components/common/mini-round-button";
+import { ConfirmDialog } from "@/components/common/confirm-dialog";
 
 export type SaleView = "list" | "grid2" | "grid4";
 
 type SaleCardProps = {
   post: Post;
   view: SaleView;
+  onDeleteAction?: (postId: string) => void;
+  isDeleting?: boolean;
 };
 
 const STEPS = ["Con ofertas", "Oferta aceptada", "Venta realizada"] as const;
@@ -118,7 +124,10 @@ function PillButton({
   );
 }
 
-export function SaleCard({ post, view }: SaleCardProps) {
+export function SaleCard({ post, view, onDelete, isDeleting }: SaleCardProps) {
+  const [editOpen, setEditOpen] = useState(false);
+  const [detailOpen, setDetailOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
   const steps = getSteps(post);
   const isSold = post.status === PostStatus.SOLD;
   const isAccepted = post.status === PostStatus.RESERVED;
@@ -151,25 +160,35 @@ export function SaleCard({ post, view }: SaleCardProps) {
         <div className="absolute top-1 right-2 z-20 flex flex-col gap-1">
           {!isSold && !isAccepted ? (
             <>
-              <MiniRoundButton aria-label="Editar">
+              <MiniRoundButton
+                aria-label="Editar"
+                onClick={() => setEditOpen(true)}
+              >
                 <IconPencil className="w-4 h-4" />
               </MiniRoundButton>
               <MiniRoundButton
                 aria-label="Eliminar"
                 className="text-destructive"
+                disabled={isDeleting}
+                onClick={() => setDeleteOpen(true)}
               >
                 <IconTrash className="w-4 h-4" />
               </MiniRoundButton>
             </>
           ) : (
             <>
-              <MiniRoundButton aria-label="Ver detalle">
+              <MiniRoundButton
+                aria-label="Ver detalle"
+                onClick={() => setDetailOpen(true)}
+              >
                 <IconInfoCircle className="w-4 h-4" />
               </MiniRoundButton>
               {!isSold && (
                 <MiniRoundButton
                   aria-label="Eliminar"
                   className="text-destructive"
+                  disabled={isDeleting}
+                  onClick={() => setDeleteOpen(true)}
                 >
                   <IconTrash className="w-4 h-4" />
                 </MiniRoundButton>
@@ -227,6 +246,29 @@ export function SaleCard({ post, view }: SaleCardProps) {
           ) : null}
         </div>
       </div>
+
+      <PostEditModal
+        open={editOpen}
+        onClose={() => setEditOpen(false)}
+        post={post}
+      />
+      <PostDetailModal
+        open={detailOpen}
+        onClose={() => setDetailOpen(false)}
+        post={post}
+      />
+      <ConfirmDialog
+        open={deleteOpen}
+        onClose={() => setDeleteOpen(false)}
+        onConfirm={() => {
+          onDelete?.(post.id);
+          setDeleteOpen(false);
+        }}
+        title="¿Eliminar publicación?"
+        description="Esta acción no se puede deshacer."
+        confirmLabel="Eliminar"
+        variant="destructive"
+      />
     </article>
   );
 }

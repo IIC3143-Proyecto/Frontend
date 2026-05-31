@@ -89,4 +89,10 @@ export const postsHandlers = [
   http.get("*/posts", () => {
     return HttpResponse.json(currentPosts);
   }),
+  http.delete("*/post/:id", ({ params }) => {
+    const idx = currentPosts.findIndex((p) => p.id === params.id);
+    if (idx === -1) return new HttpResponse(null, { status: 404 });
+    currentPosts.splice(idx, 1);
+    return new HttpResponse(null, { status: 204 });
+  }),
 ];

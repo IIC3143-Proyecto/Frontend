@@ -7,3 +7,10 @@ export const getPosts = async (): Promise<Post[]> => {
   if (!res.ok) throw new Error("Error al obtener posts");
   return res.json();
 };
+
+export const deletePost = async (postId: string): Promise<void> => {
+  const res = await fetch(`${BASE}/post/${postId}`, {
+    method: "DELETE",
+  });
+  if (!res.ok) throw new Error("Error al eliminar post");
+};

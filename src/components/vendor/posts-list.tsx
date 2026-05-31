@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { Grid3x3, LayoutGrid, Menu } from "lucide-react";
 import { usePosts } from "@/hooks/use-posts";
+import { useDeletePost } from "@/hooks/use-delete-post";
 import { PostStatus } from "@/lib/types/post-status.enum";
 import { cn } from "@/lib/utils";
 import { SaleCard, type SaleView } from "@/components/common/cards/sale-card";
@@ -24,6 +25,8 @@ export function PostsList() {
   const [view, setView] = useState<SaleView>("list");
   const [tab, setTab] = useState<Tab>("activas");
   const { data: posts, isLoading, isError } = usePosts();
+  const { mutate: deletePost, isPending: isDeleting, variables: deletingId } =
+    useDeletePost();
 
   const filtered = useMemo(() => {
     if (!posts) return [];
@@ -98,7 +101,13 @@ export function PostsList() {
           </p>
         )}
         {filtered.map((post) => (
-          <SaleCard key={post.id} post={post} view={view} />
+          <SaleCard
+            key={post.id}
+            post={post}
+            view={view}
+            onDelete={deletePost}
+            isDeleting={isDeleting && deletingId === post.id}
+          />
         ))}
       </div>
     </div>
