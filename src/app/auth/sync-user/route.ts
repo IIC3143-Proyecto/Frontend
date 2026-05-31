@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { auth0 } from '@/lib/auth0';
+import { BASE } from '@/lib/api/base';
 
 export async function GET() {
   const tokenResult = await auth0.getAccessToken();
@@ -7,12 +8,11 @@ export async function GET() {
     return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
   }
 
-  const backendUrl = process.env.BACKEND_API_URL?.replace(/\/$/, '');
-  if (!backendUrl) {
+  if (!BASE) {
     return NextResponse.json({ error: 'Backend not configured' }, { status: 503 });
   }
 
-  const res = await fetch(`${backendUrl}/api/auth/sync-user`, {
+  const res = await fetch(`${BASE}/api/auth/sync-user`, {
     headers: { Authorization: `Bearer ${tokenResult.token}` },
   });
 
