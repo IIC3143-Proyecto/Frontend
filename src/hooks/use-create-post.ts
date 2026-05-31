@@ -342,7 +342,7 @@ export function useCreatePost(onClose: () => void): UseCreatePostReturn {
     )();
 
     setIsSubmitting(false);
-  }, [validateStep, form, onClose, reset, router]);
+}, [validateStep, form, onClose, reset, router, queryClient]);
 
   return {
     form,
