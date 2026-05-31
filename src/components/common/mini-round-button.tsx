@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
 export function MiniRoundButton({
   children,
@@ -6,15 +7,16 @@ export function MiniRoundButton({
   ...rest
 }: React.ButtonHTMLAttributes<HTMLButtonElement>) {
   return (
-    <button
-      type="button"
+    <Button
+      variant="ghost"
+      size="icon"
       className={cn(
-        "flex items-center justify-center p-2 rounded-full border-0 bg-popover cursor-pointer shadow-sm transition active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100",
+        "h-8 w-8 rounded-full bg-popover shadow-sm active:scale-95 disabled:active:scale-100 cursor-pointer",
         className,
       )}
       {...rest}
     >
       {children}
-    </button>
+    </Button>
   );
 }
