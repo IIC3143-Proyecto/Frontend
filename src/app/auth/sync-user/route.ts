@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { auth0 } from '@/lib/auth0';
 import { BASE } from '@/lib/api/base';
+import type { UserDto } from '@/lib/types/user';
+import type { SyncUserResponse } from '@/lib/types/auth';
 
 export async function GET() {
   const tokenResult = await auth0.getAccessToken();
@@ -20,10 +22,13 @@ export async function GET() {
     return NextResponse.json({ error: 'Backend error' }, { status: res.status });
   }
 
-  const result = await res.json();
-  const user = result.data ?? result;
-  return NextResponse.json({
+  const user = await res.json() as UserDto;
+
+  // TODO: replace with a dedicated backend flag when available
+  const response: SyncUserResponse = {
     ...user,
     onboardingCompleted: !!user.bio,
-  });
+  };
+
+  return NextResponse.json(response);
 }
