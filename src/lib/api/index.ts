@@ -4,11 +4,12 @@
 // "not ready" endpoints (#46, #48) are in-function stubs in src/lib/api/ — no route handler needed.
 // To promote when backend ships: replace the stub with a real fetch to remote().
 
+import { BASE } from './base';
+
 const useMSW = process.env.NEXT_PUBLIC_ENABLE_MSW === 'true';
-const apiBase = process.env.NEXT_PUBLIC_API_URL ?? '';
 
 function remote(path: string): string {
-  return !useMSW && apiBase ? `${apiBase}${path}` : path;
+  return !useMSW && BASE ? `${BASE}${path}` : path;
 }
 
 function local(path: string): string {
@@ -17,8 +18,8 @@ function local(path: string): string {
 
 export const api = {
   syncUser:   () => local('/auth/sync-user'),                   // BFF — always local
-  tags:       () => remote('/api/tag'),                         // backend #39
-  userImage:  (id: string) => remote(`/api/image/user/${id}`), // backend #16
-  post:       () => remote('/api/post'),                        // backend #19/#20
-  postImages: (id: string) => remote(`/api/image/post/${id}`), // backend #16
+  tags:       () => remote('/api/tag'),
+  userImage:  (id: string) => remote(`/api/image/user/${id}`),
+  post:       () => remote('/api/post'),
+  postImages: (id: string) => remote(`/api/image/post/${id}`),
 };

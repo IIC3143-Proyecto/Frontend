@@ -1,6 +1,5 @@
 import { api } from './index';
 
-// POST /api/image/user/:id — backend #16 (implementado, devuelve { message })
 // TODO: leer photoUrl del response cuando el backend lo incluya
 export async function uploadUserAvatar(
   userId: string,
