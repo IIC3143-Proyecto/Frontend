@@ -41,8 +41,9 @@ export async function createPost(body: NewPostDto, accessToken: string): Promise
   return id;
 }
 
+// PATCH /api/post/:id/tags — backend #48 not ready; BFF stub always returns 200
 export async function patchPostTags(postId: string, tags: Record<string, string | string[]>, accessToken: string): Promise<void> {
-  const res = await fetch(`/api/post/${postId}/tags`, {
+  await fetch(`/api/post/${postId}/tags`, {
     method: 'PATCH',
     headers: {
       Authorization: `Bearer ${accessToken}`,
@@ -50,13 +51,6 @@ export async function patchPostTags(postId: string, tags: Record<string, string 
     },
     body: JSON.stringify(tags),
   });
-  if (!res.ok) {
-    const json = await res.json().catch(() => ({}));
-    throw Object.assign(
-      new Error((json as { message?: string }).message ?? 'Error al actualizar la publicación'),
-      { status: res.status }
-    );
-  }
 }
 
 export async function patchPost(body: Record<string, unknown> & { id: string }, accessToken: string): Promise<void> {
