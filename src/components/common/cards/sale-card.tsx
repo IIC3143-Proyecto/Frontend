@@ -13,7 +13,7 @@ import { cn, formatPriceCLP } from "@/lib/utils";
 import { PostDetailModal } from "./post-detail-modal";
 import { PostEditModal } from "./post-edit-modal";
 import { MiniRoundButton } from "@/components/common/mini-round-button";
-import { PillButton } from "@/components/common/pill-button";
+import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/common/confirm-dialog";
 
 export type SaleView = "list" | "grid2" | "grid4";
@@ -191,30 +191,25 @@ export function SaleCard({
           )}
         >
           {isCompact ? (
-            <button
-              type="button"
+            <Button
+              variant="outline"
+              size="icon"
               aria-label="Acciones"
-              className="w-9 h-9 rounded-full border-2 border-border bg-muted flex items-center justify-center cursor-pointer active:scale-95"
+              className="rounded-full"
             >
               <IconDots className="w-5 h-5" />
-            </button>
+            </Button>
           ) : isSold ? (
-            <PillButton variant="action" className="w-full">
-              Ver venta
-            </PillButton>
+            <Button className="w-full">Ver venta</Button>
           ) : isAccepted ? (
             <>
-              <PillButton variant="secondary" className="flex-1">
+              <Button variant="outline" className="flex-1">
                 Oferta
-              </PillButton>
-              <PillButton variant="action" className="flex-1">
-                Entregado
-              </PillButton>
+              </Button>
+              <Button className="flex-1">Entregado</Button>
             </>
           ) : post.offersCount > 0 ? (
-            <PillButton variant="action" className="w-full">
-              Ofertas
-            </PillButton>
+            <Button className="w-full">Ofertas</Button>
           ) : null}
         </div>
       </div>

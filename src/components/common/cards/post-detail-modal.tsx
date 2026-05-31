@@ -6,7 +6,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { PillButton } from "@/components/common/pill-button";
+import { Button } from "@/components/ui/button";
 import type { Post } from "@/lib/types/post";
 import { formatPriceCLP } from "@/lib/utils";
 
@@ -44,9 +44,9 @@ export function PostDetailModal({ open, onClose, post }: Props) {
             <div className="bg-muted aspect-5/6 flex items-center justify-center text-xs text-muted-foreground">
               Imagen
             </div>
-            <PillButton variant="secondary" className="w-full">
+            <Button variant="outline" className="w-full">
               Ver más fotos
-            </PillButton>
+            </Button>
           </div>
 
           <div className="flex flex-col gap-4 min-w-0">
@@ -96,9 +96,9 @@ export function PostDetailModal({ open, onClose, post }: Props) {
         </div>
 
         <DialogFooter>
-          <PillButton variant="secondary" onClick={onClose} className="w-full">
+          <Button variant="outline" onClick={onClose} className="w-full">
             Cerrar
-          </PillButton>
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
