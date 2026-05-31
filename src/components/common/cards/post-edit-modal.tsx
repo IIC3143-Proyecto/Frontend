@@ -4,7 +4,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import type { Post } from "@/lib/types/post";
+import type { PostDto as Post } from "@/lib/types/post";
 
 type Props = {
   open: boolean;

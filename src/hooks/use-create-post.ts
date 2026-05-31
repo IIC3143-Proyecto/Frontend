@@ -6,7 +6,22 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 import { getAccessToken } from "@/actions/auth";
+import { createPost, patchPostTags, uploadPostImages } from "@/lib/api/post";
+
+function handleApiError(err: unknown, label: string, router: { push: (url: string) => void }) {
+  const status = (err as { status?: number }).status;
+  const message = err instanceof Error ? err.message : `Error en ${label}`;
+
+  if (status === undefined) {
+    toast.error("Error de red", { description: "Verifica tu conexión e inténtalo de nuevo." });
+  } else if (status === 401) {
+    router.push("/session-expired");
+  } else {
+    toast.error(label, { description: message });
+  }
+}
 
 export const createPostSchema = z.object({
   title: z.string().min(1, "Título requerido").max(100, "Máximo 100 caracteres"),
@@ -31,76 +46,6 @@ export type CreatePostInput = z.input<typeof createPostSchema>;
 export interface PhotoItem {
   file: File;
   preview: string;
-}
-
-async function uploadPhotos(photos: PhotoItem[], accessToken: string, postId: string): Promise<void> {
-  const fd = new FormData();
-  photos.forEach((p) => fd.append("photos", p.file));
-
-  const res = await fetch(`/api/image/post/${postId}`, {
-    method: "POST",
-    headers: { Authorization: `Bearer ${accessToken}` },
-    body: fd,
-  });
-
-  if (!res.ok) {
-    const json = await res.json().catch(() => ({}));
-    throw Object.assign(
-      new Error((json as { message?: string }).message ?? "Error al subir las fotos"),
-      { status: res.status }
-    );
-  }
-}
-
-async function postCreate(
-  data: Pick<CreatePostSchema, "title" | "description" | "priceClp" | "isNegotiable"> & { accessToken: string }
-): Promise<string> {
-  const { accessToken, ...body } = data;
-
-  const res = await fetch("/api/post", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(body),
-  });
-
-  if (!res.ok) {
-    const json = await res.json().catch(() => ({}));
-    throw Object.assign(
-      new Error((json as { message?: string }).message ?? "Error al crear la publicación"),
-      { status: res.status }
-    );
-  }
-
-  const { id } = (await res.json()) as { id: string };
-  return id;
-}
-
-type TagFields = Omit<CreatePostSchema, "title" | "description" | "priceClp" | "isNegotiable">;
-
-async function patchTags(
-  data: TagFields & { id: string; accessToken: string }
-): Promise<void> {
-  const { Condición, accessToken, id, ...rest } = data;
-
-  const res = await fetch("/api/post", {
-    method: "PATCH",
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ id, ...rest, Condición: [Condición] }),
-  });
-
-  if (!res.ok) {
-    const json = await res.json().catch(() => ({}));
-    throw Object.assign(
-      new Error((json as { message?: string }).message ?? "Error al actualizar la publicación"),
-      { status: res.status }
-    );
-  }
 }
 
 function useIsMobile() {
@@ -160,6 +105,7 @@ export interface UseCreatePostReturn {
 
 export function useCreatePost(onClose: () => void): UseCreatePostReturn {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const isMobile = useIsMobile();
   const totalSteps = isMobile ? 5 : 3;
 
@@ -270,23 +216,13 @@ export function useCreatePost(onClose: () => void): UseCreatePostReturn {
         router.push("/session-expired");
         return false;
       }
-      await uploadPhotos(photos, accessToken, postIdRef.current);
+      const fd = new FormData();
+      photos.forEach((p) => fd.append("images", p.file));
+      await uploadPostImages(postIdRef.current, fd, accessToken);
       photosUploadedRef.current = true;
       return true;
     } catch (err) {
-      const status = (err as { status?: number }).status;
-      const message =
-        err instanceof Error ? err.message : "Error al subir las fotos";
-
-      if (status === undefined) {
-        toast.error("Error de red", {
-          description: "Verifica tu conexión e inténtalo de nuevo.",
-        });
-      } else if (status === 401) {
-        router.push("/session-expired");
-      } else {
-        toast.error("Error al subir fotos", { description: message });
-      }
+      handleApiError(err, "Error al subir fotos", router);
       return false;
     } finally {
       setIsUploading(false);
@@ -306,30 +242,20 @@ export function useCreatePost(onClose: () => void): UseCreatePostReturn {
       }
 
       const values = form.getValues();
-      const id = await postCreate({
-        title: values.title,
-        description: values.description,
-        priceClp: Number(values.priceClp),
-        isNegotiable: values.isNegotiable ?? false,
+      const id = await createPost(
+        {
+          title: values.title,
+          description: values.description,
+          priceClp: Number(values.priceClp),
+          isNegotiable: values.isNegotiable ?? false,
+        },
         accessToken,
-      });
+      );
       postIdRef.current = id;
       setIsPostCreated(true);
       return true;
     } catch (err) {
-      const status = (err as { status?: number }).status;
-      const message =
-        err instanceof Error ? err.message : "Error al crear la publicación";
-
-      if (status === undefined) {
-        toast.error("Error de red", {
-          description: "Verifica tu conexión e inténtalo de nuevo.",
-        });
-      } else if (status === 401) {
-        router.push("/session-expired");
-      } else {
-        toast.error("Error al crear publicación", { description: message });
-      }
+      handleApiError(err, "Error al crear publicación", router);
       return false;
     } finally {
       setIsPosting(false);
@@ -386,37 +312,28 @@ export function useCreatePost(onClose: () => void): UseCreatePostReturn {
           return;
         }
         try {
-          await patchTags({
-            id: postIdRef.current,
-            Talla: data.Talla,
-            Condición: data.Condición,
-            "Tipo de prenda": data["Tipo de prenda"],
-            Marca: data.Marca,
-            Color: data.Color,
-            Género: data.Género,
-            Estilo: data.Estilo,
-            Temporada: data.Temporada,
+          await patchPostTags(
+            postIdRef.current,
+            {
+              Talla: data.Talla,
+              Condición: [data.Condición],
+              "Tipo de prenda": data["Tipo de prenda"],
+              Marca: data.Marca,
+              Color: data.Color,
+              Género: data.Género,
+              Estilo: data.Estilo,
+              Temporada: data.Temporada,
+            },
             accessToken,
-          });
+          );
           toast.success("Publicación creada", {
             description: "Tu prenda fue publicada exitosamente.",
           });
+          queryClient.invalidateQueries({ queryKey: ["posts"] });
           onClose();
           reset();
         } catch (err) {
-          const status = (err as { status?: number }).status;
-          const message =
-            err instanceof Error ? err.message : "Error al actualizar la publicación";
-
-          if (status === undefined) {
-            toast.error("Error de red", {
-              description: "Verifica tu conexión e inténtalo de nuevo.",
-            });
-          } else if (status === 401) {
-            router.push("/session-expired");
-          } else {
-            toast.error("Error al publicar", { description: message });
-          }
+          handleApiError(err, "Error al publicar", router);
         }
       },
       () => {
@@ -425,7 +342,7 @@ export function useCreatePost(onClose: () => void): UseCreatePostReturn {
     )();
 
     setIsSubmitting(false);
-  }, [validateStep, form, onClose, reset, router]);
+}, [validateStep, form, onClose, reset, router, queryClient]);
 
   return {
     form,

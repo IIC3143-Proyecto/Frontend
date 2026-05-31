@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { Grid3x3, LayoutGrid, Menu } from "lucide-react";
 import { usePosts } from "@/hooks/use-posts";
 import { useDeletePost } from "@/hooks/use-delete-post";
+import { useAuth } from "@/hooks/use-auth";
 import { PostStatus } from "@/lib/types/post-status.enum";
 import { cn } from "@/lib/utils";
 import { SaleCard, type SaleView } from "@/components/common/cards/sale-card";
@@ -24,7 +25,8 @@ const VIEWS: { id: SaleView; label: string; Icon: typeof Menu }[] = [
 export function PostsList() {
   const [view, setView] = useState<SaleView>("list");
   const [tab, setTab] = useState<Tab>("activas");
-  const { data: posts, isLoading, isError } = usePosts();
+  const { dbUser } = useAuth();
+  const { data: posts, isLoading, isError } = usePosts(dbUser?.id ?? "");
   const { mutate: deletePost, isPending: isDeleting, variables: deletingId } =
     useDeletePost();
 
