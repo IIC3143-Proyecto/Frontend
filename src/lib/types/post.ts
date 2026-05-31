@@ -1,6 +1,6 @@
-import { PostStatus } from "./post-status.enum";
+import { PostStatus } from './post-status.enum';
 
-export type Post = {
+export type PostDto = {
   id: string;
   sellerId: string;
   buyerId?: string;
@@ -12,8 +12,19 @@ export type Post = {
   likesCount: number;
   savesCount: number;
   viewsCount: number;
-  offersCount: number;
-  images?: string;
+  offersCount?: number;
   isActive: boolean;
+  isDeleted: boolean;
+  images?: string;
   createdAtUtcMinus3: string;
+  interactions: unknown[];
+};
+
+export type Post = PostDto;
+
+export type NewPostDto = {
+  title: string;
+  description: string;
+  priceClp: number;
+  isNegotiable: boolean;
 };
