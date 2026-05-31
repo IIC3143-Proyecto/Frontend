@@ -1,11 +1,11 @@
 import { http, HttpResponse } from "msw";
 import { PostStatus } from "@/lib/types/post-status.enum";
+import { Post } from "@/lib/types/post";
 
-const POSTS = [
+const POSTS: Post[] = [
   {
     id: "post_1",
     sellerId: "user_123",
-    buyerId: null,
     title: "Vintage 90s Jacket",
     description: "Chaqueta vintage en excelente estado, sin defectos.",
     priceClp: 25000,
@@ -15,14 +15,13 @@ const POSTS = [
     savesCount: 1,
     viewsCount: 12,
     offersCount: 3,
-    images: null,
     isActive: true,
     createdAtUtcMinus3: new Date().toISOString(),
+    // images omitido — es opcional
   },
   {
     id: "post_2",
     sellerId: "user_123",
-    buyerId: null,
     title: "Levis 501 Custom",
     description: "Talla M, usada dos veces.",
     priceClp: 18000,
@@ -32,7 +31,6 @@ const POSTS = [
     savesCount: 0,
     viewsCount: 3,
     offersCount: 0,
-    images: null,
     isActive: true,
     createdAtUtcMinus3: new Date().toISOString(),
   },
@@ -49,14 +47,12 @@ const POSTS = [
     savesCount: 3,
     viewsCount: 25,
     offersCount: 1,
-    images: null,
     isActive: true,
     createdAtUtcMinus3: new Date().toISOString(),
   },
   {
     id: "post_4",
     sellerId: "user_123",
-    buyerId: null,
     title: "Polera Algodón Premium",
     description: "Polera básica, talla M.",
     priceClp: 12990,
@@ -66,7 +62,6 @@ const POSTS = [
     savesCount: 0,
     viewsCount: 0,
     offersCount: 0,
-    images: null,
     isActive: false,
     createdAtUtcMinus3: new Date().toISOString(),
   },
@@ -83,24 +78,6 @@ const POSTS = [
     savesCount: 4,
     viewsCount: 40,
     offersCount: 1,
-    images: null,
-    isActive: false,
-    createdAtUtcMinus3: new Date().toISOString(),
-  },
-  {
-    id: "post_6",
-    sellerId: "user_123",
-    buyerId: "user_321",
-    title: "Audífonos Bluetooth Pro",
-    description: "Muy buen estado, poco uso.",
-    priceClp: 89990,
-    isNegotiable: true,
-    status: PostStatus.SOLD,
-    likesCount: 6,
-    savesCount: 2,
-    viewsCount: 30,
-    offersCount: 2,
-    images: null,
     isActive: false,
     createdAtUtcMinus3: new Date().toISOString(),
   },

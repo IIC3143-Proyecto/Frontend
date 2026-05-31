@@ -1,6 +1,11 @@
 "use client";
 
-import { Info, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
+import {
+  IconInfoCircle,
+  IconDots,
+  IconPencil,
+  IconTrash,
+} from "@tabler/icons-react";
 import type { Post } from "@/lib/types/post";
 import { PostStatus } from "@/lib/types/post-status.enum";
 import { cn, formatPriceCLP } from "@/lib/utils";
@@ -147,26 +152,26 @@ export function SaleCard({ post, view }: SaleCardProps) {
           {!isSold && !isAccepted ? (
             <>
               <MiniRoundButton aria-label="Editar">
-                <Pencil className="w-4 h-4" />
+                <IconPencil className="w-4 h-4" />
               </MiniRoundButton>
               <MiniRoundButton
                 aria-label="Eliminar"
                 className="text-destructive"
               >
-                <Trash2 className="w-4 h-4" />
+                <IconTrash className="w-4 h-4" />
               </MiniRoundButton>
             </>
           ) : (
             <>
               <MiniRoundButton aria-label="Ver detalle">
-                <Info className="w-4 h-4" />
+                <IconInfoCircle className="w-4 h-4" />
               </MiniRoundButton>
               {!isSold && (
                 <MiniRoundButton
                   aria-label="Eliminar"
                   className="text-destructive"
                 >
-                  <Trash2 className="w-4 h-4" />
+                  <IconTrash className="w-4 h-4" />
                 </MiniRoundButton>
               )}
             </>
@@ -204,7 +209,7 @@ export function SaleCard({ post, view }: SaleCardProps) {
               aria-label="Acciones"
               className="w-9 h-9 rounded-full border-2 border-border bg-muted flex items-center justify-center cursor-pointer active:scale-95"
             >
-              <MoreHorizontal className="w-5 h-5" />
+              <IconDots className="w-5 h-5" />
             </button>
           ) : isSold ? (
             <PillButton variant="action" className="w-full">

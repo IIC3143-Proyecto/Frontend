@@ -1,4 +1,4 @@
-import { Plus } from "lucide-react";
+import { IconPlus } from "@tabler/icons-react";
 import { PostsList } from "@/components/vendor/posts-list";
 
 export default function PostsPage() {
@@ -15,7 +15,7 @@ export default function PostsPage() {
         aria-label="Nueva publicación"
         className="fixed bottom-4 right-4 bg-primary text-primary-foreground rounded-full cursor-pointer items-center z-50 p-3"
       >
-        <Plus className="w-6 h-6 md:w-10 md:h-10" />
+        <IconPlus className="w-6 h-6 md:w-10 md:h-10" />
       </button>
     </div>
   );
