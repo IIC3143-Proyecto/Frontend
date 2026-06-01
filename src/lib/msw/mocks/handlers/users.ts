@@ -1,5 +1,5 @@
 import { http, HttpResponse, delay } from 'msw';
-import { getMockUser, getErrorScenario } from '../scenario';
+import { getMockUser, getErrorScenario, setMockUser } from '../scenario';
 import type { SyncUserResponse } from '@/lib/types/auth';
 import { MOCK_USERS } from '../data/mock-users';
 
@@ -44,6 +44,7 @@ export const usersHandlers = [
     }
 
     currentUser = { ...currentUser, ...(data as Partial<SyncUserResponse>) };
+    setMockUser('FULL');
     return HttpResponse.json(currentUser, { status: 200 });
   }),
 ];

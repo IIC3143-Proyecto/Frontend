@@ -1,29 +1,16 @@
 "use client";
 
-import { useMutation } from "@tanstack/react-query";
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL;
+import Link from "next/link";
 
 export default function Home() {
-  const { mutate, isPending, isSuccess, isError, error } = useMutation({
-    mutationFn: async () => {
-      const res = await fetch(`${API_URL}/health`);
-      if (!res.ok) throw new Error(`Status: ${res.status}`);
-      return res.json();
-    },
-  });
-
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center gap-6 p-24">
-      <button
-        onClick={() => mutate()}
-        disabled={isPending}
-        className="rounded bg-black px-4 py-2 text-white"
+    <main className="flex min-h-screen flex-col items-center justify-center">
+      <Link
+        href="/login"
+        className="bg-primary text-primary-foreground px-8 py-3 rounded-lg font-semibold text-lg"
       >
-        {isPending ? "Checkeando..." : "Health Check"}
-      </button>
-      {isSuccess && <p className="text-green-600">API OK</p>}
-      {isError && <p className="text-red-600">{error.message}</p>}
+        Iniciar sesión
+      </Link>
     </main>
   );
 }

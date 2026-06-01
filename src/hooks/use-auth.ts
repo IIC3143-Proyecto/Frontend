@@ -36,7 +36,7 @@ export function useAuth() {
       }
 
       if (dbUser.onboardingCompleted && isOnboardingPage) {
-        router.push('/profile');
+        router.push('/posts');
       }
     }
   }, [dbUser, authLoading, syncLoading, pathname, router]);
