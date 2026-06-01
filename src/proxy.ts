@@ -7,7 +7,7 @@ export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const session = await auth0.getSession(request);
 
-  const privateRoutes = ['/notifications', '/profile', '/publications', '/shopping-history', '/onboarding'];
+  const privateRoutes = ['/notifications', '/profile', '/posts', '/publications', '/shopping-history', '/onboarding'];
   const isPrivateRoute = privateRoutes.some(route => pathname.startsWith(route));
 
   if (isPrivateRoute && !session) {
