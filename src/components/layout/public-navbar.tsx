@@ -10,7 +10,6 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import { VtrnaLogo } from "@/components/vtrna-logo";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { IconMenu2 } from "@tabler/icons-react";
 
@@ -64,7 +63,7 @@ export function PublicNavbar() {
   return (
     <header className="flex h-20 px-6 border-b justify-between items-center sticky top-0 z-10 bg-background">
       <Link href="/"> 
-        <VtrnaLogo className="text-primary"/>
+        <img src="/assets/vtrna-logo.svg" alt="vtrna logo" draggable={false} className="h-4 w-auto select-none pointer-events-none"/>
       </Link>
 
       <div className="hidden md:block">
