@@ -19,6 +19,7 @@ function local(path: string): string {
 export const api = {
   syncUser:   () => local('/auth/sync-user'),                   // BFF — always local
   tags:       () => remote('/api/tag'),
+  user:       (id: string) => remote(`/api/user/${id}`),
   userImage:  (id: string) => remote(`/api/image/user/${id}`),
   post:       () => remote('/api/post'),
   postImages: (id: string) => remote(`/api/image/post/${id}`),

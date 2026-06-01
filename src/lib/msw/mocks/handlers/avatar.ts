@@ -39,10 +39,6 @@ export const avatarHandlers = [
       return HttpResponse.json({ message: 'No image file provided' }, { status: 400 });
     }
 
-    if (file.type !== 'image/webp') {
-      return HttpResponse.json({ message: 'File must be a WebP image' }, { status: 422 });
-    }
-
     return HttpResponse.json(
       { photoUrl: `https://vtrna.com/avatars/mock-${Date.now()}.webp` },
       { status: 201 }

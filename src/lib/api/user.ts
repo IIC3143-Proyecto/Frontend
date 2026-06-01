@@ -26,11 +26,25 @@ export async function uploadUserAvatar(
   return `https://vtrna.com/avatars/placeholder-${userId}.webp`;
 }
 
-// PATCH /api/user/:id — backend #46 not ready; always succeeds (demo)
 export async function patchUser(
-  _userId: string,
-  _data: { username: string; bio: string; photoUrl: string },
-  _accessToken: string,
+  userId: string,
+  data: { username: string; bio: string; photoUrl: string },
+  accessToken: string,
 ): Promise<void> {
-  return;
+  const res = await fetch(api.user(userId), {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${accessToken}`,
+    },
+    body: JSON.stringify(data),
+  });
+
+  if (!res.ok) {
+    const json = await res.json().catch(() => ({}));
+    throw Object.assign(
+      new Error((json as { message?: string }).message ?? 'Error al actualizar el perfil'),
+      { status: res.status }
+    );
+  }
 }
