@@ -10,9 +10,12 @@
     "test:install": "playwright install --with-deps",
     "test:e2e": "playwright test --project=e2e",
     "test:integration": "playwright test --project=integration",
-    "test:all": "playwright test",
+    "test:all": "playwright test --project=e2e --project=integration",
     "test:report": "playwright show-report",
-    "test:ui": "playwright test --ui"
+    "test:ui": "playwright test --ui",
+    "test:unit": "vitest run",
+    "test:unit:watch": "vitest",
+    "test:contract": "playwright test --project=contract"
   },
   "dependencies": {
     "@auth0/nextjs-auth0": "^4.20.0",
@@ -43,12 +46,15 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@vitest/coverage-v8": "^4.1.8",
     "dotenv": "^16.0.0",
     "eslint": "^9",
     "eslint-config-next": "16.2.4",
     "msw": "^2.13.6",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vite-tsconfig-paths": "^6.1.1",
+    "vitest": "^4.1.8"
   },
   "msw": {
     "workerDirectory": [
