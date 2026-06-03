@@ -10,13 +10,6 @@ export type InteractionDto = {
   createdAtUtcMinus3: string;
 };
 
-export type FollowerDto = {
-  followerId: string;
-  followedId: string;
-  follower: UserDto;
-  followed: UserDto;
-};
-
 export type UserDto = {
   id: string;
   name: string;
@@ -26,12 +19,10 @@ export type UserDto = {
   bio?: string;
   photoUrl?: string;
   contactInfo?: object;
-  notificationPreferences?: object;
+  status: string;
   createdAtUtcMinus3: string;
   updatedAtUtcMinus3: string;
   posts: PostDto[];
   interactions: InteractionDto[];
-  following: FollowerDto[];
-  followers: FollowerDto[];
 };
 

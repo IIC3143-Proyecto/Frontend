@@ -18,7 +18,7 @@ export type PostDto = {
   offersCount?: number;
   isActive: boolean;
   isDeleted: boolean;
-  images?: string;
+  imagesUrls: string;
   createdAtUtcMinus3: string;
   interactions: InteractionDto[];
 };
