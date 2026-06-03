@@ -28,6 +28,7 @@ export default defineConfig({
       testMatch: '**/*.spec.ts',
       use: {
         ...devices['Desktop Chrome'],
+        serviceWorkers: 'block',
         storageState: 'tests/e2e/.auth/user.json',
       },
       dependencies: ['setup'],
