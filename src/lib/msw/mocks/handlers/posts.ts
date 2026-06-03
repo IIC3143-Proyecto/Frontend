@@ -1,5 +1,6 @@
-import { http, HttpResponse } from 'msw';
+import { http, HttpResponse, delay } from 'msw';
 import { mockPost, MOCK_SELLER_POSTS } from '../data/posts';
+import { getErrorScenario } from '../scenario';
 
 export const postsHandlers = [
   http.get('*/api/post/saved/:id_user', ({ request }) => {
@@ -46,15 +47,17 @@ export const postsHandlers = [
 
   http.post('*/api/image/post/:id_post', async ({ request }) => {
     const token = request.headers.get('Authorization');
-    if (!token) {
-      return HttpResponse.json({ message: 'Unauthorized' }, { status: 401 });
-    }
+    if (!token) return HttpResponse.json({ message: 'Unauthorized' }, { status: 401 });
+
+    const scenario = getErrorScenario();
+    if (scenario === 'UPLOAD_401') return HttpResponse.json({ message: 'Unauthorized' }, { status: 401 });
+    if (scenario === 'UPLOAD_500') return HttpResponse.json({ message: 'Internal server error' }, { status: 500 });
+    if (scenario === 'UPLOAD_NETWORK') return HttpResponse.error();
+    if (scenario === 'UPLOAD_SLOW') await delay(2000);
 
     const fd = await request.formData();
     const files = fd.getAll('images');
-    if (!files.length) {
-      return HttpResponse.json({ message: 'No se proporcionaron archivos' }, { status: 400 });
-    }
+    if (!files.length) return HttpResponse.json({ message: 'No se proporcionaron archivos' }, { status: 400 });
 
     return HttpResponse.json(
       { message: 'Imágenes subidas y vinculadas a la publicación exitosamente.' },
@@ -70,9 +73,12 @@ export const postsHandlers = [
 
   http.post('*/api/post', async ({ request }) => {
     const token = request.headers.get('Authorization');
-    if (!token) {
-      return HttpResponse.json({ message: 'Unauthorized' }, { status: 401 });
-    }
+    if (!token) return HttpResponse.json({ message: 'Unauthorized' }, { status: 401 });
+
+    const scenario = getErrorScenario();
+    if (scenario === 'CREATE_401') return HttpResponse.json({ message: 'Unauthorized' }, { status: 401 });
+    if (scenario === 'CREATE_500') return HttpResponse.json({ message: 'Internal server error' }, { status: 500 });
+    if (scenario === 'CREATE_NETWORK') return HttpResponse.error();
 
     const body = await request.json() as Record<string, unknown>;
     const id = `post-${Date.now()}`;
@@ -91,7 +97,11 @@ export const postsHandlers = [
   }),
 
   // TODO: implementar cuando el backend habilite PATCH /api/post/:id_post/tags
-  http.patch('*/api/post/:id_post/tags', () =>
-    HttpResponse.json({ message: 'Not implemented' }, { status: 404 })
-  ),
+  http.patch('*/api/post/:id_post/tags', () => {
+    const scenario = getErrorScenario();
+    if (scenario === 'PATCH_TAGS_401') return HttpResponse.json({ message: 'Unauthorized' }, { status: 401 });
+    if (scenario === 'PATCH_TAGS_500') return HttpResponse.json({ message: 'Internal server error' }, { status: 500 });
+    if (scenario === 'PATCH_TAGS_NETWORK') return HttpResponse.error();
+    return HttpResponse.json({ message: 'Not implemented' }, { status: 404 });
+  }),
 ];
