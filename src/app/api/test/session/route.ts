@@ -3,7 +3,7 @@ import { MOCK_USERS } from '@/lib/msw/mocks/data/mock-users';
 import type { MockUserScenario } from '@/lib/msw/mocks/scenario';
 
 export async function POST(req: Request) {
-  if (process.env.NODE_ENV === 'production') {
+  if (process.env.NODE_ENV !== 'development' || process.env.ENABLE_TEST_ENDPOINTS !== 'true') {
     return Response.json({ error: 'Not available' }, { status: 404 });
   }
 
