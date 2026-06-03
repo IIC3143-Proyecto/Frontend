@@ -18,9 +18,9 @@ const MOCK_SELLER: UserDto = {
 export const mockPost = (id: string, body: Record<string, unknown> = {}): PostDto => ({
   id,
   sellerId: MOCK_SELLER.id,
-  buyerId: null as unknown as string,
+  buyerId: null,
   seller: MOCK_SELLER,
-  buyer: null as unknown as UserDto,
+  buyer: null,
   title: body.title as string ?? '',
   description: body.description as string ?? '',
   priceClp: body.priceClp as number ?? 0,

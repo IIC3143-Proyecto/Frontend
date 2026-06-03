@@ -44,7 +44,7 @@ export const postsHandlers = [
     return HttpResponse.json(post, { status: 200 });
   }),
 
-  http.post('*/image/post/:id_post', async ({ request }) => {
+  http.post('*/api/image/post/:id_post', async ({ request }) => {
     const token = request.headers.get('Authorization');
     if (!token) {
       return HttpResponse.json({ message: 'Unauthorized' }, { status: 401 });
@@ -68,7 +68,7 @@ export const postsHandlers = [
     return HttpResponse.json({ message: 'Imágenes eliminadas exitosamente de la publicación.' });
   }),
 
-  http.post('*/post', async ({ request }) => {
+  http.post('*/api/post', async ({ request }) => {
     const token = request.headers.get('Authorization');
     if (!token) {
       return HttpResponse.json({ message: 'Unauthorized' }, { status: 401 });
@@ -79,7 +79,7 @@ export const postsHandlers = [
     return HttpResponse.json(mockPost(id, body), { status: 201 });
   }),
 
-  http.patch('*/post', async ({ request }) => {
+  http.patch('*/api/post', async ({ request }) => {
     const token = request.headers.get('Authorization');
     if (!token) {
       return HttpResponse.json({ message: 'Unauthorized' }, { status: 401 });

@@ -26,12 +26,9 @@ export async function uploadUserAvatar(
   // Re-fetcha sync-user para obtener el photoUrl actualizado
   // TODO: reemplazar por GET /api/user/:id cuando el backend lo implemente
   const syncRes = await fetch('/auth/sync-user');
-  if (syncRes.ok) {
-    const user = await syncRes.json() as SyncUserResponse;
-    return user.photoUrl ?? '';
-  }
-
-  return '';
+  if (!syncRes.ok) throw Object.assign(new Error('Error al obtener el avatar actualizado'), { status: syncRes.status });
+  const user = await syncRes.json() as SyncUserResponse;
+  return user.photoUrl ?? '';
 }
 
 // TODO: implementar cuando el backend habilite PATCH /api/user/:id

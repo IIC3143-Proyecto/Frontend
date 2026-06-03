@@ -4,9 +4,9 @@ import type { UserDto, InteractionDto } from './user';
 export type PostDto = {
   id: string;
   sellerId: string;
-  buyerId?: string;
+  buyerId: string | null;
   seller: UserDto;
-  buyer?: UserDto;
+  buyer: UserDto | null;
   title: string;
   description: string;
   priceClp: number;
