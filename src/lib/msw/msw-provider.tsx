@@ -52,6 +52,19 @@ export function MSWProvider({ children }: { children: React.ReactNode }) {
           });
 
           workerStarted = true;
+
+          // Apply any pre-navigation scenario set via page.addInitScript()
+          const w = window as Window & { __mswInitScenario?: string; __mswInitError?: string };
+          if (w.__mswInitScenario) {
+            const { setMockUser } = await import('./mocks/scenario');
+            setMockUser(w.__mswInitScenario as Parameters<typeof setMockUser>[0]);
+            delete w.__mswInitScenario;
+          }
+          if (w.__mswInitError) {
+            const { setErrorScenario } = await import('./mocks/scenario');
+            setErrorScenario(w.__mswInitError as Parameters<typeof setErrorScenario>[0]);
+            delete w.__mswInitError;
+          }
         })();
       }
 
