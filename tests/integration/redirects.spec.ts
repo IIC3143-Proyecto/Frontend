@@ -43,6 +43,7 @@ test.describe('Proxy redirect server-side (sin flicker)', () => {
     await page.waitForURL('**/onboarding');
 
     // El servidor nunca devolvió 200 para /posts — fue un redirect directo
+    expect(statuses.length).toBeGreaterThan(0);
     expect(statuses.every(s => s >= 300 && s < 400)).toBe(true);
   });
 });

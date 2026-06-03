@@ -6,11 +6,16 @@ import { useRouter, useSearchParams } from 'next/navigation';
 export default function AuthLoading() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const next = searchParams.get('next') ?? '/';
+  const raw = searchParams.get('next') ?? '/';
+  // Restrict to same-origin paths — reject absolute URLs and protocol-relative paths
+  const next = /^\/(?!\/)/.test(raw) ? raw : '/';
 
   useEffect(() => {
     fetch('/auth/sync-user')
-      .then(() => router.replace(next))
+      .then(res => {
+        if (!res.ok) throw new Error(`sync-user ${res.status}`);
+        router.replace(next);
+      })
       .catch(() => router.replace('/'));
   }, [next, router]);
 
