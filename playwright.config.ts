@@ -14,7 +14,7 @@ export default defineConfig({
   use: {
     baseURL: 'http://localhost:3000',
     trace: 'on-first-retry',
-    serviceWorkers: 'block',
+    serviceWorkers: 'allow',
   },
   projects: [
     {
@@ -64,7 +64,7 @@ export default defineConfig({
   ],
   webServer: [
     {
-      command: 'NEXT_PUBLIC_ENABLE_MSW=false npm run dev',
+      command: 'NEXT_PUBLIC_ENABLE_MSW=true npm run dev',
       url: 'http://localhost:3000',
       reuseExistingServer: !process.env.CI,
     },
