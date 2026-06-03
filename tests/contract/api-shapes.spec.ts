@@ -9,6 +9,10 @@ test.beforeAll(async () => {
   token = (JSON.parse(data) as { token?: string }).token ?? '';
 });
 
+test.beforeEach(() => {
+  test.skip(!token, 'No token — run with AUTH0_TEST_EMAIL/PASSWORD');
+});
+
 const auth = () => ({ Authorization: `Bearer ${token}` });
 
 // Valida que un objeto tenga la forma de UserDto
