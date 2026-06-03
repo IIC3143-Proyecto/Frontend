@@ -1,6 +1,6 @@
 import { api } from './index';
+import type { SyncUserResponse } from '@/lib/types/auth';
 
-// TODO: leer photoUrl del response cuando el backend lo incluya
 export async function uploadUserAvatar(
   userId: string,
   file: File,
@@ -23,10 +23,18 @@ export async function uploadUserAvatar(
     );
   }
 
-  return `https://vtrna.com/avatars/placeholder-${userId}.webp`;
+  // Re-fetcha sync-user para obtener el photoUrl actualizado
+  // TODO: reemplazar por GET /api/user/:id cuando el backend lo implemente
+  const syncRes = await fetch('/auth/sync-user');
+  if (syncRes.ok) {
+    const user = await syncRes.json() as SyncUserResponse;
+    return user.photoUrl ?? '';
+  }
+
+  return '';
 }
 
-// PATCH /api/user/:id — backend #46 not ready; always succeeds (demo)
+// TODO: implementar cuando el backend habilite PATCH /api/user/:id
 export async function patchUser(
   _userId: string,
   _data: { username: string; bio: string; photoUrl: string },
