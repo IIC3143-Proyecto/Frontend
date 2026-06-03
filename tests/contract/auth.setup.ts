@@ -6,8 +6,8 @@ const TOKEN_FILE = path.join(__dirname, '.auth/token.json');
 
 setup('obtain contract access token', async ({ request }) => {
   const res = await request.get('/api/test/access-token');
-  if (!res.ok) {
-    setup.skip(true, `access-token endpoint returned ${res.status}`);
+  if (!res.ok()) {
+    setup.skip(true, `access-token endpoint returned ${res.status()}`);
     return;
   }
   const body = await res.json().catch(() => null) as { token: string | null } | null;
