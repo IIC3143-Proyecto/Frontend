@@ -9,6 +9,7 @@ import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { getAccessToken } from "@/actions/auth";
 import { createPost, patchPostTags, uploadPostImages } from "@/lib/api/post";
+import { desktopToMobile, mobileToDesktop } from '@/lib/post-steps';
 
 function handleApiError(err: unknown, label: string, router: { push: (url: string) => void }) {
   const status = (err as { status?: number }).status;
@@ -64,8 +65,6 @@ function useIsMobile() {
 
   return isMobile;
 }
-
-import { desktopToMobile, mobileToDesktop } from '@/lib/post-steps';
 
 export interface UseCreatePostReturn {
   form: ReturnType<typeof useForm<CreatePostInput, unknown, CreatePostSchema>>;
