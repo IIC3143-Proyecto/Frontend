@@ -25,11 +25,19 @@ export async function GET() {
   type BackendSyncResponse = { data: UserDto; message: string; onboardingCompleted: boolean; status: string };
   const { data: user } = await res.json() as BackendSyncResponse;
 
-  // TODO: replace with a dedicated backend flag when available
   const response: SyncUserResponse = {
     ...user,
     onboardingCompleted: !!user.bio,
   };
+
+  // Persiste onboardingCompleted en la sesión para que proxy.ts lo lea server-side
+  const session = await auth0.getSession();
+  if (session) {
+    await auth0.updateSession({
+      ...session,
+      user: { ...session.user, onboardingCompleted: response.onboardingCompleted },
+    });
+  }
 
   return NextResponse.json(response);
 }

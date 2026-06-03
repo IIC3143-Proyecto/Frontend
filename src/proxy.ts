@@ -7,14 +7,26 @@ export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const session = await auth0.getSession(request);
 
-  // TODO: remove '/test' once feature is shipped
-  const privateRoutes = ['/notifications', '/profile', '/publications', '/shopping-history', '/onboarding', '/test'];
+  const privateRoutes = ['/notifications', '/profile', '/publications', '/shopping-history', '/onboarding', '/posts'];
   const isPrivateRoute = privateRoutes.some(route => pathname.startsWith(route));
 
   if (isPrivateRoute && !session) {
     const loginUrl = new URL('/login', request.url);
     loginUrl.searchParams.set('returnTo', pathname);
     return NextResponse.redirect(loginUrl);
+  }
+
+  if (session) {
+    const { onboardingCompleted } = session.user as { onboardingCompleted?: boolean };
+
+    // undefined → primer login antes de sync-user; useAuth lo maneja
+    if (onboardingCompleted === false && isPrivateRoute && !pathname.startsWith('/onboarding')) {
+      return NextResponse.redirect(new URL('/onboarding', request.url));
+    }
+
+    if (onboardingCompleted === true && pathname.startsWith('/onboarding')) {
+      return NextResponse.redirect(new URL('/profile', request.url));
+    }
   }
 
   return authResponse ?? NextResponse.next();
