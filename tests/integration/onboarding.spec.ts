@@ -1,4 +1,5 @@
-import { test, expect } from '@playwright/test';
+import { expect } from '@playwright/test';
+import { test } from '../fixtures';
 import {
   uploadAvatar,
   fillUsername,
@@ -9,16 +10,14 @@ import {
 } from './helpers/onboarding';
 import { gotoAuthenticated } from '../e2e/helpers/auth';
 import {
-  mockDefaultHandlers,
-  mockAvatarSuccess,
-  mockAvatarError,
-  mockAvatarNetwork,
-  mockAvatarSlow,
-  mockPatchError,
+  resetErrorScenario,
+  setAvatarError,
+  setAvatarNetwork,
+  setAvatarSlow,
+  setPatchError,
 } from './helpers/form-errors';
 
 test.beforeEach(async ({ page }) => {
-  await mockDefaultHandlers(page);
   await gotoAuthenticated(page, '/onboarding', 'NEW');
   await expect(page.getByRole('heading', { name: 'Completa tu perfil' })).toBeVisible({
     timeout: 15_000,
@@ -49,7 +48,7 @@ test('should require avatar before form submission', async ({ page }) => {
 });
 
 test('should redirect to session-expired when avatar returns 401', async ({ page }) => {
-  await mockAvatarError(page, 401);
+  await setAvatarError(page, 401);
   await uploadAvatar(page);
   await fillUsername(page, 'testuser');
   await fillBio(page, 'Bio de prueba');
@@ -58,7 +57,7 @@ test('should redirect to session-expired when avatar returns 401', async ({ page
 });
 
 test('should show error when file is not valid WebP', async ({ page }) => {
-  await mockAvatarError(page, 422);
+  await setAvatarError(page, 422);
   await uploadAvatar(page);
   await fillUsername(page, 'testuser');
   await fillBio(page, 'Bio de prueba');
@@ -68,7 +67,7 @@ test('should show error when file is not valid WebP', async ({ page }) => {
 
 // TODO: enable when backend #46 (PATCH /api/user/:id) is implemented
 test.fixme('should show error when username is already taken', async ({ page }) => {
-  await mockPatchError(page, 409);
+  await setPatchError(page, 409);
   await uploadAvatar(page);
   await fillUsername(page, 'takenuser');
   await fillBio(page, 'Bio de prueba');
@@ -77,7 +76,7 @@ test.fixme('should show error when username is already taken', async ({ page }) 
 });
 
 test('should show server error toast on 500 response', async ({ page }) => {
-  await mockAvatarError(page, 500);
+  await setAvatarError(page, 500);
   await uploadAvatar(page);
   await fillUsername(page, 'testuser');
   await fillBio(page, 'Bio de prueba');
@@ -86,7 +85,7 @@ test('should show server error toast on 500 response', async ({ page }) => {
 });
 
 test('should show network error toast on connection failure', async ({ page }) => {
-  await mockAvatarNetwork(page);
+  await setAvatarNetwork(page);
   await uploadAvatar(page);
   await fillUsername(page, 'testuser');
   await fillBio(page, 'Bio de prueba');
@@ -95,7 +94,7 @@ test('should show network error toast on connection failure', async ({ page }) =
 });
 
 test('should show loading spinner on slow response', async ({ page }) => {
-  await mockAvatarSlow(page);
+  await setAvatarSlow(page);
   await uploadAvatar(page);
   await fillUsername(page, 'testuser');
   await fillBio(page, 'Bio de prueba');
@@ -111,11 +110,11 @@ test('should allow retry after error', async ({ page }) => {
   await fillUsername(page, 'testuser');
   await fillBio(page, 'Bio de prueba');
 
-  await mockAvatarError(page, 500);
+  await setAvatarError(page, 500);
   await submitForm(page);
   await waitForToast(page, 'Internal server error');
 
-  await mockAvatarSuccess(page);
+  await resetErrorScenario(page);
   await submitForm(page);
   await waitForToast(page, 'Perfil actualizado!');
 });
@@ -125,7 +124,7 @@ test('should persist form values after error', async ({ page }) => {
   await fillUsername(page, 'persisteduser');
   await fillBio(page, 'Bio que debe persistir');
 
-  await mockAvatarError(page, 500);
+  await setAvatarError(page, 500);
   await submitForm(page);
   await waitForToast(page, 'Internal server error');
 

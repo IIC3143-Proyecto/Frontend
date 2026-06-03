@@ -1,15 +1,15 @@
-import { test, expect } from '@playwright/test';
+import { expect } from '@playwright/test';
+import { test } from '../fixtures';
 import { waitForToast, expectError } from './helpers/onboarding';
 import { gotoAuthenticated } from '../e2e/helpers/auth';
 import {
-  mockCreatePostHandlers,
-  mockUploadError,
-  mockUploadNetwork,
-  mockUploadSlow,
-  mockCreateError,
-  mockCreateNetwork,
-  mockPatchError,
-  mockPatchNetwork,
+  setUploadError,
+  setUploadNetwork,
+  setUploadSlow,
+  setCreateError,
+  setCreateNetwork,
+  setPatchTagsError,
+  setPatchTagsNetwork,
   openModal,
   clickNext,
   clickBack,
@@ -22,7 +22,6 @@ import {
 
 test.describe('Create Post — desktop', () => {
   test.beforeEach(async ({ page }) => {
-    await mockCreatePostHandlers(page);
     await gotoAuthenticated(page, '/test', 'FULL');
     await openModal(page);
   });
@@ -90,7 +89,7 @@ test.describe('Create Post — desktop', () => {
   });
 
   test('should redirect to session-expired when upload returns 401', async ({ page }) => {
-    await mockUploadError(page, 401);
+    await setUploadError(page, 401);
     await fillStep1(page, { title: 'Camiseta', price: 10000 });
     await uploadPhotos(page, 3);
     await clickNext(page);
@@ -98,7 +97,7 @@ test.describe('Create Post — desktop', () => {
   });
 
   test('should show error toast when upload returns 500', async ({ page }) => {
-    await mockUploadError(page, 500);
+    await setUploadError(page, 500);
     await fillStep1(page, { title: 'Camiseta', price: 10000 });
     await uploadPhotos(page, 3);
     await clickNext(page);
@@ -106,7 +105,7 @@ test.describe('Create Post — desktop', () => {
   });
 
   test('should show network error toast when upload fails due to connection', async ({ page }) => {
-    await mockUploadNetwork(page);
+    await setUploadNetwork(page);
     await fillStep1(page, { title: 'Camiseta', price: 10000 });
     await uploadPhotos(page, 3);
     await clickNext(page);
@@ -114,7 +113,7 @@ test.describe('Create Post — desktop', () => {
   });
 
   test('should show uploading spinner during slow upload', async ({ page }) => {
-    await mockUploadSlow(page);
+    await setUploadSlow(page);
     await fillStep1(page, { title: 'Camiseta', price: 10000 });
     await uploadPhotos(page, 3);
     await clickNext(page);
@@ -122,7 +121,7 @@ test.describe('Create Post — desktop', () => {
   });
 
   test('should redirect to session-expired when POST /post returns 401 on step 1', async ({ page }) => {
-    await mockCreateError(page, 401);
+    await setCreateError(page, 401);
     await fillStep1(page, { title: 'Camiseta', price: 10000 });
     await uploadPhotos(page, 3);
     await clickNext(page);
@@ -130,7 +129,7 @@ test.describe('Create Post — desktop', () => {
   });
 
   test('should show error toast when POST /post returns 500 on step 1', async ({ page }) => {
-    await mockCreateError(page, 500);
+    await setCreateError(page, 500);
     await fillStep1(page, { title: 'Camiseta', price: 10000 });
     await uploadPhotos(page, 3);
     await clickNext(page);
@@ -138,7 +137,7 @@ test.describe('Create Post — desktop', () => {
   });
 
   test('should show network error toast when POST /post fails on step 1', async ({ page }) => {
-    await mockCreateNetwork(page);
+    await setCreateNetwork(page);
     await fillStep1(page, { title: 'Camiseta', price: 10000 });
     await uploadPhotos(page, 3);
     await clickNext(page);
@@ -153,7 +152,7 @@ test.describe('Create Post — desktop', () => {
     await selectRequiredTags(page);
     await clickNext(page);
 
-    await mockPatchError(page, 401);
+    await setPatchTagsError(page, 401);
     await clickPublish(page);
     await page.waitForURL('**/session-expired', { timeout: 8_000 });
   });
@@ -165,7 +164,7 @@ test.describe('Create Post — desktop', () => {
     await selectRequiredTags(page);
     await clickNext(page);
 
-    await mockPatchError(page, 500);
+    await setPatchTagsError(page, 500);
     await clickPublish(page);
     await waitForToast(page, 'Error al publicar');
   });
@@ -177,7 +176,7 @@ test.describe('Create Post — desktop', () => {
     await selectRequiredTags(page);
     await clickNext(page);
 
-    await mockPatchNetwork(page);
+    await setPatchTagsNetwork(page);
     await clickPublish(page);
     await waitForToast(page, 'Error de red');
   });
@@ -232,7 +231,6 @@ test.describe('Create Post — mobile', () => {
   test.use({ viewport: { width: 375, height: 812 } });
 
   test.beforeEach(async ({ page }) => {
-    await mockCreatePostHandlers(page);
     await gotoAuthenticated(page, '/test', 'FULL');
     await openModal(page);
   });
