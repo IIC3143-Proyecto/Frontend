@@ -15,6 +15,10 @@ test.beforeEach(() => {
   test.skip(!token, 'No token — run with AUTH0_TEST_EMAIL/PASSWORD');
 });
 
+test.beforeEach(() => {
+  test.skip(!token, 'No token — run with AUTH0_TEST_EMAIL/PASSWORD');
+});
+
 const auth = () => ({ Authorization: `Bearer ${token}` });
 
 // Valida que un objeto tenga la forma de UserDto
