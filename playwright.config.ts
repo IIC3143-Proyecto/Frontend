@@ -42,6 +42,25 @@ export default defineConfig({
       },
       dependencies: ['setup'],
     },
+    {
+      name: 'contract-setup',
+      testDir: 'tests/contract',
+      testMatch: '**/auth.setup.ts',
+      use: {
+        baseURL: 'http://localhost:3000',
+        storageState: 'tests/e2e/.auth/user.json',
+      },
+      dependencies: ['setup'],
+    },
+    {
+      name: 'contract',
+      testDir: 'tests/contract',
+      testMatch: '**/!(auth.setup).spec.ts',
+      use: {
+        baseURL: process.env.BACKEND_API_URL ?? 'http://localhost:3000',
+      },
+      dependencies: ['contract-setup'],
+    },
   ],
   webServer: [
     {
