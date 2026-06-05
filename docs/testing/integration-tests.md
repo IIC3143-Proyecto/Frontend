@@ -34,6 +34,7 @@ No credentials required. If `AUTH0_TEST_EMAIL`/`AUTH0_TEST_PASSWORD` are not set
 |------|-------|----------------|
 | `onboarding.spec.ts` | ~13 | Form validation, avatar upload errors (401/422/500/network/slow), retry after error, form persistence, avatar preview |
 | `create-post.spec.ts` | ~20 | Desktop + mobile step flows, photo upload, tag selection, upload/create errors (401/500/network), slow upload spinner, modal lifecycle |
+| `edit-post.spec.ts` | ~20 | Save changes, pre-population (fields + tags), locked price, validation (title/price/tags/photos), PATCH post errors (401/500/network), photo endpoint correctness (DELETE/PATCH image) |
 | `redirects.spec.ts` | ~5 | `useAuth` client-side redirects based on `onboardingCompleted`; one `fixme` for server-side proxy redirect |
 | `sync-user-errors.spec.ts` | ~5 | 401 → `/session-expired`, 500/503 → error UI with retry, 403 → error without redirect |
 
@@ -80,6 +81,32 @@ setAvatarNetwork(page)
 setAvatarSlow(page)
 setPatchError(page, status: 409 | 500)
 resetErrorScenario(page)   // explicit reset (fixture also auto-resets)
+```
+
+### `tests/integration/helpers/edit-post.ts`
+Modal interaction + error scenario setters for edit-post.
+
+```ts
+// UI interaction
+openEditModal(page)                  // first Editar button
+openEditModalForPost(page, title)    // edit button for a specific post
+clickSave(page)
+openSection(page, name)              // expand accordion section by name
+fillEditTitle(page, value)
+fillEditPrice(page, value)
+uploadEditPhotos(page, count?)
+
+// Network verification
+waitForImageRequest(page, method)    // returns request Promise (DELETE|PATCH)
+assertNoImageRequest(page, action)   // asserts no image API calls during action
+
+// Error injection
+setPatchPostError(page, status: 401 | 500)
+setPatchPostNetwork(page)
+setDeleteImageError(page, status: 401 | 500)
+setDeleteImageNetwork(page)
+setAppendImageError(page, status: 401 | 500)
+setAppendImageNetwork(page)
 ```
 
 ### `tests/integration/helpers/create-post.ts`
