@@ -1,4 +1,4 @@
-import type { NewPostDto, PostDto } from '@/lib/types/post';
+import type { NewPostDto, PostDto, PostTagsDto } from '@/lib/types/post';
 import { BASE } from './base';
 
 export const deletePost = async (postId: string): Promise<void> => {
@@ -46,6 +46,21 @@ export async function patchPostTags(_postId: string, _tags: Record<string, strin
   return;
 }
 
+// GET /api/post/:id/tags — backend pendiente; MSW stub retorna tags de ejemplo
+export async function fetchPostTags(postId: string, accessToken: string): Promise<PostTagsDto> {
+  const res = await fetch(`${BASE}/api/post/${postId}/tags`, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
+  if (!res.ok) {
+    const json = await res.json().catch(() => ({}));
+    throw Object.assign(
+      new Error((json as { message?: string }).message ?? 'Error al obtener tags del post'),
+      { status: res.status }
+    );
+  }
+  return res.json() as Promise<PostTagsDto>;
+}
+
 export async function patchPost(body: Record<string, unknown> & { id: string }, accessToken: string): Promise<void> {
   const res = await fetch(`${BASE}/api/post`, {
     method: 'PATCH',
@@ -74,6 +89,39 @@ export async function uploadPostImages(postId: string, fd: FormData, accessToken
     const json = await res.json().catch(() => ({}));
     throw Object.assign(
       new Error((json as { message?: string }).message ?? 'Error al subir las fotos'),
+      { status: res.status }
+    );
+  }
+}
+
+export async function appendPostImages(postId: string, fd: FormData, accessToken: string): Promise<void> {
+  const res = await fetch(`${BASE}/api/image/post/${postId}`, {
+    method: 'PATCH',
+    headers: { Authorization: `Bearer ${accessToken}` },
+    body: fd,
+  });
+  if (!res.ok) {
+    const json = await res.json().catch(() => ({}));
+    throw Object.assign(
+      new Error((json as { message?: string }).message ?? 'Error al agregar las fotos'),
+      { status: res.status }
+    );
+  }
+}
+
+export async function deletePostImages(postId: string, urls: string[], accessToken: string): Promise<void> {
+  const res = await fetch(`${BASE}/api/image/post/${postId}`, {
+    method: 'DELETE',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ urls }),
+  });
+  if (!res.ok) {
+    const json = await res.json().catch(() => ({}));
+    throw Object.assign(
+      new Error((json as { message?: string }).message ?? 'Error al eliminar las fotos'),
       { status: res.status }
     );
   }

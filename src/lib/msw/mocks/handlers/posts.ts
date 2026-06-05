@@ -25,6 +25,16 @@ export const postsHandlers = [
     return HttpResponse.json(MOCK_SELLER_POSTS);
   }),
 
+  // GET /api/post/:id_post/tags — stub pendiente de backend
+  http.get('*/api/post/:id_post/tags', ({ request }) => {
+    const token = request.headers.get('Authorization');
+    if (!token) return HttpResponse.json({ message: 'Unauthorized' }, { status: 401 });
+    return HttpResponse.json({
+      Talla: ['M'], Condición: 'Como nuevo', 'Tipo de prenda': ['Camiseta'],
+      Marca: [], Color: [], Género: [], Estilo: [], Temporada: [],
+    });
+  }),
+
   // El frontend re-fetcha aquí después de subir/borrar imágenes para obtener las URLs actualizadas
   http.get('*/api/post/:id_post', ({ params, request }) => {
     const token = request.headers.get('Authorization');
@@ -68,7 +78,25 @@ export const postsHandlers = [
   http.delete('*/api/image/post/:id_post', ({ request }) => {
     const token = request.headers.get('Authorization');
     if (!token) return HttpResponse.json({ message: 'Unauthorized' }, { status: 401 });
+    const scenario = getErrorScenario();
+    if (scenario === 'DELETE_IMAGE_401') return HttpResponse.json({ message: 'Unauthorized' }, { status: 401 });
+    if (scenario === 'DELETE_IMAGE_500') return HttpResponse.json({ message: 'Internal server error' }, { status: 500 });
+    if (scenario === 'DELETE_IMAGE_NETWORK') return HttpResponse.error();
     return HttpResponse.json({ message: 'Imágenes eliminadas exitosamente de la publicación.' });
+  }),
+
+  // TODO: stub — PATCH /api/image/post/:id_post agrega imágenes sin reemplazar las existentes (backend pendiente)
+  http.patch('*/api/image/post/:id_post', async ({ request }) => {
+    const token = request.headers.get('Authorization');
+    if (!token) return HttpResponse.json({ message: 'Unauthorized' }, { status: 401 });
+    const scenario = getErrorScenario();
+    if (scenario === 'APPEND_IMAGE_401') return HttpResponse.json({ message: 'Unauthorized' }, { status: 401 });
+    if (scenario === 'APPEND_IMAGE_500') return HttpResponse.json({ message: 'Internal server error' }, { status: 500 });
+    if (scenario === 'APPEND_IMAGE_NETWORK') return HttpResponse.error();
+    const fd = await request.formData();
+    const files = fd.getAll('images');
+    if (!files.length) return HttpResponse.json({ message: 'No se proporcionaron archivos' }, { status: 400 });
+    return HttpResponse.json({ message: 'Imágenes agregadas exitosamente a la publicación.' });
   }),
 
   http.post('*/api/post', async ({ request }) => {
@@ -87,9 +115,12 @@ export const postsHandlers = [
 
   http.patch('*/api/post', async ({ request }) => {
     const token = request.headers.get('Authorization');
-    if (!token) {
-      return HttpResponse.json({ message: 'Unauthorized' }, { status: 401 });
-    }
+    if (!token) return HttpResponse.json({ message: 'Unauthorized' }, { status: 401 });
+
+    const scenario = getErrorScenario();
+    if (scenario === 'PATCH_POST_401') return HttpResponse.json({ message: 'Unauthorized' }, { status: 401 });
+    if (scenario === 'PATCH_POST_500') return HttpResponse.json({ message: 'Internal server error' }, { status: 500 });
+    if (scenario === 'PATCH_POST_NETWORK') return HttpResponse.error();
 
     const body = await request.json() as Record<string, unknown>;
     const id = typeof body.id === 'string' ? body.id : `post-${Date.now()}`;
