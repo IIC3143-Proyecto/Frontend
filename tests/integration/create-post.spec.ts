@@ -22,7 +22,7 @@ import {
 
 test.describe('Create Post — desktop', () => {
   test.beforeEach(async ({ page }) => {
-    await gotoAuthenticated(page, '/test', 'FULL');
+    await gotoAuthenticated(page, '/posts', 'FULL');
     await openModal(page);
   });
 
@@ -231,7 +231,7 @@ test.describe('Create Post — mobile', () => {
   test.use({ viewport: { width: 375, height: 812 } });
 
   test.beforeEach(async ({ page }) => {
-    await gotoAuthenticated(page, '/test', 'FULL');
+    await gotoAuthenticated(page, '/posts', 'FULL');
     await openModal(page);
   });
 

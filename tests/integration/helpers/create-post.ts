@@ -40,7 +40,7 @@ export async function setPatchTagsNetwork(page: Page) {
 }
 
 export async function openModal(page: Page) {
-  await page.getByRole('button', { name: 'Nueva Publicación' }).click();
+  await page.getByRole('button', { name: 'Nueva publicación' }).click();
   await expect(page.getByRole('dialog')).toBeVisible();
 }
 
