@@ -24,18 +24,13 @@ test.describe('Edit Post', () => {
     await openEditModal(page);
   });
 
-  // ── Happy path ────────────────────────────────────────────────────────────
-
   test('should save changes successfully', async ({ page }) => {
-    // Tags are pre-populated by the MSW stub for GET /api/post/:id/tags
     await fillEditTitle(page, 'Título actualizado');
     await fillEditPrice(page, 30000);
     await clickSave(page);
     await waitForToast(page, 'Publicación actualizada');
     await expect(page.getByRole('dialog')).not.toBeVisible();
   });
-
-  // ── Pre-population ────────────────────────────────────────────────────────
 
   test('should pre-populate basic fields from post data', async ({ page }) => {
     await openSection(page, 'Título');
@@ -46,7 +41,6 @@ test.describe('Edit Post', () => {
 
   test('should pre-populate tags from fetchPostTags', async ({ page }) => {
     await openSection(page, 'Especificaciones esenciales');
-    // MSW stub returns Talla: ['M'], Condición: 'Nuevo', Tipo de prenda: ['Camiseta']
     await expect(page.getByRole('button', { name: 'M', exact: true })).toHaveAttribute('aria-pressed', 'true');
     await expect(page.getByRole('radio', { name: 'Nuevo', exact: true })).toBeChecked();
     await expect(page.getByRole('button', { name: 'Camiseta', exact: true })).toHaveAttribute('aria-pressed', 'true');
@@ -61,8 +55,6 @@ test.describe('Edit Post', () => {
     await openSection(page, 'Título');
     await expect(page.getByPlaceholder('ej: Camiseta Nike azul')).not.toHaveValue('Cambio temporal');
   });
-
-  // ── Locked price ──────────────────────────────────────────────────────────
 
   test('should show locked banner and disable price when post has offers', async ({ page }) => {
     await page.getByRole('button', { name: 'Cancelar' }).click();
@@ -80,7 +72,6 @@ test.describe('Edit Post', () => {
     await waitForToast(page, 'Publicación actualizada');
   });
 
-  // ── Validation ────────────────────────────────────────────────────────────
 
   test('should show error when title is cleared', async ({ page }) => {
     await openSection(page, 'Título');
@@ -97,7 +88,6 @@ test.describe('Edit Post', () => {
   });
 
   test('should show error when required tags are empty', async ({ page }) => {
-    // Tags are pre-populated by MSW stub — explicitly deselect to trigger validation
     await openSection(page, 'Especificaciones esenciales');
     await page.getByRole('button', { name: 'M', exact: true }).click();
     await page.getByRole('button', { name: 'Camiseta', exact: true }).click();
@@ -106,14 +96,12 @@ test.describe('Edit Post', () => {
   });
 
   test('should show error when fewer than 3 photos remain', async ({ page }) => {
-    // post_1 has 3 existing photos → deleting one leaves 2 < 3
     await openSection(page, 'Fotos');
     await page.getByRole('button', { name: 'Eliminar foto' }).first().click();
     await clickSave(page);
     await expectError(page, 'Debes tener al menos 3 fotos');
   });
 
-  // ── PATCH /api/post errors ────────────────────────────────────────────────
 
   test('should redirect to session-expired when PATCH /post returns 401', async ({ page }) => {
     await setPatchPostError(page, 401);
@@ -133,7 +121,6 @@ test.describe('Edit Post', () => {
     await waitForToast(page, 'Error de red');
   });
 
-  // ── Photo endpoint correctness ────────────────────────────────────────────
 
   test('should not call image endpoints when no photos change', async ({ page }) => {
     await assertNoImageRequest(
@@ -148,11 +135,9 @@ test.describe('Edit Post', () => {
 
   test('should call DELETE with only the removed photo URL', async ({ page }) => {
     await openSection(page, 'Fotos');
-    // Get the src of the first existing photo before deleting
     const firstPhotoSrc = await page.locator('img[alt="Foto de prenda"]').first().getAttribute('src');
     await page.getByRole('button', { name: 'Eliminar foto' }).first().click();
 
-    // post_1 has 3 existing photos; after deleting 1 we have 2 → add 1 new to reach minimum of 3
     await uploadEditPhotos(page, 1);
 
     const deleteReq = waitForImageRequest(page, 'DELETE');
@@ -171,7 +156,6 @@ test.describe('Edit Post', () => {
     );
     await page.getByRole('button', { name: 'Eliminar foto' }).first().click();
 
-    // post_1 has 3 existing photos; after deleting 1 we have 2 → add 1 new to reach minimum of 3
     await uploadEditPhotos(page, 1);
 
     const deleteReq = waitForImageRequest(page, 'DELETE');
@@ -197,7 +181,6 @@ test.describe('Edit Post', () => {
   test('should redirect to session-expired when DELETE image returns 401', async ({ page }) => {
     await openSection(page, 'Fotos');
     await page.getByRole('button', { name: 'Eliminar foto' }).first().click();
-    // post_1 has 3 existing photos; after deleting 1 we have 2 → add 1 new to reach minimum of 3
     await uploadEditPhotos(page, 1);
 
     await setDeleteImageError(page, 401);
@@ -208,7 +191,6 @@ test.describe('Edit Post', () => {
   test('should show error toast when DELETE image returns 500', async ({ page }) => {
     await openSection(page, 'Fotos');
     await page.getByRole('button', { name: 'Eliminar foto' }).first().click();
-    // post_1 has 3 existing photos; after deleting 1 we have 2 → add 1 new to reach minimum of 3
     await uploadEditPhotos(page, 1);
 
     await setDeleteImageError(page, 500);

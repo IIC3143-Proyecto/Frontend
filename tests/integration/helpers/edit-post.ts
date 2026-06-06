@@ -83,7 +83,6 @@ export async function uploadEditPhotos(page: Page, count = 1) {
   for (let i = 0; i < count; i++) {
     await page.locator('input[type="file"]').setInputFiles(PHOTO_FILE);
     await expect(page.locator('img[alt="Foto de prenda"]')).toHaveCount(
-      // existing photos + i + 1
       await page.locator('img[alt="Foto de prenda"]').count() + 1,
       { timeout: 5_000 },
     );
