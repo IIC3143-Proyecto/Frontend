@@ -6,18 +6,18 @@ import { useRouter, useSearchParams } from 'next/navigation';
 export default function AuthLoading() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const raw = searchParams.get('next') ?? '/';
+  const raw = searchParams.get('redirectTo') ?? '/';
   // Restrict to same-origin paths — reject absolute URLs and protocol-relative paths
-  const next = /^\/(?!\/)/.test(raw) ? raw : '/';
+  const redirectTo = /^\/(?!\/)/.test(raw) ? raw : '/';
 
   useEffect(() => {
     fetch('/auth/sync-user')
       .then(res => {
         if (!res.ok) throw new Error(`sync-user ${res.status}`);
-        router.replace(next);
+        router.replace(redirectTo);
       })
       .catch(() => router.replace('/'));
-  }, [next, router]);
+  }, [redirectTo, router]);
 
   return (
     <div className="flex h-screen flex-col items-center justify-center bg-black text-white">

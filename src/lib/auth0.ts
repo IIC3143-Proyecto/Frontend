@@ -17,9 +17,9 @@ export const auth0 = new Auth0Client({
         new URL('/login', ctx.appBaseUrl ?? process.env.AUTH0_BASE_URL!)
       );
     }
-    const next = encodeURIComponent(ctx.returnTo ?? '/');
+    const redirectTo = encodeURIComponent(ctx.returnTo ?? '/');
     return NextResponse.redirect(
-      new URL(`/auth/loading?next=${next}`, ctx.appBaseUrl ?? process.env.AUTH0_BASE_URL!)
+      new URL(`/auth/loading?redirectTo=${redirectTo}`, ctx.appBaseUrl ?? process.env.AUTH0_BASE_URL!)
     );
   },
 });
