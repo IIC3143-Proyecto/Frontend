@@ -23,7 +23,7 @@ export const avatarHandlers = [
     if (scenario === 'AVATAR_SLOW') {
       await delay(2000);
       return HttpResponse.json(
-        { photoUrl: `https://vtrna.com/avatars/mock-${Date.now()}.webp` },
+        { message: 'Imagen subida exitosamente.' },
         { status: 201 }
       );
     }
@@ -44,8 +44,16 @@ export const avatarHandlers = [
     }
 
     return HttpResponse.json(
-      { photoUrl: `https://vtrna.com/avatars/mock-${Date.now()}.webp` },
+      { message: 'Imagen subida exitosamente.' },
       { status: 201 }
     );
+  }),
+
+  http.delete('*/api/image/user/:id_user', ({ request }) => {
+    const token = request.headers.get('Authorization');
+    if (!token) {
+      return HttpResponse.json({ message: 'Unauthorized' }, { status: 401 });
+    }
+    return HttpResponse.json({ message: 'Foto de perfil eliminada exitosamente.' });
   }),
 ];

@@ -2,20 +2,49 @@ import { http, HttpResponse } from 'msw';
 import { mockPost, MOCK_SELLER_POSTS } from '../data/posts';
 
 export const postsHandlers = [
+  http.get('*/api/post/saved/:id_user', ({ request }) => {
+    const token = request.headers.get('Authorization');
+    if (!token) return HttpResponse.json({ message: 'Unauthorized' }, { status: 401 });
+    return HttpResponse.json(MOCK_SELLER_POSTS.slice(0, 2));
+  }),
+
+  // TODO: implementar cuando el backend habilite GET /api/post/user/:id_user
+  http.get('*/api/post/user/:id_user', () =>
+    HttpResponse.json({ message: 'Not implemented' }, { status: 404 })
+  ),
+
+  // TODO: implementar cuando el backend habilite GET /api/post/search
+  http.get('*/api/post/search', () =>
+    HttpResponse.json({ message: 'Not implemented' }, { status: 404 })
+  ),
+
   http.get('*/api/post/seller/:id_user', ({ request }) => {
     const token = request.headers.get('Authorization');
     if (!token) return HttpResponse.json({ message: 'Unauthorized' }, { status: 401 });
     return HttpResponse.json(MOCK_SELLER_POSTS);
   }),
 
-  http.delete('*/post/:id', ({ params }) => {
-    const idx = MOCK_SELLER_POSTS.findIndex((p) => p.id === params.id);
-    if (idx === -1) return new HttpResponse(null, { status: 404 });
-    MOCK_SELLER_POSTS.splice(idx, 1);
-    return new HttpResponse(null, { status: 204 });
+  // El frontend re-fetcha aquí después de subir/borrar imágenes para obtener las URLs actualizadas
+  http.get('*/api/post/:id_post', ({ params, request }) => {
+    const token = request.headers.get('Authorization');
+    if (!token) return HttpResponse.json({ message: 'Unauthorized' }, { status: 401 });
+    const post = MOCK_SELLER_POSTS.find(p => p.id === params.id_post)
+      ?? mockPost(params.id_post as string);
+    return HttpResponse.json(post);
   }),
 
-  http.post('*/image/post/:id_post', async ({ request }) => {
+  http.delete('*/api/post/:id_post', ({ params, request }) => {
+    const token = request.headers.get('Authorization');
+    if (!token) return HttpResponse.json({ message: 'Unauthorized' }, { status: 401 });
+    const idx = MOCK_SELLER_POSTS.findIndex((p) => p.id === params.id_post);
+    const post = idx !== -1
+      ? { ...MOCK_SELLER_POSTS[idx], isDeleted: true, isActive: false }
+      : { ...mockPost(params.id_post as string), isDeleted: true, isActive: false };
+    if (idx !== -1) MOCK_SELLER_POSTS.splice(idx, 1);
+    return HttpResponse.json(post, { status: 200 });
+  }),
+
+  http.post('*/api/image/post/:id_post', async ({ request }) => {
     const token = request.headers.get('Authorization');
     if (!token) {
       return HttpResponse.json({ message: 'Unauthorized' }, { status: 401 });
@@ -33,7 +62,13 @@ export const postsHandlers = [
     );
   }),
 
-  http.post('*/post', async ({ request }) => {
+  http.delete('*/api/image/post/:id_post', ({ request }) => {
+    const token = request.headers.get('Authorization');
+    if (!token) return HttpResponse.json({ message: 'Unauthorized' }, { status: 401 });
+    return HttpResponse.json({ message: 'Imágenes eliminadas exitosamente de la publicación.' });
+  }),
+
+  http.post('*/api/post', async ({ request }) => {
     const token = request.headers.get('Authorization');
     if (!token) {
       return HttpResponse.json({ message: 'Unauthorized' }, { status: 401 });
@@ -44,7 +79,7 @@ export const postsHandlers = [
     return HttpResponse.json(mockPost(id, body), { status: 201 });
   }),
 
-  http.patch('*/post', async ({ request }) => {
+  http.patch('*/api/post', async ({ request }) => {
     const token = request.headers.get('Authorization');
     if (!token) {
       return HttpResponse.json({ message: 'Unauthorized' }, { status: 401 });
@@ -54,4 +89,9 @@ export const postsHandlers = [
     const id = typeof body.id === 'string' ? body.id : `post-${Date.now()}`;
     return HttpResponse.json(mockPost(id, body), { status: 200 });
   }),
+
+  // TODO: implementar cuando el backend habilite PATCH /api/post/:id_post/tags
+  http.patch('*/api/post/:id_post/tags', () =>
+    HttpResponse.json({ message: 'Not implemented' }, { status: 404 })
+  ),
 ];

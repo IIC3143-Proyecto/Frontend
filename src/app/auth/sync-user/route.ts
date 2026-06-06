@@ -22,7 +22,8 @@ export async function GET() {
     return NextResponse.json({ error: 'Backend error' }, { status: res.status });
   }
 
-  const user = await res.json() as UserDto;
+  type BackendSyncResponse = { data: UserDto; message: string; onboardingCompleted: boolean; status: string };
+  const { data: user } = await res.json() as BackendSyncResponse;
 
   // TODO: replace with a dedicated backend flag when available
   const response: SyncUserResponse = {

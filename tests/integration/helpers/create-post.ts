@@ -1,7 +1,7 @@
 import { type Page, expect } from '@playwright/test';
 import path from 'path';
 import { TAGS_MOCK } from '../../../src/lib/msw/mocks/data/mock-tags';
-import { mockPostDto } from '../../../src/lib/msw/mocks/data/mock-post';
+import { mockPostDto } from '../../../src/lib/msw/mocks/data/posts';
 
 export const PHOTO_FILE = path.join(__dirname, '../../e2e/fixtures/avatar.webp');
 
