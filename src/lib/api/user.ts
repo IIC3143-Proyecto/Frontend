@@ -34,7 +34,26 @@ export async function uploadUserAvatar(
 // TODO: implementar cuando el backend habilite PATCH /api/user/:id
 export async function patchUser(
   _userId: string,
-  _data: { username: string; bio: string; photoUrl: string },
+  _data: {
+    username: string;
+    bio: string;
+    photoUrl: string;
+    metro?: string[];
+    contactInfo?: { instagram?: string; email?: string; whatsapp?: string };
+  },
+  _accessToken: string,
+): Promise<void> {
+  return;
+}
+
+// TODO: implementar cuando el backend habilite PATCH /api/user/:id/tags
+export async function patchUserTags(
+  _userId: string,
+  _data: {
+    clothingGender?: string;
+    clothingTypes?: string[];
+    size?: string;
+  },
   _accessToken: string,
 ): Promise<void> {
   return;
