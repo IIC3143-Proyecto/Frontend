@@ -48,9 +48,9 @@ The edit button (`aria-label="Editar"`) lives inside each `SaleCard`. `openEditM
 
 ## Mock data
 
-`post_1` (Vintage 90s Jacket): PUBLISHED, 2 existing photos — used by `openEditModal`  
-`post_2` (Levis 501 Custom): PUBLISHED, `offersCount: 2` — used for locked-price tests  
-MSW stub for `GET /api/post/:id/tags` returns: `{ Talla: ['M'], Condición: 'Como nuevo', 'Tipo de prenda': ['Camiseta'], Marca: [], Color: [], Género: [], Estilo: [], Temporada: [] }`
+`post_1` (Vintage 90s Jacket): PUBLISHED, 3 existing photos — used by `openEditModal`  
+`post_2` (Levis 501 Custom): PUBLISHED, `offersCount: 2`, 3 existing photos — used for locked-price tests  
+MSW stub for `GET /api/post/:id/tags` returns: `{ Talla: ['M'], Condición: 'Nuevo', 'Tipo de prenda': ['Camiseta'], Marca: [], Color: [], Género: [], Estilo: [], Temporada: [] }`
 
 ---
 
@@ -79,7 +79,7 @@ MSW stub for `GET /api/post/:id/tags` returns: `{ Talla: ['M'], Condición: 'Com
 | 7 | Empty title | Error "Título requerido" |
 | 8 | Empty price | Error "El precio debe ser mayor a 0" |
 | 9 | Required tags empty | Error "Selecciona al menos una talla" |
-| 10 | Fewer than 3 photos | Error "Debes tener al menos 3 fotos" |
+| 10 | Fewer than 3 photos (delete 1 of 3 existing) | Error "Debes tener al menos 3 fotos" |
 
 ### PATCH /api/post errors
 

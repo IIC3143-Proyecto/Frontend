@@ -27,12 +27,9 @@ test.describe('Edit Post', () => {
   // ── Happy path ────────────────────────────────────────────────────────────
 
   test('should save changes successfully', async ({ page }) => {
+    // Tags are pre-populated by the MSW stub for GET /api/post/:id/tags
     await fillEditTitle(page, 'Título actualizado');
     await fillEditPrice(page, 30000);
-    await openSection(page, 'Especificaciones esenciales');
-    await page.getByRole('button', { name: 'M', exact: true }).click();
-    await page.getByRole('radio', { name: 'Como nuevo', exact: true }).click();
-    await page.getByRole('button', { name: 'Camiseta', exact: true }).click();
     await clickSave(page);
     await waitForToast(page, 'Publicación actualizada');
     await expect(page.getByRole('dialog')).not.toBeVisible();
@@ -49,9 +46,9 @@ test.describe('Edit Post', () => {
 
   test('should pre-populate tags from fetchPostTags', async ({ page }) => {
     await openSection(page, 'Especificaciones esenciales');
-    // MSW stub returns Talla: ['M'], Condición: 'Como nuevo', Tipo de prenda: ['Camiseta']
+    // MSW stub returns Talla: ['M'], Condición: 'Nuevo', Tipo de prenda: ['Camiseta']
     await expect(page.getByRole('button', { name: 'M', exact: true })).toHaveAttribute('aria-pressed', 'true');
-    await expect(page.getByRole('radio', { name: 'Como nuevo', exact: true })).toBeChecked();
+    await expect(page.getByRole('radio', { name: 'Nuevo', exact: true })).toBeChecked();
     await expect(page.getByRole('button', { name: 'Camiseta', exact: true })).toHaveAttribute('aria-pressed', 'true');
   });
 
@@ -79,10 +76,6 @@ test.describe('Edit Post', () => {
     await page.getByRole('button', { name: 'Cancelar' }).click();
     await openEditModalForPost(page, 'Levis 501');
     await fillEditTitle(page, 'Levis actualizado');
-    await openSection(page, 'Especificaciones esenciales');
-    await page.getByRole('button', { name: 'M', exact: true }).click();
-    await page.getByRole('radio', { name: 'Como nuevo', exact: true }).click();
-    await page.getByRole('button', { name: 'Camiseta', exact: true }).click();
     await clickSave(page);
     await waitForToast(page, 'Publicación actualizada');
   });
@@ -104,12 +97,16 @@ test.describe('Edit Post', () => {
   });
 
   test('should show error when required tags are empty', async ({ page }) => {
+    // Tags are pre-populated by MSW stub — explicitly deselect to trigger validation
+    await openSection(page, 'Especificaciones esenciales');
+    await page.getByRole('button', { name: 'M', exact: true }).click();
+    await page.getByRole('button', { name: 'Camiseta', exact: true }).click();
     await clickSave(page);
     await expectError(page, 'Selecciona al menos una talla');
   });
 
   test('should show error when fewer than 3 photos remain', async ({ page }) => {
-    // post_1 has 2 existing photos → deleting one leaves 1 < 3
+    // post_1 has 3 existing photos → deleting one leaves 2 < 3
     await openSection(page, 'Fotos');
     await page.getByRole('button', { name: 'Eliminar foto' }).first().click();
     await clickSave(page);
@@ -120,30 +117,18 @@ test.describe('Edit Post', () => {
 
   test('should redirect to session-expired when PATCH /post returns 401', async ({ page }) => {
     await setPatchPostError(page, 401);
-    await openSection(page, 'Especificaciones esenciales');
-    await page.getByRole('button', { name: 'M', exact: true }).click();
-    await page.getByRole('radio', { name: 'Como nuevo', exact: true }).click();
-    await page.getByRole('button', { name: 'Camiseta', exact: true }).click();
     await clickSave(page);
     await page.waitForURL('**/session-expired', { timeout: 8_000 });
   });
 
   test('should show error toast when PATCH /post returns 500', async ({ page }) => {
     await setPatchPostError(page, 500);
-    await openSection(page, 'Especificaciones esenciales');
-    await page.getByRole('button', { name: 'M', exact: true }).click();
-    await page.getByRole('radio', { name: 'Como nuevo', exact: true }).click();
-    await page.getByRole('button', { name: 'Camiseta', exact: true }).click();
     await clickSave(page);
     await waitForToast(page, 'Error al guardar cambios');
   });
 
   test('should show network error toast when PATCH /post fails', async ({ page }) => {
     await setPatchPostNetwork(page);
-    await openSection(page, 'Especificaciones esenciales');
-    await page.getByRole('button', { name: 'M', exact: true }).click();
-    await page.getByRole('radio', { name: 'Como nuevo', exact: true }).click();
-    await page.getByRole('button', { name: 'Camiseta', exact: true }).click();
     await clickSave(page);
     await waitForToast(page, 'Error de red');
   });
@@ -155,10 +140,6 @@ test.describe('Edit Post', () => {
       page,
       async () => {
         await fillEditTitle(page, 'Solo cambio título');
-        await openSection(page, 'Especificaciones esenciales');
-        await page.getByRole('button', { name: 'M', exact: true }).click();
-        await page.getByRole('radio', { name: 'Como nuevo', exact: true }).click();
-        await page.getByRole('button', { name: 'Camiseta', exact: true }).click();
         await clickSave(page);
         await waitForToast(page, 'Publicación actualizada');
       },
@@ -171,14 +152,10 @@ test.describe('Edit Post', () => {
     const firstPhotoSrc = await page.locator('img[alt="Foto de prenda"]').first().getAttribute('src');
     await page.getByRole('button', { name: 'Eliminar foto' }).first().click();
 
-    // Add 2 new photos to reach the minimum of 3
-    await uploadEditPhotos(page, 2);
+    // post_1 has 3 existing photos; after deleting 1 we have 2 → add 1 new to reach minimum of 3
+    await uploadEditPhotos(page, 1);
 
     const deleteReq = waitForImageRequest(page, 'DELETE');
-    await openSection(page, 'Especificaciones esenciales');
-    await page.getByRole('button', { name: 'M', exact: true }).click();
-    await page.getByRole('radio', { name: 'Como nuevo', exact: true }).click();
-    await page.getByRole('button', { name: 'Camiseta', exact: true }).click();
     await clickSave(page);
 
     const req = await deleteReq;
@@ -194,13 +171,10 @@ test.describe('Edit Post', () => {
     );
     await page.getByRole('button', { name: 'Eliminar foto' }).first().click();
 
-    await uploadEditPhotos(page, 2);
+    // post_1 has 3 existing photos; after deleting 1 we have 2 → add 1 new to reach minimum of 3
+    await uploadEditPhotos(page, 1);
 
     const deleteReq = waitForImageRequest(page, 'DELETE');
-    await openSection(page, 'Especificaciones esenciales');
-    await page.getByRole('button', { name: 'M', exact: true }).click();
-    await page.getByRole('radio', { name: 'Como nuevo', exact: true }).click();
-    await page.getByRole('button', { name: 'Camiseta', exact: true }).click();
     await clickSave(page);
 
     const req = await deleteReq;
@@ -215,10 +189,6 @@ test.describe('Edit Post', () => {
     await uploadEditPhotos(page, 1);
 
     const appendReq = waitForImageRequest(page, 'PATCH');
-    await openSection(page, 'Especificaciones esenciales');
-    await page.getByRole('button', { name: 'M', exact: true }).click();
-    await page.getByRole('radio', { name: 'Como nuevo', exact: true }).click();
-    await page.getByRole('button', { name: 'Camiseta', exact: true }).click();
     await clickSave(page);
 
     await appendReq;
@@ -227,13 +197,10 @@ test.describe('Edit Post', () => {
   test('should redirect to session-expired when DELETE image returns 401', async ({ page }) => {
     await openSection(page, 'Fotos');
     await page.getByRole('button', { name: 'Eliminar foto' }).first().click();
-    await uploadEditPhotos(page, 2);
+    // post_1 has 3 existing photos; after deleting 1 we have 2 → add 1 new to reach minimum of 3
+    await uploadEditPhotos(page, 1);
 
     await setDeleteImageError(page, 401);
-    await openSection(page, 'Especificaciones esenciales');
-    await page.getByRole('button', { name: 'M', exact: true }).click();
-    await page.getByRole('radio', { name: 'Como nuevo', exact: true }).click();
-    await page.getByRole('button', { name: 'Camiseta', exact: true }).click();
     await clickSave(page);
     await page.waitForURL('**/session-expired', { timeout: 8_000 });
   });
@@ -241,13 +208,10 @@ test.describe('Edit Post', () => {
   test('should show error toast when DELETE image returns 500', async ({ page }) => {
     await openSection(page, 'Fotos');
     await page.getByRole('button', { name: 'Eliminar foto' }).first().click();
-    await uploadEditPhotos(page, 2);
+    // post_1 has 3 existing photos; after deleting 1 we have 2 → add 1 new to reach minimum of 3
+    await uploadEditPhotos(page, 1);
 
     await setDeleteImageError(page, 500);
-    await openSection(page, 'Especificaciones esenciales');
-    await page.getByRole('button', { name: 'M', exact: true }).click();
-    await page.getByRole('radio', { name: 'Como nuevo', exact: true }).click();
-    await page.getByRole('button', { name: 'Camiseta', exact: true }).click();
     await clickSave(page);
     await waitForToast(page, 'Error al guardar cambios');
   });
@@ -255,10 +219,6 @@ test.describe('Edit Post', () => {
   test('should redirect to session-expired when PATCH append image returns 401', async ({ page }) => {
     await uploadEditPhotos(page, 1);
     await setAppendImageError(page, 401);
-    await openSection(page, 'Especificaciones esenciales');
-    await page.getByRole('button', { name: 'M', exact: true }).click();
-    await page.getByRole('radio', { name: 'Como nuevo', exact: true }).click();
-    await page.getByRole('button', { name: 'Camiseta', exact: true }).click();
     await clickSave(page);
     await page.waitForURL('**/session-expired', { timeout: 8_000 });
   });

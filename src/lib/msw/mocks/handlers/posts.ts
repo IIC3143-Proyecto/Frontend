@@ -30,7 +30,7 @@ export const postsHandlers = [
     const token = request.headers.get('Authorization');
     if (!token) return HttpResponse.json({ message: 'Unauthorized' }, { status: 401 });
     return HttpResponse.json({
-      Talla: ['M'], Condición: 'Como nuevo', 'Tipo de prenda': ['Camiseta'],
+      Talla: ['M'], Condición: 'Nuevo', 'Tipo de prenda': ['Camiseta'],
       Marca: [], Color: [], Género: [], Estilo: [], Temporada: [],
     });
   }),
