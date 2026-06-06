@@ -22,10 +22,9 @@ test.describe('Login — sin sesión', () => {
 });
 
 test.describe('Login — con sesión', () => {
-  test('usuario FULL accede a /profile sin redirect', async ({ page }) => {
-    await gotoAuthenticated(page, '/profile', 'FULL');
-    await expect(page).toHaveURL('/profile');
-    await expect(page.getByText('profile')).toBeVisible();
+  test('usuario sin onboarding es redirigido a /onboarding', async ({ page }) => {
+    await gotoAuthenticated(page, '/profile');
+    await page.waitForURL('/onboarding', { timeout: 15_000 });
   });
 });
 
