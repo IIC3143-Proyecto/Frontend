@@ -20,6 +20,8 @@ export const api = {
   syncUser:   () => local('/sync-user'),                        // BFF — always local
   tags:       () => remote('/api/tag'),
   userImage:  (id: string) => remote(`/api/image/user/${id}`),
+  user:       (id: string) => remote(`/api/user/${id}`),
+  userTags:   (id: string) => remote(`/api/user/${id}/tags`),
   post:       () => remote('/api/post'),
   postImages: (id: string) => remote(`/api/image/post/${id}`),
 };
