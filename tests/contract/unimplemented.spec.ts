@@ -41,6 +41,11 @@ test('GET /api/post/:id/tags — pendiente de implementación', async ({ request
   expect(res.status()).toBe(404);
 });
 
+test('PATCH /api/user/:id/tags — pendiente de implementación', async ({ request }) => {
+  const res = await request.patch('/api/user/fake-id/tags', { data: {}, headers: { Authorization: `Bearer ${token}` } });
+  expect(res.status()).toBe(404);
+});
+
 test('PATCH /api/image/post/:id — pendiente de implementación', async ({ request }) => {
   const res = await request.patch('/api/image/post/fake-id', {
     headers: { Authorization: `Bearer ${token}` },
