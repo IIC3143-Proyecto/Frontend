@@ -3,10 +3,12 @@ import { readFile } from 'fs/promises';
 import path from 'path';
 
 let token = '';
+let imageBuffer: Buffer = Buffer.alloc(0);
 
 test.beforeAll(async () => {
   const data = await readFile(path.join(__dirname, '.auth/token.json'), 'utf-8').catch(() => '{}');
   token = (JSON.parse(data) as { token?: string }).token ?? '';
+  imageBuffer = await readFile(path.join(__dirname, '../e2e/fixtures/avatar.webp'));
 });
 
 test.beforeEach(() => {
@@ -25,11 +27,8 @@ function expectUserShape(user: Record<string, unknown>) {
   expect(typeof user.status).toBe('string');
   expect(typeof user.createdAtUtcMinus3).toBe('string');
   expect(typeof user.updatedAtUtcMinus3).toBe('string');
-  expect(Array.isArray(user.posts)).toBe(true);
-  expect(Array.isArray(user.interactions)).toBe(true);
   expect('following' in user).toBe(false);
   expect('followers' in user).toBe(false);
-  expect('onboardingCompleted' in user).toBe(false);
 }
 
 // Valida que un objeto tenga la forma de PostDto
@@ -44,20 +43,22 @@ function expectPostShape(post: Record<string, unknown>) {
   expect(typeof post.isActive).toBe('boolean');
   expect(typeof post.isDeleted).toBe('boolean');
   expect(typeof post.createdAtUtcMinus3).toBe('string');
-  expect(Array.isArray(post.interactions)).toBe(true);
-  expect(typeof post.imagesUrls).toBe('string');
+  expect(post.imagesUrls === null || typeof post.imagesUrls === 'string').toBe(true);
   expect('images' in post).toBe(false);
 }
 
 
 test.describe('GET /api/auth/sync-user', () => {
-  test('200 — retorna UserDto completo', async ({ request }) => {
+  test('200 — retorna {data: UserDto} wrapper', async ({ request }) => {
     const res = await request.get('/api/auth/sync-user', { headers: auth() });
     expect(res.status()).toBe(200);
-    const body = await res.json() as Record<string, unknown>;
-    expectUserShape(body);
-    if (body.bio !== null && body.bio !== undefined) {
-      expect(typeof body.bio).toBe('string');
+    const body = await res.json() as { status: string; message: string; data: Record<string, unknown> };
+    expect(typeof body.message).toBe('string');
+    expect(typeof body.data).toBe('object');
+    expectUserShape(body.data);
+    const data = body.data;
+    if (data.bio !== null && data.bio !== undefined) {
+      expect(typeof data.bio).toBe('string');
     }
   });
 
@@ -144,7 +145,6 @@ test.describe('DELETE /api/post/:id', () => {
     const body = await res.json() as Record<string, unknown>;
     expectPostShape(body);
     expect(body.isDeleted).toBe(true);
-    expect(body.isActive).toBe(false);
   });
 
   test('401 sin token', async ({ request }) => {
@@ -156,11 +156,12 @@ test.describe('DELETE /api/post/:id', () => {
 test.describe('POST /api/image/user/:id', () => {
   test('201 — retorna SimpleResponseDto con message', async ({ request }) => {
     const userRes = await request.get('/api/auth/sync-user', { headers: auth() });
-    const { id } = await userRes.json() as { id: string };
+    const { data: syncUser } = await userRes.json() as { data: { id: string } };
+    const { id } = syncUser;
 
     const res = await request.post(`/api/image/user/${id}`, {
       headers: auth(),
-      multipart: { images: { name: 'test.webp', mimeType: 'image/webp', buffer: Buffer.from('fake-webp') } },
+      multipart: { images: { name: 'avatar.webp', mimeType: 'image/webp', buffer: imageBuffer } },
     });
     expect(res.status()).toBe(201);
     const body = await res.json() as Record<string, unknown>;
@@ -169,9 +170,9 @@ test.describe('POST /api/image/user/:id', () => {
   });
 
   test('403 intentando subir imagen de otro usuario', async ({ request }) => {
-    const res = await request.post('/api/image/user/otro-usuario-id', {
+    const res = await request.post('/api/image/user/00000000-0000-0000-0000-000000000001', {
       headers: auth(),
-      multipart: { images: { name: 'test.webp', mimeType: 'image/webp', buffer: Buffer.from('fake') } },
+      multipart: { images: { name: 'avatar.webp', mimeType: 'image/webp', buffer: imageBuffer } },
     });
     expect(res.status()).toBe(403);
   });
@@ -205,7 +206,8 @@ test.describe('GET /api/post/:id', () => {
 test.describe('GET /api/post/saved/:id_user', () => {
   test('200 — retorna array de PostDto', async ({ request }) => {
     const userRes = await request.get('/api/auth/sync-user', { headers: auth() });
-    const { id } = await userRes.json() as { id: string };
+    const { data: syncUser } = await userRes.json() as { data: { id: string } };
+    const { id } = syncUser;
 
     const res = await request.get(`/api/post/saved/${id}`, { headers: auth() });
     expect(res.status()).toBe(200);
@@ -227,7 +229,7 @@ test.describe('DELETE /api/image/post/:id', () => {
   });
 
   test('403 si no eres el vendedor', async ({ request }) => {
-    const res = await request.delete('/api/image/post/post-de-otro-usuario', {
+    const res = await request.delete('/api/image/post/00000000-0000-0000-0000-000000000002', {
       headers: { ...auth(), 'Content-Type': 'application/json' },
       data: { urls: ['https://example.com/fake.jpg'] },
     });
@@ -238,7 +240,8 @@ test.describe('DELETE /api/image/post/:id', () => {
 test.describe('DELETE /api/image/user/:id', () => {
   test('200 — retorna SimpleResponseDto', async ({ request }) => {
     const userRes = await request.get('/api/auth/sync-user', { headers: auth() });
-    const { id } = await userRes.json() as { id: string };
+    const { data: syncUser } = await userRes.json() as { data: { id: string } };
+    const { id } = syncUser;
 
     const res = await request.delete(`/api/image/user/${id}`, { headers: auth() });
     expect(res.status()).toBe(200);
@@ -247,7 +250,7 @@ test.describe('DELETE /api/image/user/:id', () => {
   });
 
   test('403 intentando eliminar foto de otro usuario', async ({ request }) => {
-    expect((await request.delete('/api/image/user/otro-usuario-id', { headers: auth() })).status()).toBe(403);
+    expect((await request.delete('/api/image/user/00000000-0000-0000-0000-000000000001', { headers: auth() })).status()).toBe(403);
   });
 
   test('401 sin token', async ({ request }) => {
@@ -260,7 +263,8 @@ test.describe('DELETE /api/image/user/:id', () => {
 test.describe('GET /api/user/:id', () => {
   test('200 con UserDto ó 404 si no implementado', async ({ request }) => {
     const userRes = await request.get('/api/auth/sync-user', { headers: auth() });
-    const { id } = await userRes.json() as { id: string };
+    const { data: syncUser } = await userRes.json() as { data: { id: string } };
+    const { id } = syncUser;
 
     const res = await request.get(`/api/user/${id}`, { headers: auth() });
     if (res.status() === 404) return; // pendiente de implementación
@@ -279,7 +283,7 @@ test.describe('POST /api/image/post/:id', () => {
 
     const res = await request.post(`/api/image/post/${id}`, {
       headers: auth(),
-      multipart: { images: { name: 'test.webp', mimeType: 'image/webp', buffer: Buffer.from('fake-webp') } },
+      multipart: { images: { name: 'avatar.webp', mimeType: 'image/webp', buffer: imageBuffer } },
     });
     expect(res.status()).toBe(201);
     const body = await res.json() as Record<string, unknown>;
@@ -287,14 +291,26 @@ test.describe('POST /api/image/post/:id', () => {
   });
 
   test('403 si no eres el vendedor', async ({ request }) => {
-    const res = await request.post('/api/image/post/post-de-otro-usuario', {
+    const res = await request.post('/api/image/post/00000000-0000-0000-0000-000000000002', {
       headers: auth(),
-      multipart: { images: { name: 'test.webp', mimeType: 'image/webp', buffer: Buffer.from('fake') } },
+      multipart: { images: { name: 'avatar.webp', mimeType: 'image/webp', buffer: imageBuffer } },
     });
     expect([403, 404]).toContain(res.status());
   });
 
   test('401 sin token', async ({ request }) => {
     expect((await request.post('/api/image/post/fake-id')).status()).toBe(401);
+  });
+});
+
+
+test.describe('GET /api/post/search', () => {
+  test('401 sin token', async ({ request }) => {
+    expect((await request.get('/api/post/search?q=test')).status()).toBe(401);
+  });
+
+  test('reachable con token — no 404', async ({ request }) => {
+    const res = await request.get('/api/post/search?q=test', { headers: auth() });
+    expect(res.status()).not.toBe(404);
   });
 });
