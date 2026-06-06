@@ -83,6 +83,7 @@ export function PostEditModal({ open, onClose, post }: Props) {
   const {
     form,
     allPhotos,
+    photoError,
     addPhoto,
     removePhoto,
     isLocked,
@@ -209,6 +210,7 @@ export function PostEditModal({ open, onClose, post }: Props) {
                     photos={allPhotos}
                     onAddPhoto={addPhoto}
                     onRemovePhoto={removePhoto}
+                    validationError={photoError}
                     columns={6}
                   />
                 </AccordionContent>

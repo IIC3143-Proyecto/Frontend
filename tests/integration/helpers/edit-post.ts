@@ -55,13 +55,16 @@ export async function clickSave(page: Page) {
   await page.getByRole('button', { name: 'Guardar Cambios' }).click();
 }
 
-/** Clicks an AccordionTrigger that contains the given text. */
+/** Expands an accordion section matching the given text. No-op if already open. */
 export async function openSection(page: Page, name: string) {
-  await page
-    .getByRole('button', { name: new RegExp(name, 'i') })
-    .filter({ hasNot: page.locator('[data-slot="accordion-content"]') })
-    .first()
-    .click();
+  const trigger = page
+    .locator('[data-slot="accordion-trigger"]')
+    .filter({ hasText: new RegExp(name, 'i') })
+    .first();
+  const state = await trigger.getAttribute('data-state');
+  if (state !== 'open') {
+    await trigger.click();
+  }
 }
 
 export async function fillEditTitle(page: Page, value: string) {
