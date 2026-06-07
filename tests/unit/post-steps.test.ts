@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { desktopToMobile, mobileToDesktop } from './post-steps';
+import { desktopToMobile, mobileToDesktop } from '@/lib/post-steps';
 
 describe('desktopToMobile', () => {
   it('step 1 sin fotos → móvil step 1', () => expect(desktopToMobile(1, 0)).toBe(1));
