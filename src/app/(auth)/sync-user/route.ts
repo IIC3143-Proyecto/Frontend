@@ -30,7 +30,7 @@ export async function GET() {
     onboardingCompleted: !!user.bio,
   };
 
-const session = await auth0.getSession();
+  const session = await auth0.getSession();
   if (session) {
     await auth0.updateSession({
       ...session,
