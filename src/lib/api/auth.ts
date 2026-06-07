@@ -1,7 +1,7 @@
 import type { SyncUserResponse } from '@/lib/types/auth';
 
 export async function syncUser(): Promise<SyncUserResponse> {
-  const res = await fetch('/auth/sync-user');
+  const res = await fetch('/sync-user');
   if (res.status === 401) {
     throw Object.assign(new Error('AUTH_EXPIRED'), { code: 401 });
   }

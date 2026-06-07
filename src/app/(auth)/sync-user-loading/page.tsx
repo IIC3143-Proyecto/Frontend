@@ -11,7 +11,7 @@ export default function AuthLoading() {
   const redirectTo = /^\/(?!\/)/.test(raw) ? raw : '/';
 
   useEffect(() => {
-    fetch('/auth/sync-user')
+    fetch('/sync-user')
       .then(res => {
         if (!res.ok) throw new Error(`sync-user ${res.status}`);
         router.replace(redirectTo);

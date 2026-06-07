@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 
 /**
  * True integration tests — no mocks.
- * Validates the full chain: Auth0 session → BFF /auth/sync-user → real backend.
+ * Validates the full chain: Auth0 session → BFF /sync-user → real backend.
  * Requires BACKEND_API_URL to be set in .env.local.
  */
 
@@ -21,7 +21,7 @@ test.describe('Auth0 + backend integration', () => {
     test.skip(!process.env.BACKEND_API_URL, 'BACKEND_API_URL not set — skipping real backend tests');
 
     const [response] = await Promise.all([
-      page.waitForResponse('**/auth/sync-user'),
+      page.waitForResponse('**/sync-user'),
       page.goto('/profile'),
     ]);
 
@@ -34,7 +34,7 @@ test.describe('Auth0 + backend integration', () => {
     test.skip(!process.env.BACKEND_API_URL, 'BACKEND_API_URL not set — skipping real backend tests');
 
     const [response] = await Promise.all([
-      page.waitForResponse('**/auth/sync-user'),
+      page.waitForResponse('**/sync-user'),
       page.goto('/profile'),
     ]);
 
@@ -50,7 +50,7 @@ test.describe('Auth0 + backend integration', () => {
     test.skip(!process.env.BACKEND_API_URL, 'BACKEND_API_URL not set — skipping real backend tests');
 
     const [response] = await Promise.all([
-      page.waitForResponse('**/auth/sync-user'),
+      page.waitForResponse('**/sync-user'),
       page.goto('/profile'),
     ]);
 
