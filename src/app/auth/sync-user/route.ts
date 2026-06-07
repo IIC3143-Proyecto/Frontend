@@ -30,7 +30,6 @@ export async function GET() {
     onboardingCompleted: !!user.bio,
   };
 
-  // Persiste onboardingCompleted en la sesión para que proxy.ts lo lea server-side
   const session = await auth0.getSession();
   if (session) {
     await auth0.updateSession({
