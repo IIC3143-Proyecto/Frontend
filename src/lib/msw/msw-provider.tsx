@@ -58,7 +58,10 @@ export function MSWProvider({ children }: { children: React.ReactNode }) {
       try {
         await workerStartPromise;
       } catch (error) {
-        console.error("❌ MSW error:", error);
+        const msg = (error as Error)?.message ?? '';
+        if (!msg.includes("reading 'active'")) {
+          console.error("❌ MSW error:", error);
+        }
       } finally {
         setMswReady(true);
       }
