@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { Providers } from "./providers";
 import { Toaster } from "@/components/ui/sonner";
+import { PublicNavbar } from "@/components/layout/public-navbar";
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -11,7 +12,8 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="es">
-      <body>
+      <body className="flex flex-col h-screen">
+        <PublicNavbar/>
         <Providers>{children}</Providers>
         <Toaster position="top-center" richColors />
       </body>
