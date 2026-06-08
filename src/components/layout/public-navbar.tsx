@@ -62,8 +62,8 @@ function MobileMenu() {
 
 export function PublicNavbar() {
   return (
-    <header className="flex h-20 px-6 border-b justify-between items-center sticky top-0 z-10 bg-background">
-      <Link href="/">
+    <header className="flex h-20 px-6 border-b justify-between items-center sticky top-0 z-10 bg-background shrink-0">
+      <Link href="/" className="shrink-0">
         <Image
           src="/assets/vtrna-logo.svg"
           alt="vtrna logo"
