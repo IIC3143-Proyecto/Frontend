@@ -2,6 +2,7 @@
 
 import { cn } from '@/lib/utils';
 import Link from "next/link";
+import Image from 'next/image';
 import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
@@ -62,8 +63,16 @@ function MobileMenu() {
 export function PublicNavbar() {
   return (
     <header className="flex h-20 px-6 border-b justify-between items-center sticky top-0 z-10 bg-background">
-      <Link href="/"> 
-        <img src="/assets/vtrna-logo.svg" alt="vtrna logo" draggable={false} className="h-4 w-auto select-none pointer-events-none"/>
+      <Link href="/">
+        <Image
+          src="/assets/vtrna-logo.svg"
+          alt="vtrna logo"
+          draggable={false}
+          width={136}
+          height={16}
+          className="h-4 w-auto select-none pointer-events-none"
+          unoptimized={true}
+        />
       </Link>
 
       <div className="hidden md:block">
