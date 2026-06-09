@@ -5,7 +5,7 @@ import { MOCK_USERS } from '@/lib/msw/mocks/data/mock-users';
 export type MockScenario = MockUserScenario;
 
 export async function mockSyncUser(page: Page, scenario: MockScenario) {
-  await page.route('**/auth/sync-user', (route) =>
+  await page.route('**/sync-user', (route) =>
     route.fulfill({
       status: 200,
       contentType: 'application/json',
@@ -15,7 +15,7 @@ export async function mockSyncUser(page: Page, scenario: MockScenario) {
 }
 
 export async function mockSyncUserError(page: Page, status: 401 | 403 | 500 | 503) {
-  await page.route('**/auth/sync-user', (route) =>
+  await page.route('**/sync-user', (route) =>
     route.fulfill({
       status,
       contentType: 'application/json',

@@ -11,7 +11,7 @@ setup('authenticate with Auth0', async ({ page }) => {
     setup.skip(true, 'AUTH0_TEST_EMAIL / AUTH0_TEST_PASSWORD no configurados en .env.local');
   }
 
-  await page.route('**/auth/sync-user', route =>
+  await page.route('**/sync-user', route =>
     route.fulfill({
       status: 200,
       contentType: 'application/json',

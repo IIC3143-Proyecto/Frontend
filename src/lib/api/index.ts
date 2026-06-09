@@ -1,5 +1,5 @@
 // remote(path) → real backend when NEXT_PUBLIC_API_URL set + MSW off; else relative (MSW intercepts)
-// local(path)  → always the Next.js BFF route handler (e.g. /auth/sync-user)
+// local(path)  → always the Next.js BFF route handler (e.g. /sync-user)
 //
 // "not ready" endpoints (#46, #48) are in-function stubs in src/lib/api/ — no route handler needed.
 // To promote when backend ships: replace the stub with a real fetch to remote().
@@ -17,7 +17,7 @@ function local(path: string): string {
 }
 
 export const api = {
-  syncUser:   () => local('/auth/sync-user'),                   // BFF — always local
+  syncUser:   () => local('/sync-user'),                        // BFF — always local
   tags:       () => remote('/api/tag'),
   userImage:  (id: string) => remote(`/api/image/user/${id}`),
   post:       () => remote('/api/post'),
