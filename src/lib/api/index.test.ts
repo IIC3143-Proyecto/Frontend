@@ -8,7 +8,7 @@ describe('api URL builder', () => {
 
   it('syncUser() siempre retorna la ruta BFF local', async () => {
     const { api } = await import('./index');
-    expect(api.syncUser()).toBe('/auth/sync-user');
+    expect(api.syncUser()).toBe('/sync-user');
   });
 
   it('tags() retorna ruta relativa cuando MSW está activo', async () => {
