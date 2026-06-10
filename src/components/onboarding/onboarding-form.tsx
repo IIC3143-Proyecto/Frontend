@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { useQueryClient } from "@tanstack/react-query";
-import { uploadUserAvatar, patchUser, patchUserTags } from "@/lib/api/user";
+import { uploadUserAvatar, patchUser } from "@/lib/api/user";
 import { getAccessToken } from "@/actions/auth";
 import { StepProgress } from "@/components/common/step-progress";
 import { useTags } from "@/hooks/use-tags";
@@ -28,16 +28,23 @@ const onboardingSchema = z.object({
     .min(1, "Username es requerido")
     .min(3, "Username debe tener al menos 3 caracteres")
     .max(30, "Username debe tener como máximo 30 caracteres")
-    .regex(/^[a-zA-Z0-9_-]+$/, "Username solo puede contener letras, números, guiones y guiones bajos"),
+    .regex(/^[a-zA-Z0-9_-]+$/, "Username solo puede contener letras, números, guiones y guiones bajos")
+    .transform((v) => v.toLowerCase()),
   bio: z.string().min(1, "Bio es requerida").max(500, "Bio debe tener como máximo 500 caracteres"),
   // Step 2 — optional (valores dinámicos del API de tags)
   clothingGender: z.string().optional(),
   clothingTypes: z.array(z.string()).optional(),
   size: z.string().optional(),
   // Step 3 — mínimo 1 requerido (validación manual)
-  contactInstagram: z.string().optional(),
+  contactInstagram: z
+    .string()
+    .refine((v) => !v || !/\s/.test(v), "No puede contener espacios")
+    .optional(),
   contactEmail: z.string().email("Email inválido").optional().or(z.literal("")),
-  contactWhatsapp: z.string().optional(),
+  contactWhatsapp: z
+    .string()
+    .refine((v) => !v || /^\d{8}$/.test(v), "Debe tener exactamente 8 dígitos")
+    .optional(),
   // Step 4 — required
   metro: z.array(z.string()).min(1, "Selecciona al menos una estación de metro"),
 });
@@ -54,10 +61,10 @@ const STEP_TITLES: Record<number, string> = {
 };
 
 const STEP_DESCRIPTIONS: Record<number, string> = {
-  1: "Foto, nombre de usuario y una bio",
-  2: "Preferencias de moda (opcional)",
-  3: "Cómo contactarte",
-  4: "¿Dónde te mueves?",
+  1: "",
+  2: "Qué te gustaría ver en el feed",
+  3: "Agrega al menos un medio de contacto",
+  4: "",
 };
 
 const STEP_FIELDS: Record<number, (keyof OnboardingSchema)[]> = {
@@ -95,6 +102,7 @@ export const OnboardingForm = React.forwardRef<HTMLDivElement, OnboardingFormPro
       },
     });
 
+    const [showIntro, setShowIntro] = React.useState(true);
     const [currentStep, setCurrentStep] = React.useState(1);
     const [showSummary, setShowSummary] = React.useState(false);
     const [isSubmitting, setIsSubmitting] = React.useState(false);
@@ -103,11 +111,12 @@ export const OnboardingForm = React.forwardRef<HTMLDivElement, OnboardingFormPro
     const [avatarError, setAvatarError] = React.useState<string | null>(null);
 
     const handleAvatarChange = React.useCallback((file: File) => {
+      setAvatarPreview((prev) => {
+        if (prev) URL.revokeObjectURL(prev);
+        return URL.createObjectURL(file);
+      });
       setAvatarFile(file);
       setAvatarError(null);
-      const url = URL.createObjectURL(file);
-      setAvatarPreview(url);
-      return () => URL.revokeObjectURL(url);
     }, []);
 
     const handleNext = async () => {
@@ -126,6 +135,8 @@ export const OnboardingForm = React.forwardRef<HTMLDivElement, OnboardingFormPro
           form.setError("contactInstagram", { message: "Agrega al menos un medio de contacto" });
           return;
         }
+        const valid = await form.trigger(STEP_FIELDS[3]);
+        if (!valid) return;
       }
 
       if (currentStep === 4) {
@@ -190,33 +201,48 @@ export const OnboardingForm = React.forwardRef<HTMLDivElement, OnboardingFormPro
         }
 
         const { username, bio, metro, contactInstagram, contactEmail, contactWhatsapp } = form.getValues();
-        const { clothingGender, clothingTypes, size } = form.getValues();
 
-        await patchUser(
-          userId,
-          {
-            username,
-            bio,
-            photoUrl,
-            metro: metro?.length ? metro : undefined,
-            contactInfo: {
-              instagram: contactInstagram || undefined,
-              email: contactEmail || undefined,
-              whatsapp: contactWhatsapp || undefined,
+        try {
+          await patchUser(
+            userId,
+            {
+              username: username.toLowerCase(),
+              bio,
+              photoUrl,
+              metro: metro.length ? metro : undefined,
+              contactInfo: {
+                instagram: contactInstagram ? `@${contactInstagram}` : undefined,
+                email: contactEmail || undefined,
+                whatsapp: contactWhatsapp || undefined,
+              },
             },
-          },
-          token,
-        );
+            token,
+          );
+        } catch (err) {
+          const status = (err as { status?: number }).status;
+          const field = (err as { field?: string }).field;
+          const message = err instanceof Error ? err.message : 'Error al actualizar el perfil';
 
-        await patchUserTags(
-          userId,
-          {
-            clothingGender: clothingGender || undefined,
-            clothingTypes: clothingTypes?.length ? clothingTypes : undefined,
-            size: size || undefined,
-          },
-          token,
-        );
+          if (status === undefined) {
+            toast.error('Error de red', { description: 'Verifica tu conexión e inténtalo de nuevo.' });
+            return;
+          }
+          if (status === 401) {
+            router.push('/session-expired');
+            return;
+          }
+          if (status === 409 && field === 'username') {
+            form.setError('username', { message });
+            setShowSummary(false);
+            setCurrentStep(1);
+            return;
+          }
+          toast.error('Error', { description: message });
+          return;
+        }
+
+        // TODO: no existe endpoint de tags de usuario — implementar cuando el backend lo habilite
+        // await patchUserTags(userId, { clothingGender, clothingTypes, size }, token);
 
         queryClient.setQueriesData(
           { queryKey: ["dbUser"], exact: false },
@@ -231,67 +257,95 @@ export const OnboardingForm = React.forwardRef<HTMLDivElement, OnboardingFormPro
       }
     };
 
-    const isLoading = isSubmitting;
-
     return (
       <div
         ref={ref}
         className={cn(
-          "w-full max-w-md mx-auto flex flex-col gap-6",
+          "w-full max-w-lg mx-auto flex flex-col h-full",
           disabled && "opacity-50 pointer-events-none",
           className,
         )}
         {...props}
       >
-        {!showSummary && (
-          <StepProgress currentStep={currentStep} totalSteps={TOTAL_STEPS} />
-        )}
+        {showIntro ? (
+          <>
+            {/* Intro body */}
+            <div className="flex-1 flex flex-col items-center justify-center gap-3 text-center">
+              <h1 className="text-3xl font-bold">¡Arma tu perfil!</h1>
+              <p className="text-sm text-muted-foreground">Cuéntanos sobre ti y tu estilo. Solo toma un par de minutos.</p>
+            </div>
 
-        <div className="flex flex-col gap-1">
-          <h1 className="text-2xl font-semibold">
-            {showSummary ? "Resumen" : STEP_TITLES[currentStep]}
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            {showSummary
-              ? "Revisa tu información antes de finalizar"
-              : STEP_DESCRIPTIONS[currentStep]}
-          </p>
-        </div>
+            {/* Intro button */}
+            <div className="flex justify-center pt-4 shrink-0">
+              <Button
+                type="button"
+                size="lg"
+                onClick={() => setShowIntro(false)}
+              >
+                Empezar
+                <IconChevronRight className="size-4" />
+              </Button>
+            </div>
+          </>
+        ) : (
+          <>
+            {/* Fixed top: progress + title */}
+            <div className="flex flex-col gap-3 pb-4 shrink-0">
+              {!showSummary && (
+                <StepProgress currentStep={currentStep} totalSteps={TOTAL_STEPS} className="w-full max-w-[200px] mx-auto" />
+              )}
+              <div className="flex flex-col gap-1">
+                <h1 className="text-2xl font-semibold">
+                  {showSummary ? "Resumen" : STEP_TITLES[currentStep]}
+                </h1>
+                {(showSummary || STEP_DESCRIPTIONS[currentStep]) && (
+                  <p className="text-sm text-muted-foreground">
+                    {showSummary
+                      ? "Revisa tu información antes de finalizar"
+                      : STEP_DESCRIPTIONS[currentStep]}
+                  </p>
+                )}
+              </div>
+            </div>
 
-        <Form {...form}>
-          <div className="flex flex-col gap-8">
-            {showSummary ? (
-              <StepResumen form={form} avatarPreview={avatarPreview} />
-            ) : (
-              <>
-                {currentStep === 1 && (
-                  <StepPerfil
-                    form={form}
-                    avatarPreview={avatarPreview}
-                    avatarError={avatarError}
-                    onAvatarChange={handleAvatarChange}
-                    disabled={disabled || isLoading}
-                  />
+            {/* Scrollable body */}
+            <Form {...form}>
+              <div className="flex-1 overflow-y-auto min-h-0">
+                {showSummary ? (
+                  <StepResumen form={form} avatarPreview={avatarPreview} />
+                ) : (
+                  <>
+                    {currentStep === 1 && (
+                      <StepPerfil
+                        form={form}
+                        avatarPreview={avatarPreview}
+                        avatarError={avatarError}
+                        onAvatarChange={handleAvatarChange}
+                        disabled={disabled || isSubmitting}
+                      />
+                    )}
+                    {currentStep === 2 && (
+                      <StepEstilo form={form} tags={tags} disabled={disabled || isSubmitting} />
+                    )}
+                    {currentStep === 3 && (
+                      <StepContacto form={form} disabled={disabled || isSubmitting} />
+                    )}
+                    {currentStep === 4 && (
+                      <StepZona form={form} disabled={disabled || isSubmitting} />
+                    )}
+                  </>
                 )}
-                {currentStep === 2 && (
-                  <StepEstilo form={form} tags={tags} disabled={disabled || isLoading} />
-                )}
-                {currentStep === 3 && (
-                  <StepContacto form={form} disabled={disabled || isLoading} />
-                )}
-                {currentStep === 4 && (
-                  <StepZona form={form} disabled={disabled || isLoading} />
-                )}
-              </>
-            )}
+              </div>
+            </Form>
 
-            <div className={cn("flex", currentStep === 1 && !showSummary ? "justify-end" : "justify-between")}>
+            {/* Fixed bottom: buttons */}
+            <div className={cn("flex pt-4 shrink-0", currentStep === 1 && !showSummary ? "justify-end" : "justify-between")}>
               {(currentStep > 1 || showSummary) && (
                 <Button
                   type="button"
                   variant="ghost"
                   onClick={handleBack}
-                  disabled={isLoading}
+                  disabled={isSubmitting}
                 >
                   <IconChevronLeft className="size-4" />
                   Atrás
@@ -302,21 +356,21 @@ export const OnboardingForm = React.forwardRef<HTMLDivElement, OnboardingFormPro
                 <Button
                   type="button"
                   onClick={handleSubmit}
-                  disabled={disabled || isLoading}
+                  disabled={disabled || isSubmitting}
                   size="lg"
                 >
-                  {isLoading ? (
+                  {isSubmitting ? (
                     <IconLoader2 className="size-4 animate-spin" />
                   ) : (
                     <IconCheck className="size-4" />
                   )}
-                  {isLoading ? "Guardando..." : "Finalizar"}
+                  {isSubmitting ? "Guardando..." : "Finalizar"}
                 </Button>
               ) : (
                 <Button
                   type="button"
                   onClick={handleNext}
-                  disabled={disabled || isLoading}
+                  disabled={disabled || isSubmitting}
                   size="lg"
                 >
                   {currentStep === TOTAL_STEPS ? "Ver resumen" : "Siguiente"}
@@ -324,8 +378,8 @@ export const OnboardingForm = React.forwardRef<HTMLDivElement, OnboardingFormPro
                 </Button>
               )}
             </div>
-          </div>
-        </Form>
+          </>
+        )}
       </div>
     );
   },

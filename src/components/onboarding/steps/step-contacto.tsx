@@ -1,7 +1,7 @@
 "use client";
 
 import type { UseFormReturn } from "react-hook-form";
-import { IconBrandInstagram, IconMail, IconBrandWhatsapp } from "@tabler/icons-react";
+import { IconMail } from "@tabler/icons-react";
 import { TextInput } from "@/components/common/text-input";
 import type { OnboardingSchema } from "../onboarding-form";
 
@@ -17,8 +17,8 @@ export function StepContacto({ form, disabled }: StepContactoProps) {
         control={form.control}
         name="contactInstagram"
         label="Instagram"
-        placeholder="@tu_usuario"
-        icon={IconBrandInstagram}
+        placeholder="tu_usuario"
+        prefix="@"
         disabled={disabled}
       />
 
@@ -36,9 +36,10 @@ export function StepContacto({ form, disabled }: StepContactoProps) {
         control={form.control}
         name="contactWhatsapp"
         label="WhatsApp"
-        placeholder="+56 9 1234 5678"
-        type="tel"
-        icon={IconBrandWhatsapp}
+        placeholder="12345678"
+        prefix="+569"
+        onlyDigits
+        maxLength={8}
         disabled={disabled}
       />
     </div>

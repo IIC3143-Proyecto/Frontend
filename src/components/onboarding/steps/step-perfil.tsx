@@ -36,6 +36,7 @@ export function StepPerfil({ form, avatarPreview, avatarError, onAvatarChange, d
         disabled={disabled}
         autoFocus
         required
+        maxLength={30}
       />
 
       <TextInput
@@ -45,6 +46,8 @@ export function StepPerfil({ form, avatarPreview, avatarError, onAvatarChange, d
         placeholder="Escribe una breve biografía sobre ti..."
         disabled={disabled}
         isTextarea
+        required
+        maxLength={500}
         inputClassName="min-h-[100px] max-h-[100px]"
       />
     </div>

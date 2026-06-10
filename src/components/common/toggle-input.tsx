@@ -125,10 +125,9 @@ export function ToggleInputGroup<TFieldValues extends FieldValues>({
           <FormControl>
             <ToggleGroup
               type={type as "single" | "multiple"}
-              value={field.value}
+              value={field.value ?? (type === "multiple" ? [] : "")}
               disabled={disabled}
               onValueChange={(val: string | string[]) => {
-                if (type === "single" && !val) return;
                 field.onChange(val);
               }}
               spacing={8}
