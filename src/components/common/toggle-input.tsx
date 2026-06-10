@@ -11,6 +11,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+const ToggleGroupAny = ToggleGroup as React.ComponentType<any>;
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -123,13 +124,11 @@ export function ToggleInputGroup<TFieldValues extends FieldValues>({
           )}
 
           <FormControl>
-            <ToggleGroup
-              type={type as "single" | "multiple"}
+            <ToggleGroupAny
+              type={type}
               value={field.value ?? (type === "multiple" ? [] : "")}
               disabled={disabled}
-              onValueChange={(val: string | string[]) => {
-                field.onChange(val);
-              }}
+              onValueChange={(val: string | string[]) => { field.onChange(val); }}
               spacing={8}
               className="flex flex-wrap justify-start gap-2 h-auto"
             >
@@ -165,7 +164,7 @@ export function ToggleInputGroup<TFieldValues extends FieldValues>({
                     : `Ver ${options.length - actualLimit} más`}
                 </Button>
               )}
-            </ToggleGroup>
+            </ToggleGroupAny>
           </FormControl>
 
           <div className="min-h-[1.1em]">
