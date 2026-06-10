@@ -24,8 +24,12 @@ export async function fillBio(page: Page, value: string) {
   await page.getByPlaceholder('Escribe una breve biografía sobre ti...').fill(value);
 }
 
+export async function clickEmpezar(page: Page) {
+  await page.getByRole('button', { name: 'Empezar' }).click();
+}
+
 export async function fillInstagram(page: Page, value: string) {
-  await page.getByPlaceholder('@tu_usuario').fill(value);
+  await page.getByPlaceholder('tu_usuario').fill(value);
 }
 
 export async function clickNext(page: Page) {
@@ -62,26 +66,19 @@ export async function expectError(page: Page, message: string) {
 
 /**
  * Navigate through all 4 steps with minimal valid data and reach the summary screen.
- * Step 1: avatar + username + bio
- * Step 2: skipped (optional)
- * Step 3: instagram (min 1 contact)
- * Step 4: one metro station → "Ver resumen"
+ * Step 1: avatar + username + bio. Step 2: skipped. Step 3: instagram. Step 4: one metro station.
  */
 export async function completeAllStepsUntilSummary(page: Page) {
-  // Step 1 — perfil
   await uploadAvatar(page);
   await fillUsername(page, 'testuser');
   await fillBio(page, 'Bio de prueba');
   await clickNext(page);
 
-  // Step 2 — estilo (optional, skip)
   await clickNext(page);
 
-  // Step 3 — contacto (min 1)
-  await fillInstagram(page, '@testuser');
+  await fillInstagram(page, 'testuser');
   await clickNext(page);
 
-  // Step 4 — zona → goes to summary
   await selectMetroStation(page, 'Baquedano');
   await clickNext(page);
 }
