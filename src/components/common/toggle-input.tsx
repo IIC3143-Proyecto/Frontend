@@ -11,7 +11,15 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-const ToggleGroupAny = ToggleGroup as React.ComponentType<any>;
+const ToggleGroupAny = ToggleGroup as unknown as React.ComponentType<{
+  type: string;
+  value?: string | string[];
+  disabled?: boolean;
+  onValueChange?: (val: string | string[]) => void;
+  spacing?: number;
+  className?: string;
+  children?: React.ReactNode;
+}>;
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
