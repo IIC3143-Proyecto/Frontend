@@ -31,22 +31,44 @@ export async function uploadUserAvatar(
   return user.photoUrl ?? '';
 }
 
-// TODO: implementar cuando el backend habilite PATCH /api/user/:id
+// PATCH /api/user/:id — not in main or dev
 export async function patchUser(
-  _userId: string,
-  _data: {
+  userId: string,
+  data: {
     username: string;
     bio: string;
     photoUrl: string;
     metro?: string[];
     contactInfo?: { instagram?: string; email?: string; whatsapp?: string };
   },
-  _accessToken: string,
+  accessToken: string,
 ): Promise<void> {
-  return;
+  const res = await fetch(api.user(userId), {
+    method: 'PATCH',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      username: data.username,
+      bio: data.bio,
+      photoUrl: data.photoUrl,
+      stations: data.metro,
+      contactInfo: data.contactInfo,
+    }),
+  });
+
+  if (!res.ok) {
+    const json = await res.json().catch(() => ({}));
+    throw Object.assign(
+      new Error((json as { message?: string }).message ?? 'Error al actualizar el perfil'),
+      { status: res.status, field: (json as { field?: string }).field },
+    );
+  }
 }
 
-// TODO: implementar cuando el backend habilite PATCH /api/user/:id/tags
+// TODO: no existe endpoint de tags de usuario en ninguna rama documentada.
+// El más cercano es PATCH /api/post/:id_post/tags [PR #64], que es para posts, no usuarios.
 export async function patchUserTags(
   _userId: string,
   _data: {
