@@ -246,7 +246,9 @@ export const OnboardingForm = React.forwardRef<HTMLDivElement, OnboardingFormPro
         queryClient.setQueriesData(
           { queryKey: ["dbUser"], exact: false },
           (old: unknown) =>
-            old && typeof old === "object" ? { ...(old as object), onboardingCompleted: true } : old,
+            old && typeof old === "object"
+              ? { ...(old as object), onboardingCompleted: true, photoUrl }
+              : old,
         );
 
         toast.success("¡Perfil completado!", { description: "Tu perfil ha sido actualizado exitosamente." });
