@@ -9,6 +9,7 @@ import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { getAccessToken } from "@/actions/auth";
 import { createPost, patchPostTags, uploadPostImages } from "@/lib/api/post";
+import { desktopToMobile, mobileToDesktop } from '@/lib/post-steps';
 
 function handleApiError(err: unknown, label: string, router: { push: (url: string) => void }) {
   const status = (err as { status?: number }).status;
@@ -63,24 +64,6 @@ function useIsMobile() {
   }, []);
 
   return isMobile;
-}
-
-function desktopToMobile(step: number, photoCount: number): number {
-  switch (step) {
-    case 1: return photoCount > 0 ? 2 : 1;
-    case 2: return 3;
-    case 3: return 4;
-    default: return 1;
-  }
-}
-
-function mobileToDesktop(step: number): number {
-  switch (step) {
-    case 3: return 2;
-    case 4:
-    case 5: return 3;
-    default: return 1;
-  }
 }
 
 export interface UseCreatePostReturn {
