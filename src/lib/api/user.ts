@@ -37,7 +37,6 @@ export async function patchUser(
   data: {
     username: string;
     bio: string;
-    photoUrl: string;
     metro?: string[];
     contactInfo?: { instagram?: string; email?: string; whatsapp?: string };
   },
@@ -52,7 +51,7 @@ export async function patchUser(
     body: JSON.stringify({
       username: data.username,
       bio: data.bio,
-      photoUrl: data.photoUrl,
+      // TODO: backend debe agregar `stations` a PatchUserDto ([PR #64])
       stations: data.metro,
       contactInfo: data.contactInfo,
     }),

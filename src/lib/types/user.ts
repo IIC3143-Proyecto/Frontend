@@ -25,6 +25,7 @@ export type UserDto = {
   bio?: string;
   photoUrl?: string;
   contactInfo?: ContactInfo;
+  stations?: string[];
   status: string;
   createdAtUtcMinus3: string;
   updatedAtUtcMinus3: string;

@@ -208,7 +208,6 @@ export const OnboardingForm = React.forwardRef<HTMLDivElement, OnboardingFormPro
             {
               username: username.toLowerCase(),
               bio,
-              photoUrl,
               metro: metro.length ? metro : undefined,
               contactInfo: {
                 instagram: contactInstagram ? `@${contactInstagram}` : undefined,
