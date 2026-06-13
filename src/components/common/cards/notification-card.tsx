@@ -29,15 +29,6 @@ const TYPE_CONFIG: Record<NotificationType, TypeConfig> = {
   Vendedor:     { Icon: IconBuildingStore, colorClass: "text-foreground", bgClass: "bg-muted", borderClass: "border-foreground", label: "Vendedor" },
 };
 
-function UnreadDot({ read }: { read?: boolean }) {
-  if (read) return null;
-  return (
-    <span
-      aria-label="No leída"
-      className="w-2 h-2 rounded-full bg-chart-3 shrink-0"
-    />
-  );
-}
 
 // ─── V1: Minimalista — borde izquierdo de color, sin icono ───────────────────
 
@@ -55,10 +46,7 @@ export function NotificationCardV1({ notification: n }: { notification: Notifica
         <span className={cn("text-xs font-medium uppercase tracking-wide", cfg.colorClass)}>
           {cfg.label}
         </span>
-        <div className="flex items-center gap-1.5">
-          <UnreadDot read={n.read} />
-          <span className="text-xs text-muted-foreground">{formatRelativeDate(n.createdAtUtcMinus3)}</span>
-        </div>
+        <span className="text-xs text-muted-foreground">{formatRelativeDate(n.createdAtUtcMinus3)}</span>
       </div>
       <p className="text-sm font-semibold leading-snug">{n.title}</p>
       <p className="text-sm text-muted-foreground leading-snug">{n.content}</p>
@@ -71,15 +59,12 @@ export function NotificationCardV1({ notification: n }: { notification: Notifica
 export function NotificationCardV2({ notification: n }: { notification: NotificationDto }) {
   const { Icon, colorClass, bgClass } = TYPE_CONFIG[n.type];
   return (
-    <div className={cn("bg-card border border-border rounded-xl p-4 flex gap-3", n.read && "opacity-50")}>
+    <div className="bg-card border border-border rounded-xl p-4 flex gap-3">
       <div className={cn("w-14 h-14 rounded-full flex items-center justify-center shrink-0", bgClass)}>
         <Icon className={cn("w-8 h-8", colorClass)} />
       </div>
       <div className="flex flex-col gap-0.5 min-w-0 flex-1">
-        <div className="flex items-start justify-between gap-2">
-          <p className="text-sm font-semibold leading-snug">{n.title}</p>
-          <UnreadDot read={n.read} />
-        </div>
+        <p className="text-sm font-semibold leading-snug">{n.title}</p>
         <p className="text-sm text-muted-foreground leading-snug">{n.content}</p>
         <span className="text-xs text-muted-foreground mt-1">{formatRelativeDate(n.createdAtUtcMinus3)}</span>
       </div>
@@ -109,7 +94,6 @@ export function NotificationCardV3({ notification: n }: { notification: Notifica
             <Icon className="w-3 h-3" />
             {label}
           </span>
-          <UnreadDot read={n.read} />
         </div>
         <p className="text-sm font-semibold leading-snug">{n.title}</p>
         <p className="text-sm text-muted-foreground leading-snug">{n.content}</p>
@@ -132,10 +116,7 @@ export function NotificationCardV4({ notification: n }: { notification: Notifica
             <Icon className={cn("w-4 h-4", colorClass)} />
             <span className={cn("text-xs font-semibold", colorClass)}>{label}</span>
           </div>
-          <div className="flex items-center gap-1.5">
-            <UnreadDot read={n.read} />
-            <span className="text-xs text-muted-foreground">{formatRelativeDate(n.createdAtUtcMinus3)}</span>
-          </div>
+          <span className="text-xs text-muted-foreground">{formatRelativeDate(n.createdAtUtcMinus3)}</span>
         </div>
         <p className="text-sm font-semibold leading-snug">{n.title}</p>
         <p className="text-sm text-muted-foreground leading-snug">{n.content}</p>
@@ -157,10 +138,7 @@ export function NotificationCardV5({ notification: n }: { notification: Notifica
         <p className="text-sm font-semibold truncate">{n.title}</p>
         <p className="text-xs text-muted-foreground truncate">{n.content}</p>
       </div>
-      <div className="flex flex-col items-end gap-1 shrink-0">
-        <span className="text-xs text-muted-foreground whitespace-nowrap">{formatRelativeDate(n.createdAtUtcMinus3)}</span>
-        <UnreadDot read={n.read} />
-      </div>
+      <span className="text-xs text-muted-foreground whitespace-nowrap shrink-0">{formatRelativeDate(n.createdAtUtcMinus3)}</span>
     </div>
   );
 }
@@ -171,10 +149,7 @@ export function NotificationCardV6({ notification: n }: { notification: Notifica
   const { Icon, colorClass, bgClass, label } = TYPE_CONFIG[n.type];
   return (
     <div
-      className={cn(
-        "bg-card rounded-2xl shadow-md p-4 flex gap-3",
-        !n.read && "ring-1 ring-chart-3/40",
-      )}
+      className="bg-card rounded-2xl shadow-md p-4 flex gap-3"
     >
       <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center shrink-0", bgClass)}>
         <Icon className={cn("w-5 h-5", colorClass)} />
@@ -182,12 +157,6 @@ export function NotificationCardV6({ notification: n }: { notification: Notifica
       <div className="flex flex-col gap-0.5 min-w-0 flex-1">
         <div className="flex items-start justify-between gap-2">
           <span className={cn("text-xs font-medium", colorClass)}>{label}</span>
-          <div className="flex items-center gap-1.5 shrink-0">
-            {!n.read && (
-              <span className="text-xs font-medium text-chart-3">Nueva</span>
-            )}
-            <UnreadDot read={n.read} />
-          </div>
         </div>
         <p className="text-sm font-semibold leading-snug">{n.title}</p>
         <p className="text-sm text-muted-foreground leading-snug">{n.content}</p>
