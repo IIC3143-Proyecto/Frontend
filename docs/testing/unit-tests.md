@@ -31,20 +31,20 @@ No environment variables required.
 
 ## File Location
 
-Test files live **next to the module they test**, using the `.test.ts` suffix:
+Test files live in `tests/unit/`, mirroring the `src/` structure:
 
 ```
-src/lib/post-steps.ts       → src/lib/post-steps.test.ts
-src/lib/api/index.ts        → src/lib/api/index.test.ts
+src/lib/post-steps.ts       → tests/unit/post-steps.test.ts
+src/lib/api/index.ts        → tests/unit/api/index.test.ts
 ```
 
-Vitest picks up all `src/**/*.test.ts` files automatically.
+Vitest picks up all `tests/unit/**/*.test.ts` files automatically.
 
 ---
 
 ## Examples
 
-### `src/lib/post-steps.test.ts`
+### `tests/unit/post-steps.test.ts`
 
 Tests the desktop↔mobile step conversion logic used by the create-post wizard:
 
@@ -58,7 +58,7 @@ describe('desktopToMobile', () => {
 })
 ```
 
-### `src/lib/api/index.test.ts`
+### `tests/unit/api/index.test.ts`
 
 Tests the URL builder with different environment configurations:
 
@@ -73,7 +73,7 @@ describe('api URL builder', () => {
 
   it('syncUser() always returns the local BFF path', async () => {
     const { api } = await import('./index')
-    expect(api.syncUser()).toBe('/auth/sync-user')
+    expect(api.syncUser()).toBe('/sync-user')
   })
 })
 ```
