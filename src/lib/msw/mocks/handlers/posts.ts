@@ -70,7 +70,7 @@ export const postsHandlers = [
     if (!files.length) return HttpResponse.json({ message: 'No se proporcionaron archivos' }, { status: 400 });
 
     return HttpResponse.json(
-      { message: 'Imágenes subidas y vinculadas a la publicación exitosamente.' },
+      { imagesUrls: ['https://mock-cdn.example.com/post-image-1.webp'] },
       { status: 201 }
     );
   }),
@@ -82,10 +82,9 @@ export const postsHandlers = [
     if (scenario === 'DELETE_IMAGE_401') return HttpResponse.json({ message: 'Unauthorized' }, { status: 401 });
     if (scenario === 'DELETE_IMAGE_500') return HttpResponse.json({ message: 'Internal server error' }, { status: 500 });
     if (scenario === 'DELETE_IMAGE_NETWORK') return HttpResponse.error();
-    return HttpResponse.json({ message: 'Imágenes eliminadas exitosamente de la publicación.' });
+    return HttpResponse.json({ imagesUrls: [] });
   }),
 
-  // TODO: stub — PATCH /api/image/post/:id_post agrega imágenes sin reemplazar las existentes (backend pendiente)
   http.patch('*/api/image/post/:id_post', async ({ request }) => {
     const token = request.headers.get('Authorization');
     if (!token) return HttpResponse.json({ message: 'Unauthorized' }, { status: 401 });
@@ -96,7 +95,9 @@ export const postsHandlers = [
     const fd = await request.formData();
     const files = fd.getAll('images');
     if (!files.length) return HttpResponse.json({ message: 'No se proporcionaron archivos' }, { status: 400 });
-    return HttpResponse.json({ message: 'Imágenes agregadas exitosamente a la publicación.' });
+    return HttpResponse.json({
+      imagesUrls: files.map((_, i) => `https://mock-cdn.example.com/post-image-${i + 1}.webp`),
+    });
   }),
 
   http.post('*/api/post', async ({ request }) => {
