@@ -25,14 +25,14 @@ export const postsHandlers = [
     return HttpResponse.json(MOCK_SELLER_POSTS);
   }),
 
-  // GET /api/post/:id_post/tags — stub pendiente de backend
-  http.get('*/api/post/:id_post/tags', ({ request }) => {
+  http.get('*/api/tag/post/:id_post', ({ request }) => {
     const token = request.headers.get('Authorization');
     if (!token) return HttpResponse.json({ message: 'Unauthorized' }, { status: 401 });
-    return HttpResponse.json({
-      Talla: ['M'], Condición: 'Nuevo', 'Tipo de prenda': ['Camiseta'],
-      Marca: [], Color: [], Género: [], Estilo: [], Temporada: [],
-    });
+    return HttpResponse.json([
+      { tag: { title: 'M', category: 'Talla' } },
+      { tag: { title: 'Nuevo', category: 'Condición' } },
+      { tag: { title: 'Camiseta', category: 'Tipo de prenda' } },
+    ]);
   }),
 
   // El frontend re-fetcha aquí después de subir/borrar imágenes para obtener las URLs actualizadas
@@ -127,12 +127,11 @@ export const postsHandlers = [
     return HttpResponse.json(mockPost(id, body), { status: 200 });
   }),
 
-  // TODO: implementar cuando el backend habilite PATCH /api/post/:id_post/tags
   http.patch('*/api/post/:id_post/tags', () => {
     const scenario = getErrorScenario();
     if (scenario === 'PATCH_TAGS_401') return HttpResponse.json({ message: 'Unauthorized' }, { status: 401 });
     if (scenario === 'PATCH_TAGS_500') return HttpResponse.json({ message: 'Internal server error' }, { status: 500 });
     if (scenario === 'PATCH_TAGS_NETWORK') return HttpResponse.error();
-    return HttpResponse.json({ message: 'Not implemented' }, { status: 404 });
+    return HttpResponse.json({ message: 'Tags actualizados exitosamente.' }, { status: 200 });
   }),
 ];
