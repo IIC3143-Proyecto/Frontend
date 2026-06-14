@@ -18,6 +18,9 @@ A form-integrated text input with optional icon, password visibility toggle, siz
 | `type` | `"text" \| "password" \| "email" \| "number" \| "tel" \| "url"` | `"text"` | HTML input type. Passing `"password"` automatically enables the visibility toggle. |
 | `size` | `"sm" \| "default" \| "lg"` | `"default"` | Visual scale of the entire component, including label, icon, and error message. |
 | `icon` | `TablerIcon` | `undefined` | Icon component from `@tabler/icons-react` displayed inside the input on the left. |
+| `isTextarea` | `boolean` | `false` | Renders a `<Textarea>` instead of an `<input>`. Incompatible with `type`, `icon`, `formatNumber`, and `maxValue`. |
+| `formatNumber` | `boolean` | `false` | Formats the value with thousand separators as the user types (e.g. `25000` → `25.000`). The raw numeric string is passed to RHF. Implies `type="text"` internally. |
+| `maxValue` | `number` | `undefined` | Clamps the numeric value to this maximum. Only meaningful when `formatNumber` is true. Shows a brief error ring for 3 s when exceeded. |
 | `disabled` | `boolean` | `false` | Disables interaction, dims the entire field, and passes `disabled` down to the input element. |
 | `inputClassName` | `string` | `undefined` | Additional class names applied directly to the `<input>` element. |
 | `labelClassName` | `string` | `undefined` | Additional class names applied to the label. |
@@ -83,6 +86,8 @@ const schema = z.object({
 - **Controlled value:** Always passes `value={field.value ?? ""}` to prevent React's uncontrolled-to-controlled warning when a field initializes as `undefined`.
 - **Password toggle:** Rendered automatically when `type="password"` is passed. No additional prop needed.
 - **Disabled and validation:** Marking a field as `disabled` does not bypass Zod schema validation. If the disabled field's default value fails the schema, validation will still fire on submit. Ensure the default value is valid or mark the schema field as `.optional()`.
+- **`formatNumber` + RHF:** The displayed value has separators but the value stored in the form is a plain numeric string (e.g. `"25000"`). Make sure the Zod schema uses `z.string()` or `z.coerce.number()` accordingly.
+- **`isTextarea` focus ring:** When a textarea has a validation error and is focused, a destructive shadow is applied instead of the default ring.
 - **Icon offset:** The `pl-*` padding offset is applied automatically per size when an icon is present, so input text never overlaps the icon.
 - **Accessibility:** Focus ring and error ring are handled by Shadcn's `Input`. The password toggle button is fully keyboard accessible. `aria-*` attributes (e.g., `aria-label`, `aria-describedby`) are accepted via `...rest` and forwarded to the underlying `<input>` element.
 
