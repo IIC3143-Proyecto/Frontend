@@ -31,7 +31,6 @@ export async function uploadUserAvatar(
   return user.photoUrl ?? '';
 }
 
-// PATCH /api/user/:id — not in main or dev
 export async function patchUser(
   userId: string,
   data: {

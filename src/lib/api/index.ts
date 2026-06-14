@@ -21,7 +21,7 @@ export const api = {
   tags:       () => remote('/api/tag'),
   userImage:  (id: string) => remote(`/api/image/user/${id}`),
   user:       (id: string) => remote(`/api/user/${id}`),
-  userTags:   (id: string) => remote(`/api/user/${id}/tags`),
+  userTags:   (id: string) => remote(`/api/tag/user/${id}`),
   post:       () => remote('/api/post'),
   postImages: (id: string) => remote(`/api/image/post/${id}`),
 };

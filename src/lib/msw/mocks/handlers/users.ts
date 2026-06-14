@@ -6,7 +6,9 @@ import { MOCK_USERS } from '../data/mock-users';
 let currentUser: SyncUserResponse = { ...MOCK_USERS[getMockUser()] };
 
 export const usersHandlers = [
-  http.get('*/api/user/:id_user', () => {
+  http.get('*/api/user/:id_user', ({ request }) => {
+    const token = request.headers.get('Authorization');
+    if (!token) return HttpResponse.json({ message: 'Unauthorized' }, { status: 401 });
     const scenario = getMockUser();
     if (currentUser.username !== MOCK_USERS[scenario].username) {
       currentUser = { ...MOCK_USERS[scenario] };
