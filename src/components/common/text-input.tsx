@@ -73,13 +73,15 @@ type InputControlProps = Omit<React.ComponentProps<"input">, "size"> & {
   size?: TextInputSize;
   formatNumber?: boolean;
   maxValue?: number;
+  prefix?: string;
+  onlyDigits?: boolean;
 };
 
 /**
  * Internal input control with icon and password toggle support.
  */
 const InputControl = React.forwardRef<HTMLInputElement, InputControlProps>(
-  function InputControl({ icon: Icon, isPassword, type, inputClassName, size = "default", formatNumber, onChange, value, maxValue, inputMode, ...props }, ref) {
+  function InputControl({ icon: Icon, isPassword, type, inputClassName, size = "default", formatNumber, onChange, value, maxValue, inputMode, prefix, onlyDigits, ...props }, ref) {
     const { error } = useFormField();
     const [showPassword, setShowPassword] = React.useState(false);
     const [maxError, setMaxError] = React.useState(false);
@@ -98,7 +100,17 @@ const InputControl = React.forwardRef<HTMLInputElement, InputControlProps>(
       : value;
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-      if (formatNumber) {
+      if (onlyDigits) {
+        let numericValue = e.target.value.replace(/\D/g, '');
+        if (typeof props.maxLength === 'number') {
+          numericValue = numericValue.slice(0, props.maxLength);
+        }
+        const syntheticEvent = {
+          ...e,
+          target: { ...e.target, value: numericValue },
+        } as React.ChangeEvent<HTMLInputElement>;
+        onChange?.(syntheticEvent);
+      } else if (formatNumber) {
         let numericValue = e.target.value.replace(/\D/g, '');
 
         if (maxValue && parseInt(numericValue) > maxValue) {
@@ -121,46 +133,73 @@ const InputControl = React.forwardRef<HTMLInputElement, InputControlProps>(
 
     return (
       <div className="flex flex-col gap-1">
-        <div className="relative flex items-center">
-          {Icon && (
-            <Icon
-              className={cn(
-                "absolute left-3 transition-colors pointer-events-none",
-                s.icon,
-                error ? "text-destructive" : "text-muted-foreground/70"
-              )}
-            />
-          )}
-          <FormControl>
-            <Input
-              {...props}
-              ref={ref}
-              type={finalType}
-              inputMode={formatNumber ? "numeric" : inputMode}
-              value={displayValue}
-              onChange={handleChange}
-              className={cn(s.input, Icon && s.iconOffset, isPassword && "pr-10", inputClassName)}
-            />
-          </FormControl>
-          {isPassword && (
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              disabled={props.disabled}
-              aria-label={showPassword ? "Hide password" : "Show password"}
-              aria-pressed={showPassword}
-              className={cn("absolute right-0 px-3", s.eyeButton)}
-              onClick={() => setShowPassword((v) => !v)}
-            >
-              {showPassword ? (
-                <IconEyeOff className={s.icon} />
-              ) : (
-                <IconEye className={s.icon} />
-              )}
-            </Button>
-          )}
-        </div>
+        {prefix ? (
+          <div className={cn(
+            "flex items-stretch overflow-hidden rounded-md border transition-colors",
+            error ? "border-destructive" : "border-input",
+            "focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2",
+          )}>
+            <span className={cn(
+              "flex items-center px-3 shrink-0 select-none pointer-events-none text-muted-foreground border-r",
+              error ? "border-destructive" : "border-input",
+              "text-sm",
+            )}>
+              {prefix}
+            </span>
+            <FormControl>
+              <Input
+                {...props}
+                ref={ref}
+                type={finalType}
+                inputMode={onlyDigits ? "numeric" : formatNumber ? "numeric" : inputMode}
+                value={displayValue}
+                onChange={handleChange}
+                className={cn(s.input, "border-0 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 rounded-none flex-1", inputClassName)}
+              />
+            </FormControl>
+          </div>
+        ) : (
+          <div className="relative flex items-center">
+            {Icon && (
+              <Icon
+                className={cn(
+                  "absolute left-3 transition-colors pointer-events-none",
+                  s.icon,
+                  error ? "text-destructive" : "text-muted-foreground/70"
+                )}
+              />
+            )}
+            <FormControl>
+              <Input
+                {...props}
+                ref={ref}
+                type={finalType}
+                inputMode={formatNumber ? "numeric" : inputMode}
+                value={displayValue}
+                onChange={handleChange}
+                className={cn(s.input, Icon && s.iconOffset, isPassword && "pr-10", inputClassName)}
+              />
+            </FormControl>
+            {isPassword && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                disabled={props.disabled}
+                aria-label={showPassword ? "Hide password" : "Show password"}
+                aria-pressed={showPassword}
+                className={cn("absolute right-0 px-3", s.eyeButton)}
+                onClick={() => setShowPassword((v) => !v)}
+              >
+                {showPassword ? (
+                  <IconEyeOff className={s.icon} />
+                ) : (
+                  <IconEye className={s.icon} />
+                )}
+              </Button>
+            )}
+          </div>
+        )}
         {maxError && (
           <span className="text-[10px] font-bold text-destructive animate-pulse">
             Máximo permitido: {maxValue?.toLocaleString('es-CL')}
@@ -204,6 +243,8 @@ interface TextInputProps<TFieldValues extends FieldValues>
   messageClassName?: string;
   formatNumber?: boolean;
   maxValue?: number;
+  prefix?: string;
+  onlyDigits?: boolean;
 }
 
 /**
@@ -220,12 +261,14 @@ export function TextInput<TFieldValues extends FieldValues>({
   size = "default",
   icon,
   isTextarea = false,
-  disabled, 
+  disabled,
   inputClassName,
   labelClassName,
   messageClassName,
   formatNumber,
   maxValue,
+  prefix,
+  onlyDigits,
   className,
   ...props
 }: TextInputProps<TFieldValues> & { disabled?: boolean }) {
@@ -259,7 +302,7 @@ export function TextInput<TFieldValues extends FieldValues>({
                 {...field}
                 disabled={disabled}
                 onFocus={() => setIsFocused(true)}
-                onBlur={() => setIsFocused(false)}
+                onBlur={() => { field.onBlur(); setIsFocused(false); }}
                 className={cn(
                   "resize-none",
                   s.input,
@@ -276,11 +319,13 @@ export function TextInput<TFieldValues extends FieldValues>({
               type={type}
               size={size}
               icon={icon}
-              disabled={disabled} 
+              disabled={disabled}
               isPassword={type === "password"}
               inputClassName={inputClassName}
               formatNumber={formatNumber}
               maxValue={maxValue}
+              prefix={prefix}
+              onlyDigits={onlyDigits}
               value={field.value ?? ""}
             />
           )}

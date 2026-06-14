@@ -272,7 +272,7 @@ function DesktopAllOptionalTags({ control, opts, tagsLoading }: TagStepProps) {
   );
 }
 
-export function CreatePostModal({ isOpen, onClose }: CreatePostModalProps) {
+export function PostCreateModal({ isOpen, onClose }: CreatePostModalProps) {
   const {
     form,
     photos,

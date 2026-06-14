@@ -1,5 +1,11 @@
 import type { PostDto } from './post';
 
+export type ContactInfo = {
+  instagram?: string;
+  email?: string;
+  whatsapp?: string;
+};
+
 export type InteractionDto = {
   id: string;
   userId: string;
@@ -18,7 +24,8 @@ export type UserDto = {
   providerAuth0: string;
   bio?: string;
   photoUrl?: string;
-  contactInfo?: object;
+  contactInfo?: ContactInfo;
+  stations?: string[];
   status: string;
   createdAtUtcMinus3: string;
   updatedAtUtcMinus3: string;

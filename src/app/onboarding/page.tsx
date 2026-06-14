@@ -7,8 +7,8 @@ export default function OnboardingPage() {
   const { dbUser } = useAuth();
 
   return (
-    <main className="min-h-screen flex items-center justify-center bg-background p-4">
-      <div className="w-full">
+    <main className="h-[calc(100vh-80px)] min-h-[500px] pb-[60px] flex flex-col bg-background p-4">
+      <div className="w-full flex-1 min-h-0 h-full">
         <OnboardingForm userId={dbUser?.id} />
       </div>
     </main>
