@@ -29,3 +29,15 @@ export type NewPostDto = {
   priceClp: number;
   isNegotiable: boolean;
 };
+
+// GET /api/post/:id/tags — backend pendiente
+export type PostTagsDto = {
+  Talla: string[];
+  Condición: string;
+  'Tipo de prenda': string[];
+  Marca: string[];
+  Color: string[];
+  Género: string[];
+  Estilo: string[];
+  Temporada: string[];
+};
