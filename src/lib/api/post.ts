@@ -41,14 +41,29 @@ export async function createPost(body: NewPostDto, accessToken: string): Promise
   return id;
 }
 
-// PATCH /api/post/:id/tags — backend #48 not ready; always succeeds (demo)
-export async function patchPostTags(_postId: string, _tags: Record<string, string | string[]>, _accessToken: string): Promise<void> {
-  return;
+export async function patchPostTags(postId: string, tags: Record<string, string | string[]>, accessToken: string): Promise<void> {
+  const tagsArray = Object.entries(tags).flatMap(([category, values]) =>
+    (Array.isArray(values) ? values : [values]).map((title) => ({ title, category }))
+  );
+  const res = await fetch(`${BASE}/api/post/${postId}/tags`, {
+    method: 'PATCH',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ tags: tagsArray }),
+  });
+  if (!res.ok) {
+    const json = await res.json().catch(() => ({}));
+    throw Object.assign(
+      new Error((json as { message?: string }).message ?? 'Error al actualizar tags'),
+      { status: res.status }
+    );
+  }
 }
 
-// GET /api/post/:id/tags — backend pendiente; MSW stub retorna tags de ejemplo
 export async function fetchPostTags(postId: string, accessToken: string): Promise<PostTagsDto> {
-  const res = await fetch(`${BASE}/api/post/${postId}/tags`, {
+  const res = await fetch(`${BASE}/api/tag/post/${postId}`, {
     headers: { Authorization: `Bearer ${accessToken}` },
   });
   if (!res.ok) {
@@ -58,7 +73,22 @@ export async function fetchPostTags(postId: string, accessToken: string): Promis
       { status: res.status }
     );
   }
-  return res.json() as Promise<PostTagsDto>;
+  const items = await res.json() as Array<{ tag: { title: string; category: string } }>;
+  const grouped: Record<string, string[]> = {};
+  for (const item of items) {
+    const { title, category } = item.tag;
+    (grouped[category] ??= []).push(title);
+  }
+  return {
+    Talla: grouped['Talla'] ?? [],
+    Condición: grouped['Condición']?.[0] ?? '',
+    'Tipo de prenda': grouped['Tipo de prenda'] ?? [],
+    Marca: grouped['Marca'] ?? [],
+    Color: grouped['Color'] ?? [],
+    Género: grouped['Género'] ?? [],
+    Estilo: grouped['Estilo'] ?? [],
+    Temporada: grouped['Temporada'] ?? [],
+  };
 }
 
 export async function patchPost(body: Record<string, unknown> & { id: string }, accessToken: string): Promise<void> {
