@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { LinkIconButton } from "@/components/common/link-icon-button";
+import { NavigationIconButton } from "@/components/common/navigation-icon-button";
 import {
   IconHome,
   IconShoppingCart,
@@ -17,31 +17,31 @@ function NavigationButtons() {
 
   return (
     <nav className="flex gap-8 md:gap-6">
-      <LinkIconButton
+      <NavigationIconButton
         href="/"
         icon={IconHome}
         label="ir al feed"
         highlighted={pathname === "/"}
       />
-      <LinkIconButton
+      <NavigationIconButton
         href="/shopping-history"
         icon={IconShoppingCart}
         label="ir a mis compras"
         highlighted={pathname.startsWith("/shopping-history")}
       />
-      <LinkIconButton
+      <NavigationIconButton
         href="/publications"
         icon={IconBuildingStore}
         label="ir a mis ventas"
         highlighted={pathname.startsWith("/publications")}
       />
-      <LinkIconButton
+      <NavigationIconButton
         href="/notifications"
         icon={IconBell}
         label="ir a notificaciones"
         highlighted={pathname === "/notifications"}
       />
-      <LinkIconButton
+      <NavigationIconButton
         href="/profile"
         icon={IconUser}
         label="ir a perfil"
