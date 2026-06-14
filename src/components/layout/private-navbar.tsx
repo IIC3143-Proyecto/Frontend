@@ -54,9 +54,9 @@ function NavigationButtons() {
 export function PrivateNavbar() {
   return (
     <header
-      className="flex h-20 px-6 bg-background shrink-0 items-center
-        order-last border-t justify-center
-        md:order-first md:border-b md:justify-between"
+      className="flex h-20 px-6 bg-background shrink-0 items-center sticky
+        order-last border-t justify-center bottom-0
+        md:order-first md:border-b md:border-t-0 md:justify-between md:top-0"
     >
       <Link href="/" className="hidden md:block shrink-0">
         <Image
