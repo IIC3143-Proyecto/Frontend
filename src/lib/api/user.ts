@@ -1,4 +1,6 @@
 import { api } from './index';
+import type { PostDto } from '@/lib/types/post';
+import type { UserTagPreferenceDto } from '@/lib/types/tag';
 
 export async function uploadUserAvatar(
   userId: string,
@@ -55,6 +57,72 @@ export async function patchUser(
     throw Object.assign(
       new Error((json as { message?: string }).message ?? 'Error al actualizar el perfil'),
       { status: res.status, field: (json as { field?: string }).field },
+    );
+  }
+}
+
+// TODO: no existe endpoint de tags de usuario en ninguna rama documentada.
+export async function patchUserTags(
+  _userId: string,
+  _data: {
+    clothingGender?: string;
+    clothingTypes?: string[];
+    size?: string;
+  },
+  _accessToken: string,
+): Promise<void> {
+  return;
+}
+
+export async function getSavedPosts(userId: string, accessToken: string): Promise<PostDto[]> {
+  const res = await fetch(api.savedPosts(userId), {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
+  if (!res.ok) {
+    const json = await res.json().catch(() => ({}));
+    throw Object.assign(
+      new Error((json as { message?: string }).message ?? 'Error al obtener guardados'),
+      { status: res.status },
+    );
+  }
+  return res.json() as Promise<PostDto[]>;
+}
+
+export async function getUserTagPreferences(
+  userId: string,
+  accessToken: string,
+): Promise<UserTagPreferenceDto[]> {
+  const res = await fetch(api.userTags(userId), {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
+  if (!res.ok) {
+    const json = await res.json().catch(() => ({}));
+    throw Object.assign(
+      new Error((json as { message?: string }).message ?? 'Error al obtener preferencias'),
+      { status: res.status },
+    );
+  }
+  return res.json() as Promise<UserTagPreferenceDto[]>;
+}
+
+export async function removeInteraction(
+  postId: string,
+  type: 'Saved' | 'Liked',
+  accessToken: string,
+): Promise<void> {
+  const res = await fetch(api.interaction(postId), {
+    method: 'DELETE',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ type }),
+  });
+  if (!res.ok) {
+    const json = await res.json().catch(() => ({}));
+    throw Object.assign(
+      new Error((json as { message?: string }).message ?? 'Error al quitar guardado'),
+      { status: res.status },
     );
   }
 }
