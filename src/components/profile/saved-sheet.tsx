@@ -9,14 +9,18 @@ import {
 } from "@/components/ui/dialog";
 import { SavedPostCard } from "./saved-post-card";
 import type { PostDto } from "@/lib/types/post";
+import { useRemoveSavedPost } from "@/hooks/use-saved-posts";
 
 type Props = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   savedPosts: PostDto[];
+  userId: string;
 };
 
-export function SavedSheet({ open, onOpenChange, savedPosts }: Props) {
+export function SavedSheet({ open, onOpenChange, savedPosts, userId }: Props) {
+  const removeSaved = useRemoveSavedPost();
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="min-w-[300px] w-[90vw] max-w-[900px] sm:max-w-[900px] flex flex-col gap-0 p-0 max-h-[85vh]">
@@ -34,7 +38,12 @@ export function SavedSheet({ open, onOpenChange, savedPosts }: Props) {
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-[repeat(auto-fill,minmax(180px,1fr))] gap-2">
               {savedPosts.map((p) => (
-                <SavedPostCard key={p.id} post={p} view="grid2" />
+                <SavedPostCard
+                  key={p.id}
+                  post={p}
+                  view="grid2"
+                  onRemove={(postId) => removeSaved.mutate({ postId, userId })}
+                />
               ))}
             </div>
           )}
