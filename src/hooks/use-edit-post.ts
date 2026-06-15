@@ -1,28 +1,18 @@
 "use client";
 
-import * as React from "react";
+import { useRef, useState, useCallback, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { getAccessToken } from "@/actions/auth";
-import { patchPost, patchPostTags, appendPostImages, deletePostImages, fetchPostTags } from "@/lib/api/post";
+import { patchPost, patchPostTags, appendPostImages, deletePostImages } from "@/lib/api/post";
 import type { PostDto } from "@/lib/types/post";
-import type { PhotoItem } from "@/components/common/photo-upload-grid";
-
-function handleApiError(err: unknown, label: string, router: { push: (url: string) => void }) {
-  const status = (err as { status?: number }).status;
-  const message = err instanceof Error ? err.message : `Error en ${label}`;
-  if (status === undefined) {
-    toast.error("Error de red", { description: "Verifica tu conexión e inténtalo de nuevo." });
-  } else if (status === 401) {
-    router.push("/session-expired");
-  } else {
-    toast.error(label, { description: message });
-  }
-}
+import type { PhotoItem } from "@/lib/types/post";
+import { handleApiError } from "@/lib/api/handle-error";
+import { usePostTags } from "@/hooks/use-tags";
 
 export const editPostSchema = z.object({
   title: z.string().min(1, "Título requerido").max(100, "Máximo 100 caracteres"),
@@ -60,7 +50,6 @@ function buildInitialPhotos(imagesUrls: string): PhotoItem[] {
     .filter(Boolean)
     .map((url) => ({
       preview: url,
-      // Dummy file (size=0) marks this as an existing photo — only preview/url is used for display
       file: new File([], "existing-photo", { type: "image/jpeg" }),
     }));
 }
@@ -71,15 +60,15 @@ export function useEditPost(post: PostDto, onClose: () => void): UseEditPostRetu
 
   const isLocked = (post.offersCount ?? 0) > 0;
 
-  const initialExistingUrls = React.useRef(
+  const initialExistingUrls = useRef(
     new Set(post.imagesUrls?.split(",").filter(Boolean) ?? [])
   );
 
-  const [allPhotos, setAllPhotos] = React.useState<PhotoItem[]>(() =>
+  const [allPhotos, setAllPhotos] = useState<PhotoItem[]>(() =>
     buildInitialPhotos(post.imagesUrls ?? "")
   );
-  const [photoError, setPhotoError] = React.useState<string | null>(null);
-  const [isSaving, setIsSaving] = React.useState(false);
+  const [photoError, setPhotoError] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
 
   const form = useForm<EditPostInput, unknown, EditPostSchema>({
     resolver: zodResolver(editPostSchema),
@@ -100,16 +89,9 @@ export function useEditPost(post: PostDto, onClose: () => void): UseEditPostRetu
     },
   });
 
-  // Pre-load current tags from backend (endpoint pending — stub returns mock data)
-  const { data: postTags } = useQuery({
-    queryKey: ["postTags", post.id],
-    queryFn: async () => {
-      const accessToken = await getAccessToken();
-      return fetchPostTags(post.id, accessToken);
-    },
-  });
+  const { data: postTags } = usePostTags(post.id);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (!postTags) return;
     form.reset({
       ...form.getValues(),
@@ -125,12 +107,12 @@ export function useEditPost(post: PostDto, onClose: () => void): UseEditPostRetu
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [postTags]);
 
-  const addPhoto = React.useCallback((file: File, preview: string) => {
+  const addPhoto = useCallback((file: File, preview: string) => {
     setAllPhotos((prev) => [...prev, { file, preview }]);
     setPhotoError(null);
   }, []);
 
-  const removePhoto = React.useCallback((index: number) => {
+  const removePhoto = useCallback((index: number) => {
     setAllPhotos((prev) => {
       const item = prev[index];
       if (!initialExistingUrls.current.has(item.preview)) {
@@ -141,7 +123,7 @@ export function useEditPost(post: PostDto, onClose: () => void): UseEditPostRetu
     setPhotoError(null);
   }, []);
 
-  const handleClose = React.useCallback(() => {
+  const handleClose = useCallback(() => {
     setAllPhotos((prev) => {
       prev.forEach((p) => {
         if (!initialExistingUrls.current.has(p.preview)) {
@@ -168,7 +150,7 @@ export function useEditPost(post: PostDto, onClose: () => void): UseEditPostRetu
     onClose();
   }, [form, onClose, post]);
 
-  const handleSave = React.useCallback(async () => {
+  const handleSave = useCallback(async () => {
     if (allPhotos.length < 3) {
       setPhotoError("Debes tener al menos 3 fotos");
       return;
@@ -244,7 +226,7 @@ export function useEditPost(post: PostDto, onClose: () => void): UseEditPostRetu
     )();
 
     setIsSaving(false);
-  }, [form, post.id, allPhotos, router, queryClient, onClose]);
+  }, [form, post, allPhotos, router, queryClient, onClose]);
 
   return {
     form,

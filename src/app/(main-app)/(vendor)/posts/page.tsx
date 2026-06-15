@@ -1,12 +1,12 @@
 "use client";
 
-import * as React from "react";
+import { useState } from "react";
 import { IconPlus } from "@tabler/icons-react";
 import { PostsList } from "@/components/vendor/posts-list";
 import { PostCreateModal } from "@/components/common/cards/post-create-modal";
 
 export default function PostsPage() {
-  const [createOpen, setCreateOpen] = React.useState(false);
+  const [createOpen, setCreateOpen] = useState(false);
 
   return (
     <div className="flex flex-col items-center">

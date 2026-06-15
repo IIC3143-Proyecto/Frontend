@@ -1,6 +1,11 @@
 import { PostStatus } from './post-status.enum';
 import type { UserDto, InteractionDto } from './user';
 
+export interface PhotoItem {
+  file: File;
+  preview: string;
+}
+
 export type PostDto = {
   id: string;
   sellerId: string;
@@ -30,7 +35,6 @@ export type NewPostDto = {
   isNegotiable: boolean;
 };
 
-// GET /api/post/:id/tags — backend pendiente
 export type PostTagsDto = {
   Talla: string[];
   Condición: string;
