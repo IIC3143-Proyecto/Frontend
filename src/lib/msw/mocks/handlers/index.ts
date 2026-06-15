@@ -3,6 +3,7 @@ import { usersHandlers } from "./users";
 import { avatarHandlers } from "./avatar";
 import { postsHandlers } from "./posts";
 import { tagsHandlers } from "./tags";
+import { interactionHandlers } from "./interactions";
 
 export const handlers = [
   ...usersHandlers,
@@ -10,4 +11,5 @@ export const handlers = [
   ...syncUserHandlers,
   ...postsHandlers,
   ...tagsHandlers,
+  ...interactionHandlers,
 ];

@@ -3,6 +3,20 @@ import { getMockUser, getErrorScenario } from '../scenario';
 import { MOCK_USERS } from '../data/mock-users';
 
 export const syncUserHandlers = [
+  // Mock Auth0 session endpoint so useUser() returns a user in dev/MSW mode
+  http.get('*/auth/profile', () => {
+    const user = MOCK_USERS[getMockUser()];
+    if (!user) return new HttpResponse(null, { status: 401 });
+    return HttpResponse.json({
+      sub: user.providerAuth0,
+      name: user.name,
+      email: user.email,
+      picture: user.photoUrl ?? null,
+      nickname: user.username,
+      updated_at: user.updatedAtUtcMinus3,
+    });
+  }),
+
   http.get('*/sync-user', () => {
     const errorScenario = getErrorScenario();
     if (errorScenario === 'SYNC_USER_401') return new HttpResponse(null, { status: 401 });
