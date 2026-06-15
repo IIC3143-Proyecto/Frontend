@@ -20,7 +20,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import type { MockUser } from "@/lib/types/profile-mockup";
+import type { ContactInfo } from "@/lib/types/user";
 
 const contactoSchema = z.object({
   contactInstagram: z
@@ -39,14 +39,24 @@ type ContactoForm = z.infer<typeof contactoSchema>;
 type Props = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  contactInfo: MockUser["contactInfo"];
+  contactInfo: ContactInfo;
+  onSave: (info: ContactInfo) => void;
+  isSaving: boolean;
 };
 
-function toFormValues(contactInfo: MockUser["contactInfo"]): ContactoForm {
+function toFormValues(contactInfo: ContactInfo): ContactoForm {
   return {
-    contactInstagram: contactInfo.instagram.replace(/^@/, ""),
+    contactInstagram: contactInfo.instagram?.replace(/^@/, ""),
     contactEmail: contactInfo.email,
     contactWhatsapp: contactInfo.whatsapp,
+  };
+}
+
+function toContactInfo(form: ContactoForm): ContactInfo {
+  return {
+    instagram: form.contactInstagram || undefined,
+    email: form.contactEmail || undefined,
+    whatsapp: form.contactWhatsapp || undefined,
   };
 }
 
@@ -89,7 +99,7 @@ function FieldHeader({ label, tooltip, isDirty, onReset }: FieldHeaderProps) {
   );
 }
 
-export function ContactoDialog({ open, onOpenChange, contactInfo }: Props) {
+export function ContactoDialog({ open, onOpenChange, contactInfo, onSave, isSaving }: Props) {
   const original = toFormValues(contactInfo);
 
   const form = useForm<ContactoForm>({
@@ -113,7 +123,7 @@ export function ContactoDialog({ open, onOpenChange, contactInfo }: Props) {
             <div>
               <FieldHeader
                 label="Instagram"
-                tooltip={`Original: @${original.contactInstagram}`}
+                tooltip={`Original: @${original.contactInstagram ?? ""}`}
                 isDirty={!!dirtyFields.contactInstagram}
                 onReset={() => form.resetField("contactInstagram")}
               />
@@ -128,7 +138,7 @@ export function ContactoDialog({ open, onOpenChange, contactInfo }: Props) {
             <div>
               <FieldHeader
                 label="Correo"
-                tooltip={`Original: ${original.contactEmail}`}
+                tooltip={`Original: ${original.contactEmail ?? ""}`}
                 isDirty={!!dirtyFields.contactEmail}
                 onReset={() => form.resetField("contactEmail")}
               />
@@ -144,7 +154,7 @@ export function ContactoDialog({ open, onOpenChange, contactInfo }: Props) {
             <div>
               <FieldHeader
                 label="WhatsApp"
-                tooltip={`Original: +569 ${original.contactWhatsapp}`}
+                tooltip={`Original: +569 ${original.contactWhatsapp ?? ""}`}
                 isDirty={!!dirtyFields.contactWhatsapp}
                 onReset={() => form.resetField("contactWhatsapp")}
               />
@@ -161,10 +171,15 @@ export function ContactoDialog({ open, onOpenChange, contactInfo }: Props) {
         </Form>
 
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isSaving}>
             Cancelar
           </Button>
-          <Button onClick={() => onOpenChange(false)}>Guardar</Button>
+          <Button
+            onClick={form.handleSubmit((values) => onSave(toContactInfo(values)))}
+            disabled={isSaving}
+          >
+            {isSaving ? "Guardando…" : "Guardar"}
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
