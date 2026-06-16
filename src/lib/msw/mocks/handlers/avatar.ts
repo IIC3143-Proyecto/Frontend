@@ -23,7 +23,7 @@ export const avatarHandlers = [
     if (scenario === 'AVATAR_SLOW') {
       await delay(2000);
       return HttpResponse.json(
-        { message: 'Imagen subida exitosamente.' },
+        { imageUrl: 'https://picsum.photos/seed/mock-avatar/200/200' },
         { status: 201 }
       );
     }
@@ -44,7 +44,7 @@ export const avatarHandlers = [
     }
 
     return HttpResponse.json(
-      { message: 'Imagen subida exitosamente.' },
+      { imageUrl: 'https://picsum.photos/seed/mock-avatar/200/200' },
       { status: 201 }
     );
   }),

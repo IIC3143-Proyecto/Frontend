@@ -91,21 +91,6 @@ export async function fetchPostTags(postId: string, accessToken: string): Promis
   };
 }
 
-// GET /api/post/:id/tags — backend pendiente; MSW stub retorna tags de ejemplo
-export async function fetchPostTags(postId: string, accessToken: string): Promise<PostTagsDto> {
-  const res = await fetch(`${BASE}/api/post/${postId}/tags`, {
-    headers: { Authorization: `Bearer ${accessToken}` },
-  });
-  if (!res.ok) {
-    const json = await res.json().catch(() => ({}));
-    throw Object.assign(
-      new Error((json as { message?: string }).message ?? 'Error al obtener tags del post'),
-      { status: res.status }
-    );
-  }
-  return res.json() as Promise<PostTagsDto>;
-}
-
 export async function patchPost(body: Record<string, unknown> & { id: string }, accessToken: string): Promise<void> {
   const res = await fetch(`${BASE}/api/post`, {
     method: 'PATCH',

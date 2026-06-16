@@ -158,7 +158,7 @@ test.describe('DELETE /api/post/:id', () => {
 
 
 test.describe('POST /api/image/user/:id', () => {
-  test('201 — retorna SimpleResponseDto con message', async ({ request }) => {
+  test('201 — retorna UserImageResponseDto con imageUrl', async ({ request }) => {
     const userRes = await request.get('/api/auth/sync-user', { headers: auth() });
     const { data: syncUser } = await userRes.json() as { data: { id: string } };
     const { id } = syncUser;
@@ -169,8 +169,8 @@ test.describe('POST /api/image/user/:id', () => {
     });
     expect(res.status()).toBe(201);
     const body = await res.json() as Record<string, unknown>;
-    expect(typeof body.message).toBe('string');
-    expect('photoUrl' in body).toBe(false);
+    expect(typeof body.imageUrl).toBe('string');
+    expect('message' in body).toBe(false);
   });
 
   test('403 intentando subir imagen de otro usuario', async ({ request }) => {
@@ -279,7 +279,7 @@ test.describe('GET /api/user/:id', () => {
 });
 
 test.describe('POST /api/image/post/:id', () => {
-  test('201 — retorna SimpleResponseDto con message', async ({ request }) => {
+  test('201 — retorna PostImageResponseDto con imagesUrls', async ({ request }) => {
     const createRes = await request.post('/api/post', {
       headers: { ...auth(), 'Content-Type': 'application/json' },
       data: { title: 'Image test post', description: 'Desc', priceClp: 1000, isNegotiable: false },
@@ -292,7 +292,8 @@ test.describe('POST /api/image/post/:id', () => {
     });
     expect(res.status()).toBe(201);
     const body = await res.json() as Record<string, unknown>;
-    expect(typeof body.message).toBe('string');
+    expect(Array.isArray(body.imagesUrls)).toBe(true);
+    expect('message' in body).toBe(false);
   });
 
   test('403 si no eres el vendedor', async ({ request }) => {

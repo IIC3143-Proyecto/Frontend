@@ -1,5 +1,4 @@
 import { api } from './index';
-import type { SyncUserResponse } from '@/lib/types/auth';
 
 export async function uploadUserAvatar(
   userId: string,
@@ -23,12 +22,8 @@ export async function uploadUserAvatar(
     );
   }
 
-  // Re-fetcha sync-user para obtener el photoUrl actualizado
-  // TODO: reemplazar por GET /api/user/:id cuando el backend lo implemente
-  const syncRes = await fetch('/sync-user');
-  if (!syncRes.ok) throw Object.assign(new Error('Error al obtener el avatar actualizado'), { status: syncRes.status });
-  const user = await syncRes.json() as SyncUserResponse;
-  return user.photoUrl ?? '';
+  const { imageUrl } = await res.json() as { imageUrl: string };
+  return imageUrl;
 }
 
 export async function patchUser(
@@ -50,7 +45,6 @@ export async function patchUser(
     body: JSON.stringify({
       username: data.username,
       bio: data.bio,
-      // TODO: backend debe agregar `stations` a PatchUserDto ([PR #64])
       stations: data.metro,
       contactInfo: data.contactInfo,
     }),
@@ -63,18 +57,4 @@ export async function patchUser(
       { status: res.status, field: (json as { field?: string }).field },
     );
   }
-}
-
-// TODO: no existe endpoint de tags de usuario en ninguna rama documentada.
-// El más cercano es PATCH /api/post/:id_post/tags [PR #64], que es para posts, no usuarios.
-export async function patchUserTags(
-  _userId: string,
-  _data: {
-    clothingGender?: string;
-    clothingTypes?: string[];
-    size?: string;
-  },
-  _accessToken: string,
-): Promise<void> {
-  return;
 }
