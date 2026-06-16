@@ -3,7 +3,7 @@
 import type { UseFormReturn } from "react-hook-form";
 import { ToggleInputGroup } from "@/components/common/toggle-input";
 import type { TagCategories } from "@/lib/types/tag";
-import type { OnboardingSchema } from "../onboarding-form";
+import type { OnboardingSchema } from "../schema";
 
 interface StepEstiloProps {
   form: UseFormReturn<OnboardingSchema>;

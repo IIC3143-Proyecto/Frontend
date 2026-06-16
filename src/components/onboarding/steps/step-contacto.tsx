@@ -3,7 +3,7 @@
 import type { UseFormReturn } from "react-hook-form";
 import { IconMail } from "@tabler/icons-react";
 import { TextInput } from "@/components/common/text-input";
-import type { OnboardingSchema } from "../onboarding-form";
+import type { OnboardingSchema } from "../schema";
 
 interface StepContactoProps {
   form: UseFormReturn<OnboardingSchema>;

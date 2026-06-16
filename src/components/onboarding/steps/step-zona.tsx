@@ -2,7 +2,7 @@
 
 import type { UseFormReturn } from "react-hook-form";
 import { MetroInput } from "@/components/common/metro-input";
-import type { OnboardingSchema } from "../onboarding-form";
+import type { OnboardingSchema } from "../schema";
 
 interface StepZonaProps {
   form: UseFormReturn<OnboardingSchema>;

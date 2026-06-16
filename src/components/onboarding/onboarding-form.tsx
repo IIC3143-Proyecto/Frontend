@@ -5,13 +5,15 @@ import { useRouter } from "next/navigation";
 import { IconLoader2, IconChevronLeft, IconChevronRight, IconCheck } from "@tabler/icons-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { Form } from "@/components/ui/form";
+import { onboardingSchema, type OnboardingSchema } from "./schema";
+import { TOTAL_STEPS, STEP_TITLES, STEP_DESCRIPTIONS, STEP_FIELDS } from "./constants";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { useQueryClient } from "@tanstack/react-query";
 import { uploadUserAvatar, patchUser } from "@/lib/api/user";
+import { patchUserTags } from "@/lib/api/tag";
 import { getAccessToken } from "@/actions/auth";
 import { StepProgress } from "@/components/common/step-progress";
 import { useTags } from "@/hooks/use-tags";
@@ -20,59 +22,6 @@ import { StepEstilo } from "./steps/step-estilo";
 import { StepContacto } from "./steps/step-contacto";
 import { StepZona } from "./steps/step-zona";
 import { StepResumen } from "./steps/step-resumen";
-
-const onboardingSchema = z.object({
-  // Step 1 — required
-  username: z
-    .string()
-    .min(1, "Username es requerido")
-    .min(3, "Username debe tener al menos 3 caracteres")
-    .max(30, "Username debe tener como máximo 30 caracteres")
-    .regex(/^[a-zA-Z0-9_-]+$/, "Username solo puede contener letras, números, guiones y guiones bajos")
-    .transform((v) => v.toLowerCase()),
-  bio: z.string().min(1, "Bio es requerida").max(500, "Bio debe tener como máximo 500 caracteres"),
-  // Step 2 — optional (valores dinámicos del API de tags)
-  clothingGender: z.string().optional(),
-  clothingTypes: z.array(z.string()).optional(),
-  size: z.string().optional(),
-  // Step 3 — mínimo 1 requerido (validación manual)
-  contactInstagram: z
-    .string()
-    .refine((v) => !v || !/\s/.test(v), "No puede contener espacios")
-    .optional(),
-  contactEmail: z.string().email("Email inválido").optional().or(z.literal("")),
-  contactWhatsapp: z
-    .string()
-    .refine((v) => !v || /^\d{8}$/.test(v), "Debe tener exactamente 8 dígitos")
-    .optional(),
-  // Step 4 — required
-  metro: z.array(z.string()).min(1, "Selecciona al menos una estación de metro"),
-});
-
-export type OnboardingSchema = z.infer<typeof onboardingSchema>;
-
-const TOTAL_STEPS = 4;
-
-const STEP_TITLES: Record<number, string> = {
-  1: "Tu perfil",
-  2: "Tu estilo",
-  3: "Contacto",
-  4: "Tu zona",
-};
-
-const STEP_DESCRIPTIONS: Record<number, string> = {
-  1: "",
-  2: "Qué te gustaría ver en el feed",
-  3: "Agrega al menos un medio de contacto",
-  4: "",
-};
-
-const STEP_FIELDS: Record<number, (keyof OnboardingSchema)[]> = {
-  1: ["username", "bio"],
-  2: [],
-  3: ["contactInstagram", "contactEmail", "contactWhatsapp"],
-  4: ["metro"],
-};
 
 export interface OnboardingFormProps extends React.HTMLAttributes<HTMLDivElement> {
   onSuccess?: () => void | Promise<void>;
@@ -122,11 +71,10 @@ export const OnboardingForm = React.forwardRef<HTMLDivElement, OnboardingFormPro
     const handleNext = async () => {
       if (currentStep === 1) {
         const valid = await form.trigger(STEP_FIELDS[1]);
-        if (!valid) return;
         if (!avatarFile) {
           setAvatarError("Avatar es requerido");
-          return;
         }
+        if (!valid || !avatarFile) return;
       }
 
       if (currentStep === 3) {
@@ -200,7 +148,7 @@ export const OnboardingForm = React.forwardRef<HTMLDivElement, OnboardingFormPro
           return;
         }
 
-        const { username, bio, metro, contactInstagram, contactEmail, contactWhatsapp } = form.getValues();
+        const { username, bio, contactInstagram, contactEmail, contactWhatsapp, metro, clothingGender, clothingTypes, size } = form.getValues();
 
         try {
           await patchUser(
@@ -240,14 +188,35 @@ export const OnboardingForm = React.forwardRef<HTMLDivElement, OnboardingFormPro
           return;
         }
 
-        // TODO: no existe endpoint de tags de usuario — implementar cuando el backend lo habilite
-        // await patchUserTags(userId, { clothingGender, clothingTypes, size }, token);
+        const tags: Record<string, string[]> = {};
+        if (clothingGender) tags['Género'] = [clothingGender];
+        if (clothingTypes?.length) tags['Tipo de prenda'] = clothingTypes;
+        if (size) tags['Talla'] = [size];
+
+        try {
+          await patchUserTags({ tags }, token);
+        } catch (err) {
+          const status = (err as { status?: number }).status;
+          if (status === undefined) {
+            toast.error('Error de red', { description: 'Verifica tu conexión e inténtalo de nuevo.' });
+            return;
+          }
+          if (status === 401) {
+            router.push('/session-expired');
+            return;
+          }
+          if (status !== 403) {
+            const message = err instanceof Error ? err.message : 'Error al guardar preferencias de estilo';
+            toast.error('Error', { description: message });
+            return;
+          }
+        }
 
         queryClient.setQueriesData(
           { queryKey: ["dbUser"], exact: false },
           (old: unknown) =>
             old && typeof old === "object"
-              ? { ...(old as object), onboardingCompleted: true, photoUrl }
+              ? { ...(old as object), status: 'Activo', photoUrl }
               : old,
         );
 
@@ -270,13 +239,11 @@ export const OnboardingForm = React.forwardRef<HTMLDivElement, OnboardingFormPro
       >
         {showIntro ? (
           <>
-            {/* Intro body */}
             <div className="flex-1 flex flex-col items-center justify-center gap-3 text-center">
               <h1 className="text-3xl font-bold">¡Arma tu perfil!</h1>
               <p className="text-sm text-muted-foreground">Cuéntanos sobre ti y tu estilo. Solo toma un par de minutos.</p>
             </div>
 
-            {/* Intro button */}
             <div className="flex justify-center pt-4 shrink-0">
               <Button
                 type="button"
@@ -290,7 +257,6 @@ export const OnboardingForm = React.forwardRef<HTMLDivElement, OnboardingFormPro
           </>
         ) : (
           <>
-            {/* Fixed top: progress + title */}
             <div className="flex flex-col gap-3 pb-4 shrink-0">
               {!showSummary && (
                 <StepProgress currentStep={currentStep} totalSteps={TOTAL_STEPS} className="w-full max-w-[200px] mx-auto" />
@@ -309,7 +275,6 @@ export const OnboardingForm = React.forwardRef<HTMLDivElement, OnboardingFormPro
               </div>
             </div>
 
-            {/* Scrollable body */}
             <Form {...form}>
               <div className="flex-1 overflow-y-auto min-h-0">
                 {showSummary ? (
@@ -339,7 +304,6 @@ export const OnboardingForm = React.forwardRef<HTMLDivElement, OnboardingFormPro
               </div>
             </Form>
 
-            {/* Fixed bottom: buttons */}
             <div className={cn("flex pt-4 shrink-0", currentStep === 1 && !showSummary ? "justify-end" : "justify-between")}>
               {(currentStep > 1 || showSummary) && (
                 <Button

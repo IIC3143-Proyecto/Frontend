@@ -8,7 +8,7 @@ import {
   IconSparkles,
 } from "@tabler/icons-react";
 import type { Icon as TablerIcon } from "@tabler/icons-react";
-import type { OnboardingSchema } from "../onboarding-form";
+import type { OnboardingSchema } from "../schema";
 
 interface StepResumenProps {
   form: UseFormReturn<OnboardingSchema>;
@@ -53,7 +53,6 @@ export function StepResumen({ form, avatarPreview }: StepResumenProps) {
 
   return (
     <div className="flex flex-col gap-5">
-      {/* Profile */}
       <div className="flex flex-col items-center gap-2">
         {avatarPreview && (
           <img
@@ -68,7 +67,6 @@ export function StepResumen({ form, avatarPreview }: StepResumenProps) {
         )}
       </div>
 
-      {/* Style — always shown */}
       <div className="flex flex-col gap-2">
         <SLabel icon={IconSparkles}>Tu estilo</SLabel>
         {hasStyle ? (
@@ -82,7 +80,6 @@ export function StepResumen({ form, avatarPreview }: StepResumenProps) {
         )}
       </div>
 
-      {/* Contact */}
       {contact.length > 0 && (
         <div className="flex flex-col gap-2">
           <SLabel icon={IconAddressBook}>Contacto</SLabel>
@@ -92,7 +89,6 @@ export function StepResumen({ form, avatarPreview }: StepResumenProps) {
         </div>
       )}
 
-      {/* Metro */}
       {vals.metro.length > 0 && (
         <div className="flex flex-col gap-2">
           <SLabel icon={IconMapPin}>Zona</SLabel>

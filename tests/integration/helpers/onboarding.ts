@@ -76,9 +76,9 @@ export async function completeAllStepsUntilSummary(page: Page) {
 
   await clickNext(page);
 
-  await fillInstagram(page, 'testuser');
+  await fillInstagram(page, 'contacto_test');
   await clickNext(page);
 
-  await selectMetroStation(page, 'Baquedano');
+  await selectMetroStation(page, 'Neptuno');
   await clickNext(page);
 }
