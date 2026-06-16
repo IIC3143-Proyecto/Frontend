@@ -28,7 +28,10 @@ test('PATCH /api/user/:id — pendiente de implementación', async ({ request })
   expect(res.status()).toBe(404);
 });
 
-test('PATCH /api/post/:id/tags — pendiente de implementación', async ({ request }) => {
-  const res = await request.patch('/api/post/fake-id/tags', { data: {}, headers: { Authorization: `Bearer ${token}` } });
+test('PATCH /api/image/post/:id — pendiente de implementación', async ({ request }) => {
+  const res = await request.patch('/api/image/post/fake-id', {
+    headers: { Authorization: `Bearer ${token}` },
+    multipart: { images: { name: 'test.webp', mimeType: 'image/webp', buffer: Buffer.from('x') } },
+  });
   expect(res.status()).toBe(404);
 });

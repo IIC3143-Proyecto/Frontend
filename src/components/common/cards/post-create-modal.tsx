@@ -25,11 +25,8 @@ import { TextInput } from "@/components/common/text-input";
 import { ToggleInputGroup } from "@/components/common/toggle-input";
 import { StepProgress } from "@/components/common/step-progress";
 import { PhotoUploadGrid } from "@/components/common/photo-upload-grid";
-import {
-  useCreatePost,
-  type CreatePostInput,
-  type PhotoItem,
-} from "@/hooks/use-create-post";
+import { useCreatePost, type CreatePostInput } from "@/hooks/use-create-post";
+import type { PhotoItem } from "@/lib/types/post";
 import { useTags } from "@/hooks/use-tags";
 
 interface CreatePostModalProps {
@@ -272,7 +269,7 @@ function DesktopAllOptionalTags({ control, opts, tagsLoading }: TagStepProps) {
   );
 }
 
-export function CreatePostModal({ isOpen, onClose }: CreatePostModalProps) {
+export function PostCreateModal({ isOpen, onClose }: CreatePostModalProps) {
   const {
     form,
     photos,

@@ -5,11 +5,9 @@ import { useDropzone, type FileRejection } from "react-dropzone";
 import imageCompression from "browser-image-compression";
 import { IconLoader2, IconPlus, IconX } from "@tabler/icons-react";
 import { cn } from "@/lib/utils";
+import type { PhotoItem } from "@/lib/types/post";
 
-export interface PhotoItem {
-  file: File;
-  preview: string;
-}
+export type { PhotoItem };
 
 /** Supported size options for PhotoUploadGrid and its slots. */
 type PhotoUploadSize = "sm" | "default" | "lg";

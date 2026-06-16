@@ -15,6 +15,10 @@ test.beforeEach(() => {
   test.skip(!token, 'No token — run with AUTH0_TEST_EMAIL/PASSWORD');
 });
 
+test.beforeEach(() => {
+  test.skip(!token, 'No token — run with AUTH0_TEST_EMAIL/PASSWORD');
+});
+
 const auth = () => ({ Authorization: `Bearer ${token}` });
 
 // Valida que un objeto tenga la forma de UserDto
@@ -300,6 +304,57 @@ test.describe('POST /api/image/post/:id', () => {
 
   test('401 sin token', async ({ request }) => {
     expect((await request.post('/api/image/post/fake-id')).status()).toBe(401);
+  });
+});
+
+
+test.describe('PATCH /api/post/:id/tags', () => {
+  test('200 — aplica tags al post', async ({ request }) => {
+    const createRes = await request.post('/api/post', {
+      headers: { ...auth(), 'Content-Type': 'application/json' },
+      data: { title: 'Tags test post', description: 'Desc', priceClp: 1000, isNegotiable: false },
+    });
+    const { id } = await createRes.json() as { id: string };
+
+    const res = await request.patch(`/api/post/${id}/tags`, {
+      headers: { ...auth(), 'Content-Type': 'application/json' },
+      data: { tags: [{ title: 'M', category: 'Talla' }] },
+    });
+    expect(res.status()).toBe(200);
+  });
+
+  test('401 sin token', async ({ request }) => {
+    expect((await request.patch('/api/post/fake-id/tags', { data: {} })).status()).toBe(401);
+  });
+});
+
+
+test.describe('GET /api/tag/post/:id', () => {
+  test('200 — retorna PostTagDto[] con forma {tag: {title, category}}', async ({ request }) => {
+    const createRes = await request.post('/api/post', {
+      headers: { ...auth(), 'Content-Type': 'application/json' },
+      data: { title: 'Tags fetch test', description: 'Desc', priceClp: 1000, isNegotiable: false },
+    });
+    const { id } = await createRes.json() as { id: string };
+
+    await request.patch(`/api/post/${id}/tags`, {
+      headers: { ...auth(), 'Content-Type': 'application/json' },
+      data: { tags: [{ title: 'M', category: 'Talla' }] },
+    });
+
+    const res = await request.get(`/api/tag/post/${id}`, { headers: auth() });
+    expect(res.status()).toBe(200);
+    const body = await res.json() as unknown[];
+    expect(Array.isArray(body)).toBe(true);
+    for (const item of body as Array<{ tag: { title: string; category: string } }>) {
+      expect(typeof item.tag).toBe('object');
+      expect(typeof item.tag.title).toBe('string');
+      expect(typeof item.tag.category).toBe('string');
+    }
+  });
+
+  test('401 sin token', async ({ request }) => {
+    expect((await request.get('/api/tag/post/fake-id')).status()).toBe(401);
   });
 });
 
