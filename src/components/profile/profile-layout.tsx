@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useUser } from "@auth0/nextjs-auth0";
 import {
   IconBrandInstagram,
@@ -18,10 +18,12 @@ import type { UserDto, ContactInfo } from "@/lib/types/user";
 import type { PostDto } from "@/lib/types/post";
 import { groupTagPreferencesByCategory } from "@/lib/tag-utils";
 import { ContactoDialog } from "./contacto-dialog";
+import { MetroDialog } from "./metro-dialog";
 import { SavedSheet } from "./saved-sheet";
 import { FotoDialog } from "./foto-dialog";
 import { usePatchContact } from "@/hooks/use-patch-user";
 import { useUserTagPreferences } from "@/hooks/use-user-tag-preferences";
+import { useMetroStations } from "@/hooks/use-metro-stations";
 
 type Props = {
   user: UserDto;
@@ -33,11 +35,19 @@ export function ProfileLayout({ user, savedPosts }: Props) {
   const sub = authUser?.sub ?? "";
 
   const [contactoOpen, setContactoOpen] = useState(false);
+  const [metroOpen, setMetroOpen] = useState(false);
   const [savedOpen, setSavedOpen] = useState(false);
   const [fotoOpen, setFotoOpen] = useState(false);
 
   const patchContact = usePatchContact();
   const { data: tagPrefs = [] } = useUserTagPreferences(user.id);
+
+  const stationLines = useMetroStations();
+  const stationNameMap = useMemo(() => {
+    const map = new Map<string, string>();
+    stationLines.forEach(l => l.stations.forEach(st => map.set(st.id, st.name)));
+    return map;
+  }, [stationLines]);
 
   function handleSaveContacto(info: ContactInfo) {
     patchContact.mutate(
@@ -55,7 +65,6 @@ export function ProfileLayout({ user, savedPosts }: Props) {
 
   return (
     <div>
-      {/* Header */}
       <header className="bg-sidebar border-b border-border p-6 sm:p-8 sm:px-[50px] flex flex-col items-center gap-3 text-center">
         <div
           className="relative group cursor-pointer"
@@ -77,22 +86,30 @@ export function ProfileLayout({ user, savedPosts }: Props) {
         </div>
       </header>
 
-      {/* Mobile: columna centrada — Desktop: grid 2×2 con margen lateral */}
       <div className="flex flex-col gap-4 p-4 max-w-sm mx-auto sm:max-w-none sm:grid sm:grid-cols-2 sm:gap-3 sm:px-[50px] sm:py-4">
 
-        {/* Zona — solo lectura */}
+        {/* Zona */}
         <section className="bg-card border border-border rounded-2xl p-4 sm:p-3 flex flex-col gap-2">
-          <p className="text-xs font-black uppercase flex items-center gap-1.5 text-muted-foreground">
-            <IconMapPin className="size-3.5" /> Zona
-          </p>
+          <div className="flex items-center justify-between">
+            <p className="text-xs font-black uppercase flex items-center gap-1.5 text-muted-foreground">
+              <IconMapPin className="size-3.5" /> Zona
+            </p>
+            <button
+              type="button"
+              className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+              onClick={() => setMetroOpen(true)}
+            >
+              Editar
+            </button>
+          </div>
           <div className="flex flex-wrap gap-1">
             {user.stations && user.stations.length > 0 ? (
-              user.stations.map((s) => (
+              user.stations.map((id) => (
                 <span
-                  key={s}
+                  key={id}
                   className="text-xs bg-muted px-1.5 py-0.5 rounded-full border border-border leading-tight"
                 >
-                  {s}
+                  {stationNameMap.get(id) ?? id}
                 </span>
               ))
             ) : (
@@ -101,7 +118,6 @@ export function ProfileLayout({ user, savedPosts }: Props) {
           </div>
         </section>
 
-        {/* Contacto */}
         <section className="bg-card border border-border rounded-2xl p-4 sm:p-3 flex flex-col gap-2">
           <div className="flex items-center justify-between">
             <p className="text-xs font-black uppercase flex items-center gap-1.5 text-muted-foreground">
@@ -140,7 +156,6 @@ export function ProfileLayout({ user, savedPosts }: Props) {
           </div>
         </section>
 
-        {/* Preferencias — col-span-2 */}
         <section className="bg-card border border-border rounded-2xl p-4 sm:p-3 sm:col-span-2 flex flex-col gap-2">
           <p className="text-xs font-black uppercase flex items-center gap-1.5 text-muted-foreground">
             <IconSparkles className="size-3.5" /> Preferencias
@@ -170,7 +185,6 @@ export function ProfileLayout({ user, savedPosts }: Props) {
           )}
         </section>
 
-        {/* Guardados — col-span-2 */}
         <section className="bg-card border border-border rounded-2xl p-4 sm:p-3 sm:col-span-2 flex items-center justify-between">
           <p className="text-xs font-black uppercase flex items-center gap-1.5 text-muted-foreground">
             <IconBookmark className="size-3.5" /> Guardados ({savedPosts.length})
@@ -206,6 +220,12 @@ export function ProfileLayout({ user, savedPosts }: Props) {
         onOpenChange={setSavedOpen}
         savedPosts={savedPosts}
         userId={user.id}
+      />
+      <MetroDialog
+        open={metroOpen}
+        onOpenChange={setMetroOpen}
+        user={user}
+        sub={sub}
       />
       <FotoDialog
         open={fotoOpen}
