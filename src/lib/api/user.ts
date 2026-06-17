@@ -1,6 +1,7 @@
 import { api } from './index';
 import type { PostDto } from '@/lib/types/post';
 import type { UserTagPreferenceDto } from '@/lib/types/tag';
+import type { UserDto } from '@/lib/types/user';
 
 export async function uploadUserAvatar(
   userId: string,
@@ -90,6 +91,20 @@ export async function getUserTagPreferences(
     );
   }
   return res.json() as Promise<UserTagPreferenceDto[]>;
+}
+
+export async function getUser(userId: string, accessToken: string): Promise<UserDto> {
+  const res = await fetch(api.user(userId), {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
+  if (!res.ok) {
+    const json = await res.json().catch(() => ({}));
+    throw Object.assign(
+      new Error((json as { message?: string }).message ?? 'Error al obtener el usuario'),
+      { status: res.status },
+    );
+  }
+  return res.json() as Promise<UserDto>;
 }
 
 export async function removeInteraction(

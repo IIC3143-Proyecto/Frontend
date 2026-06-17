@@ -1,26 +1,22 @@
 "use client";
 
-import { useUser } from "@auth0/nextjs-auth0";
-import { useQuery } from "@tanstack/react-query";
+import { useAuth } from "@/hooks/use-auth";
+import { useUser } from "@/hooks/use-user";
 import { ProfileLayout } from "@/components/profile/profile-layout";
 import { useSavedPosts } from "@/hooks/use-saved-posts";
-import { syncUser } from "@/lib/api/auth";
-import type { SyncUserResponse } from "@/lib/types/auth";
 
 export default function ProfilePage() {
-  const { user: authUser } = useUser();
-  const sub = authUser?.sub;
-
-  const { data: dbUser } = useQuery<SyncUserResponse>({
-    queryKey: ["dbUser", sub],
-    queryFn: () => syncUser(),
-    enabled: !!sub,
-    staleTime: 5 * 60 * 1000,
-  });
-
+  const { user: authUser, dbUser } = useAuth();
+  const { data: userProfile } = useUser(dbUser?.id);
   const { data: savedPosts = [] } = useSavedPosts(dbUser?.id);
 
-  if (!dbUser) return null;
+  if (!userProfile) return null;
 
-  return <ProfileLayout user={dbUser} savedPosts={savedPosts} />;
+  return (
+    <ProfileLayout
+      user={userProfile}
+      savedPosts={savedPosts}
+      sub={authUser?.sub ?? ""}
+    />
+  );
 }
