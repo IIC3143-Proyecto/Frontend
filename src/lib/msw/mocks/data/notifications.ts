@@ -7,6 +7,7 @@ const baseUser = {
     name: "Florencia Aqueveque",
     username: "floaq",
     email: "floaq@example.com",
+    providerAuth0: "auth0|user-001",
     status: "Activo",
     createdAtUtcMinus3: "2026-01-15T14:30:00.000Z",
     updatedAtUtcMinus3: "2026-03-20T09:00:00.000Z",
