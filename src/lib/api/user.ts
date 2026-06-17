@@ -1,5 +1,4 @@
 import { api } from './index';
-import type { SyncUserResponse } from '@/lib/types/auth';
 
 export async function uploadUserAvatar(
   userId: string,
@@ -23,19 +22,39 @@ export async function uploadUserAvatar(
     );
   }
 
-  // Re-fetcha sync-user para obtener el photoUrl actualizado
-  // TODO: reemplazar por GET /api/user/:id cuando el backend lo implemente
-  const syncRes = await fetch('/sync-user');
-  if (!syncRes.ok) throw Object.assign(new Error('Error al obtener el avatar actualizado'), { status: syncRes.status });
-  const user = await syncRes.json() as SyncUserResponse;
-  return user.photoUrl ?? '';
+  const { imageUrl } = await res.json() as { imageUrl: string };
+  return imageUrl;
 }
 
-// TODO: implementar cuando el backend habilite PATCH /api/user/:id
 export async function patchUser(
-  _userId: string,
-  _data: { username: string; bio: string; photoUrl: string },
-  _accessToken: string,
+  userId: string,
+  data: {
+    username: string;
+    bio: string;
+    metro?: string[];
+    contactInfo?: { instagram?: string; email?: string; whatsapp?: string };
+  },
+  accessToken: string,
 ): Promise<void> {
-  return;
+  const res = await fetch(api.user(userId), {
+    method: 'PATCH',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      username: data.username,
+      bio: data.bio,
+      stations: data.metro,
+      contactInfo: data.contactInfo,
+    }),
+  });
+
+  if (!res.ok) {
+    const json = await res.json().catch(() => ({}));
+    throw Object.assign(
+      new Error((json as { message?: string }).message ?? 'Error al actualizar el perfil'),
+      { status: res.status, field: (json as { field?: string }).field },
+    );
+  }
 }

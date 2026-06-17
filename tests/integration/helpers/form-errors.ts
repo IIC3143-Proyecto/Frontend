@@ -31,6 +31,15 @@ export async function setAvatarSlow(page: Page) {
   await setScenario(page, 'AVATAR_SLOW');
 }
 
-export async function setPatchError(page: Page, status: 409 | 500) {
-  await setScenario(page, status === 409 ? 'PATCH_409' : 'PATCH_500');
+export async function setPatchError(page: Page, status: 401 | 409 | 500) {
+  const map: Record<number, OnboardingErrorScenario> = {
+    401: 'PATCH_401',
+    409: 'PATCH_409',
+    500: 'PATCH_500',
+  };
+  await setScenario(page, map[status]);
+}
+
+export async function setPatchNetwork(page: Page) {
+  await setScenario(page, 'PATCH_NETWORK');
 }

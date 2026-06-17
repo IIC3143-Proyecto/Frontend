@@ -6,7 +6,7 @@ import { syncUser } from '@/lib/api/auth';
 
 export type SyncError = Error & { code: number };
 
-type DbUser = { id: string; onboardingCompleted: boolean };
+type DbUser = { id: string; status: string };
 
 // TODO: sync-user debe llamarse solo una vez por login (propósito: sincronizar Auth0 → DB).
 // Cuando GET /api/user/:id esté disponible en el backend, separar el sync inicial
@@ -22,7 +22,7 @@ export function useAuth() {
       const data = await syncUser();
       return {
         ...data,
-        onboardingCompleted: data.onboardingCompleted ?? false,
+        status: data.status ?? 'En proceso de registro',
       };
     },
     enabled: !!user,
@@ -33,12 +33,13 @@ export function useAuth() {
   useEffect(() => {
     if (!authLoading && !syncLoading && dbUser) {
       const isOnboardingPage = pathname === '/onboarding';
+      const onboardingDone = dbUser.status !== 'En proceso de registro';
 
-      if (!dbUser.onboardingCompleted && !isOnboardingPage) {
+      if (!onboardingDone && !isOnboardingPage) {
         router.push('/onboarding');
       }
 
-      if (dbUser.onboardingCompleted && isOnboardingPage) {
+      if (onboardingDone && isOnboardingPage) {
         router.push('/profile');
       }
     }

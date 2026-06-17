@@ -2,6 +2,11 @@
 
 import * as React from "react";
 import imageCompression from "browser-image-compression";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { getAccessToken } from "@/actions/auth";
+import { uploadUserAvatar } from "@/lib/api/user";
+import type { SyncUserResponse } from "@/lib/types/auth";
 
 export interface UseAvatarUploadOptions {
   /** Max output file size in MB (default: 1) */
@@ -109,4 +114,28 @@ export function useAvatarUpload(
   }, []);
 
   return { preview, isConverting, error, processFile, reset };
+}
+
+type UploadAvatarInput = { userId: string; sub: string; file: File };
+
+export function useUploadAvatar() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ userId, file }: UploadAvatarInput) => {
+      const token = await getAccessToken();
+      return uploadUserAvatar(userId, file, token);
+    },
+    onSuccess: (newPhotoUrl, { sub }) => {
+      queryClient.setQueryData<SyncUserResponse>(["dbUser", sub], (old) =>
+        old ? { ...old, photoUrl: newPhotoUrl } : old,
+      );
+      toast.success("Foto actualizada");
+    },
+    onError: (err) => {
+      toast.error("Error al subir la foto", {
+        description: err instanceof Error ? err.message : "Inténtalo de nuevo",
+      });
+    },
+  });
 }
