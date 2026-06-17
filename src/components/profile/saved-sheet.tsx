@@ -41,7 +41,6 @@ export function SavedSheet({ open, onOpenChange, savedPosts, userId }: Props) {
                 <SavedPostCard
                   key={p.id}
                   post={p}
-                  view="grid2"
                   onRemove={(postId) => removeSaved.mutate({ postId, userId })}
                 />
               ))}
