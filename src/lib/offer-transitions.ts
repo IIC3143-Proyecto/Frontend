@@ -1,51 +1,87 @@
 import { OfferDirection } from "@/lib/types/offer-direction.enum";
 import { OfferStatus } from "@/lib/types/offer-status.enum";
+import { OfferPatchAction } from "@/lib/types/offer-patch-action.enum";
 
-// El rol del usuario frente a una oferta depende de qué pestaña está viendo:
-// - ofertas RECIBIDAS  → el usuario es el VENDEDOR (alguien ofertó por su post)
-// - ofertas REALIZADAS → el usuario es el COMPRADOR (él hizo la oferta)
 export type OfferRole = "buyer" | "seller";
 
-export function roleForDirection(direction: OfferDirection): OfferRole {
+export function getRoleForDirection(direction: OfferDirection): OfferRole {
   return direction === OfferDirection.RECEIVED ? "seller" : "buyer";
 }
 
-export type OfferAction = {
+export type OfferActionOption = {
   label: string;
-  nextStatus: OfferStatus;
+  action: OfferPatchAction;
   variant: "default" | "destructive" | "outline";
 };
 
-// Devuelve las transiciones que el usuario (según su rol) puede ejecutar sobre
-// la oferta en su estado actual. Replica las reglas del backend:
-//   pendiente  →(vendedor)            aceptada | rechazada
-//   aceptada   →(comprador|vendedor)  confirmada
-//   confirmada →(la otra parte)       exitosa
-// rechazada y exitosa son estados terminales.
+// Actions (OfferPatchAction) the user can execute on the offer
+// based on its current STATE (OfferStatus) and their role. Mirrors the backend rules:
+//   Pending            →(seller)         Accepted | Rejected
+//   Accepted           →(buyer|seller)   Buyer|Seller confirmed
+//   Buyer confirmed    →(seller)         Successful
+//   Seller confirmed   →(buyer)          Successful
+// Rejected, Successful, Failed, and Deleted are terminal states.
 export function getOfferActions(
   status: string,
   role: OfferRole,
-): OfferAction[] {
+): OfferActionOption[] {
   const normalized = status.trim().toLowerCase();
 
   switch (normalized) {
-    case OfferStatus.PENDING:
+    case OfferStatus.PENDING.toLowerCase():
       return role === "seller"
         ? [
-            { label: "Aceptar", nextStatus: OfferStatus.ACCEPTED, variant: "default" },
-            { label: "Rechazar", nextStatus: OfferStatus.REJECTED, variant: "destructive" },
+            {
+              label: "Aceptar oferta",
+              action: OfferPatchAction.ACCEPT,
+              variant: "default",
+            },
+            {
+              label: "Rechazar oferta",
+              action: OfferPatchAction.REJECT,
+              variant: "destructive",
+            },
           ]
         : [];
 
-    case OfferStatus.ACCEPTED:
-      return [
-        { label: "Confirmar", nextStatus: OfferStatus.CONFIRMED, variant: "default" },
-      ];
+    case OfferStatus.ACCEPTED.toLowerCase():
+      return role === "seller"
+        ? [
+            {
+              label: "Confirmar venta",
+              action: OfferPatchAction.SELLER_CONFIRM,
+              variant: "default",
+            },
+          ]
+        : [
+            {
+              label: "Confirmar compra",
+              action: OfferPatchAction.BUYER_CONFIRM,
+              variant: "default",
+            },
+          ];
 
-    case OfferStatus.CONFIRMED:
-      return [
-        { label: "Confirmar entrega", nextStatus: OfferStatus.SUCCESSFUL, variant: "default" },
-      ];
+    case OfferStatus.BUYER_CONFIRMED.toLowerCase():
+      return role === "seller"
+        ? [
+            {
+              label: "Confirmar entrega",
+              action: OfferPatchAction.SELLER_CONFIRM,
+              variant: "default",
+            },
+          ]
+        : [];
+
+    case OfferStatus.SELLER_CONFIRMED.toLowerCase():
+      return role === "buyer"
+        ? [
+            {
+              label: "Confirmar entrega",
+              action: OfferPatchAction.BUYER_CONFIRM,
+              variant: "default",
+            },
+          ]
+        : [];
 
     default:
       return [];

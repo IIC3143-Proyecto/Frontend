@@ -1,9 +1,10 @@
-// Estados de una oferta. Los valores coinciden con los que maneja el backend
-// (se comparan de forma case-insensitive en `offer-transitions.ts`).
 export enum OfferStatus {
-  PENDING = "pendiente",
-  ACCEPTED = "aceptada",
-  REJECTED = "rechazada",
-  CONFIRMED = "confirmada",
-  SUCCESSFUL = "exitosa",
+  PENDING = "Pendiente", // El comprador ofertó; el vendedor aún no responde.
+  ACCEPTED = "Aceptada", // El vendedor aceptó la oferta.
+  REJECTED = "Rechazada", // El vendedor rechazó la oferta.
+  BUYER_CONFIRMED = "Comprador confirmó", // El comprador confirmó la compra.
+  SELLER_CONFIRMED = "Vendedor confirmó", // El vendedor confirmó la venta.
+  SUCCESSFUL = "Exitosa", // Ambas partes confirmaron.
+  FAILED = "Fallida", // Una de las partes no confirmó.
+  DELETED = "Eliminada", // El comprador eliminó la oferta.
 }
