@@ -79,7 +79,7 @@ interface MetroInputProps<TFieldValues extends FieldValues> {
  * Multi-select station picker for the Santiago metro system.
  * Features line filtering, search across all stations, pills display of selections,
  * and responsive size variants.
- * Integrates with React Hook Form and uses MSW for API mocking.
+ * Integrates with React Hook Form; field value is an array of station IDs (e.g. "L1_BAQUEDANO").
  */
 export function MetroInput<TFieldValues extends FieldValues>({
   control,
@@ -95,16 +95,22 @@ export function MetroInput<TFieldValues extends FieldValues>({
   const s = sizeClasses[size];
   const effectiveActiveLine = activeLine || lines[0]?.number || "";
 
+  const stationMap = React.useMemo(() => {
+    const map = new Map<string, string>();
+    lines.forEach(line => line.stations.forEach(st => map.set(st.id, st.name)));
+    return map;
+  }, [lines]);
+
   const visibleStations = React.useMemo(() => {
     if (search.trim()) {
       return lines.flatMap(line =>
         line.stations
-          .filter(s => s.toLowerCase().includes(search.toLowerCase()))
-          .map(name => ({ name, line: line.number }))
+          .filter(st => st.name.toLowerCase().includes(search.toLowerCase()))
+          .map(st => ({ id: st.id, name: st.name, line: line.number }))
       );
     }
     const active = lines.find(l => l.number === effectiveActiveLine);
-    return (active?.stations ?? []).map(name => ({ name, line: effectiveActiveLine }));
+    return (active?.stations ?? []).map(st => ({ id: st.id, name: st.name, line: effectiveActiveLine }));
   }, [search, effectiveActiveLine, lines]);
 
   return (
@@ -115,10 +121,10 @@ export function MetroInput<TFieldValues extends FieldValues>({
       render={({ field }) => {
         const selected: string[] = field.value ?? [];
 
-        const toggleStation = (station: string) => {
-          const next = selected.includes(station)
-            ? selected.filter(s => s !== station)
-            : [...selected, station];
+        const toggleStation = (id: string) => {
+          const next = selected.includes(id)
+            ? selected.filter(s => s !== id)
+            : [...selected, id];
           field.onChange(next);
         };
 
@@ -160,17 +166,17 @@ export function MetroInput<TFieldValues extends FieldValues>({
                       Ninguna estación seleccionada
                     </span>
                   ) : (
-                    selected.map(station => (
+                    selected.map(id => (
                       <span
-                        key={station}
+                        key={id}
                         className={cn(s.pill, "inline-flex items-center gap-1 rounded-full bg-black text-white font-medium shrink-0")}
                       >
-                        {station}
+                        {stationMap.get(id) ?? id}
                         {!disabled && (
                           <button
                             type="button"
-                            onClick={() => field.onChange(selected.filter(s => s !== station))}
-                            aria-label={`Eliminar ${station}`}
+                            onClick={() => field.onChange(selected.filter(s => s !== id))}
+                            aria-label={`Eliminar ${stationMap.get(id) ?? id}`}
                             className="ml-0.5 hover:opacity-70 transition-opacity leading-none"
                           >
                             ×
@@ -227,9 +233,9 @@ export function MetroInput<TFieldValues extends FieldValues>({
                         Sin resultados para &quot;{search}&quot;
                       </p>
                     )}
-                    {visibleStations.map(({ name, line }) => (
+                    {visibleStations.map(({ id, name, line }) => (
                       <label
-                        key={`${line}-${name}`}
+                        key={`${line}-${id}`}
                         className={cn(
                           "flex items-center gap-2 py-1 px-1 rounded cursor-pointer hover:bg-muted/50 transition-colors",
                           s.station,
@@ -238,8 +244,8 @@ export function MetroInput<TFieldValues extends FieldValues>({
                       >
                         <input
                           type="checkbox"
-                          checked={selected.includes(name)}
-                          onChange={() => toggleStation(name)}
+                          checked={selected.includes(id)}
+                          onChange={() => toggleStation(id)}
                           disabled={disabled}
                           className="accent-black shrink-0"
                         />
