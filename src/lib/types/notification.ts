@@ -1,3 +1,5 @@
+import type { UserDto } from './user';
+
 export type NotificationType =
   | "Sistema"
   | "Seguidores"
@@ -6,25 +8,10 @@ export type NotificationType =
   | "Publicaciones"
   | "Vendedor";
 
-export type NotificationTargetUser = {
-  id: string;
-  name: string;
-  username: string;
-  email: string;
-  bio?: string;
-  photoUrl?: string;
-  contactInfo?: Record<string, string>;
-  status: string;
-  createdAtUtcMinus3: string;
-  updatedAtUtcMinus3: string;
-  posts: unknown[];
-  interactions: unknown[];
-};
-
 export type NotificationDto = {
   id: string;
   targetUserId: string;
-  targetUser: NotificationTargetUser;
+  targetUser: UserDto;
   type: NotificationType;
   title: string;
   content: string;
