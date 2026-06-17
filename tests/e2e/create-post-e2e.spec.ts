@@ -2,11 +2,10 @@ import { test, expect } from '@playwright/test';
 
 test.describe('Create Post E2E (real backend)', () => {
   // Needs a test user with completed onboarding (bio filled) in the real backend.
-  // Current test account is redirected to /onboarding before reaching /test.
   test.fixme(true, 'TODO: implement with dedicated test account');
 
   test('authenticated user can open create-post modal', async ({ page }) => {
-    await page.goto('/test');
+    await page.goto('/posts');
     await page.getByRole('button', { name: 'Nueva Publicación' }).click();
     await expect(page.getByRole('dialog')).toBeVisible();
   });

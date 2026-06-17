@@ -158,7 +158,7 @@ test.describe('DELETE /api/post/:id', () => {
 
 
 test.describe('POST /api/image/user/:id', () => {
-  test('201 — retorna SimpleResponseDto con message', async ({ request }) => {
+  test('201 — retorna UserImageResponseDto con imageUrl', async ({ request }) => {
     const userRes = await request.get('/api/auth/sync-user', { headers: auth() });
     const { data: syncUser } = await userRes.json() as { data: { id: string } };
     const { id } = syncUser;
@@ -169,8 +169,8 @@ test.describe('POST /api/image/user/:id', () => {
     });
     expect(res.status()).toBe(201);
     const body = await res.json() as Record<string, unknown>;
-    expect(typeof body.message).toBe('string');
-    expect('photoUrl' in body).toBe(false);
+    expect(typeof body.imageUrl).toBe('string');
+    expect('message' in body).toBe(false);
   });
 
   test('403 intentando subir imagen de otro usuario', async ({ request }) => {
@@ -262,23 +262,24 @@ test.describe('DELETE /api/image/user/:id', () => {
   });
 });
 
-// GET /api/user/:id — no está en api-docs.md pero sí en nuestros mocks.
-// Si retorna 404, el endpoint no está implementado — actualizar MSW cuando llegue.
 test.describe('GET /api/user/:id', () => {
-  test('200 con UserDto ó 404 si no implementado', async ({ request }) => {
+  test('200 — retorna UserDto', async ({ request }) => {
     const userRes = await request.get('/api/auth/sync-user', { headers: auth() });
     const { data: syncUser } = await userRes.json() as { data: { id: string } };
     const { id } = syncUser;
 
     const res = await request.get(`/api/user/${id}`, { headers: auth() });
-    if (res.status() === 404) return; // pendiente de implementación
     expect(res.status()).toBe(200);
     expectUserShape(await res.json() as Record<string, unknown>);
+  });
+
+  test('401 sin token', async ({ request }) => {
+    expect((await request.get('/api/user/fake-id')).status()).toBe(401);
   });
 });
 
 test.describe('POST /api/image/post/:id', () => {
-  test('201 — retorna SimpleResponseDto con message', async ({ request }) => {
+  test('201 — retorna PostImageResponseDto con imagesUrls', async ({ request }) => {
     const createRes = await request.post('/api/post', {
       headers: { ...auth(), 'Content-Type': 'application/json' },
       data: { title: 'Image test post', description: 'Desc', priceClp: 1000, isNegotiable: false },
@@ -291,7 +292,8 @@ test.describe('POST /api/image/post/:id', () => {
     });
     expect(res.status()).toBe(201);
     const body = await res.json() as Record<string, unknown>;
-    expect(typeof body.message).toBe('string');
+    expect(Array.isArray(body.imagesUrls)).toBe(true);
+    expect('message' in body).toBe(false);
   });
 
   test('403 si no eres el vendedor', async ({ request }) => {
@@ -355,6 +357,93 @@ test.describe('GET /api/tag/post/:id', () => {
 
   test('401 sin token', async ({ request }) => {
     expect((await request.get('/api/tag/post/fake-id')).status()).toBe(401);
+  });
+});
+
+
+test.describe('PATCH /api/user/:id', () => {
+  test('200 — retorna UserDto actualizado', async ({ request }) => {
+    const userRes = await request.get('/api/auth/sync-user', { headers: auth() });
+    const { data: syncUser } = await userRes.json() as { data: { id: string } };
+    const { id } = syncUser;
+
+    const res = await request.patch(`/api/user/${id}`, {
+      headers: { ...auth(), 'Content-Type': 'application/json' },
+      data: { bio: 'Contract test bio' },
+    });
+    expect(res.status()).toBe(200);
+    const body = await res.json() as Record<string, unknown>;
+    expectUserShape(body);
+    expect(body.id).toBe(id);
+  });
+
+  test('403 intentando editar otro usuario', async ({ request }) => {
+    const res = await request.patch('/api/user/00000000-0000-0000-0000-000000000001', {
+      headers: { ...auth(), 'Content-Type': 'application/json' },
+      data: { bio: 'Hack attempt' },
+    });
+    expect(res.status()).toBe(403);
+  });
+
+  test('401 sin token', async ({ request }) => {
+    expect((await request.patch('/api/user/fake-id', { data: {} })).status()).toBe(401);
+  });
+});
+
+
+test.describe('GET /api/post/user/:id', () => {
+  test('200 — retorna Array<PostDto>', async ({ request }) => {
+    const userRes = await request.get('/api/auth/sync-user', { headers: auth() });
+    const { data: syncUser } = await userRes.json() as { data: { id: string } };
+    const { id } = syncUser;
+
+    const res = await request.get(`/api/post/user/${id}`, { headers: auth() });
+    expect(res.status()).toBe(200);
+    const body = await res.json() as unknown[];
+    expect(Array.isArray(body)).toBe(true);
+    if (body.length > 0) {
+      expectPostShape(body[0] as Record<string, unknown>);
+    }
+  });
+
+  test('401 sin token', async ({ request }) => {
+    expect((await request.get('/api/post/user/fake-id')).status()).toBe(401);
+  });
+});
+
+
+test.describe('PATCH /api/image/post/:id', () => {
+  test('200 — agrega imágenes sin reemplazar las existentes', async ({ request }) => {
+    const createRes = await request.post('/api/post', {
+      headers: { ...auth(), 'Content-Type': 'application/json' },
+      data: { title: 'Patch image test', description: 'Desc', priceClp: 1000, isNegotiable: false },
+    });
+    const { id } = await createRes.json() as { id: string };
+
+    await request.post(`/api/image/post/${id}`, {
+      headers: auth(),
+      multipart: { images: { name: 'avatar.webp', mimeType: 'image/webp', buffer: imageBuffer } },
+    });
+
+    const res = await request.patch(`/api/image/post/${id}`, {
+      headers: auth(),
+      multipart: { images: { name: 'avatar.webp', mimeType: 'image/webp', buffer: imageBuffer } },
+    });
+    expect(res.status()).toBe(200);
+    const body = await res.json() as Record<string, unknown>;
+    expect(Array.isArray(body.imagesUrls)).toBe(true);
+  });
+
+  test('403 si no eres el vendedor', async ({ request }) => {
+    const res = await request.patch('/api/image/post/00000000-0000-0000-0000-000000000002', {
+      headers: auth(),
+      multipart: { images: { name: 'avatar.webp', mimeType: 'image/webp', buffer: imageBuffer } },
+    });
+    expect([403, 404]).toContain(res.status());
+  });
+
+  test('401 sin token', async ({ request }) => {
+    expect((await request.patch('/api/image/post/fake-id')).status()).toBe(401);
   });
 });
 

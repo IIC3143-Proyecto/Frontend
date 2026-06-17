@@ -17,14 +17,14 @@ export async function proxy(request: NextRequest) {
   }
 
   if (session) {
-    const { onboardingCompleted: isOnboardingCompleted } = session.user as { onboardingCompleted?: boolean };
+    const { status } = session.user as { status?: string };
     const isOnboardingRoute = pathname.startsWith('/onboarding');
 
     // undefined → primer login antes de sync-user; useAuth lo maneja
-    if (isOnboardingCompleted === false && isPrivateRoute && !isOnboardingRoute) {
+    if (status === 'En proceso de registro' && isPrivateRoute && !isOnboardingRoute) {
       return NextResponse.redirect(new URL('/onboarding', request.url));
     }
-    if (isOnboardingCompleted === true && isOnboardingRoute) {
+    if (status && status !== 'En proceso de registro' && isOnboardingRoute) {
       return NextResponse.redirect(new URL('/profile', request.url));
     }
   }
