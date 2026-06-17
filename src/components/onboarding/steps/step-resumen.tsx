@@ -9,6 +9,7 @@ import {
 } from "@tabler/icons-react";
 import type { Icon as TablerIcon } from "@tabler/icons-react";
 import type { OnboardingSchema } from "../schema";
+import { useStationNameMap } from "@/hooks/use-metro-stations";
 
 interface StepResumenProps {
   form: UseFormReturn<OnboardingSchema>;
@@ -35,6 +36,7 @@ function Pill({ children }: { children: ReactNode }) {
 }
 
 export function StepResumen({ form, avatarPreview }: StepResumenProps) {
+  const stationNameMap = useStationNameMap();
   const vals = form.getValues();
 
   const contact = [
@@ -87,7 +89,7 @@ export function StepResumen({ form, avatarPreview }: StepResumenProps) {
         <div className="flex flex-col gap-2">
           <SLabel icon={IconMapPin}>Zona</SLabel>
           <div className="flex flex-wrap gap-2">
-            {vals.metro.map((m) => <Pill key={m}>{m}</Pill>)}
+            {vals.metro.map((m) => <Pill key={m}>{stationNameMap.get(m) ?? m}</Pill>)}
           </div>
         </div>
       )}

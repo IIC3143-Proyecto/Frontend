@@ -1,6 +1,5 @@
 "use client";
 
-import { useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -16,7 +15,7 @@ import { Form } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { MetroInput } from "@/components/common/metro-input";
 import { RestoreFieldHeader } from "./restore-field-header";
-import { useMetroStations } from "@/hooks/use-metro-stations";
+import { useStationNameMap } from "@/hooks/use-metro-stations";
 import { usePatchStations } from "@/hooks/use-patch-user";
 import type { UserDto } from "@/lib/types/user";
 
@@ -34,14 +33,8 @@ type Props = {
 };
 
 export function MetroDialog({ open, onOpenChange, user, sub }: Props) {
-  const lines = useMetroStations();
+  const stationNameMap = useStationNameMap();
   const patchStations = usePatchStations();
-
-  const stationNameMap = useMemo(() => {
-    const map = new Map<string, string>();
-    lines.forEach(line => line.stations.forEach(st => map.set(st.id, st.name)));
-    return map;
-  }, [lines]);
 
   const originalStations = user.stations ?? [];
 
