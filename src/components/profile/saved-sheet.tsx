@@ -23,7 +23,7 @@ export function SavedSheet({ open, onOpenChange, savedPosts, userId }: Props) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="min-w-[300px] w-[90vw] max-w-[900px] sm:max-w-[900px] flex flex-col gap-0 p-0 max-h-[85vh]">
+      <DialogContent className="min-w-[300px] w-[90vw] max-w-[900px] flex flex-col gap-0 p-0 max-h-[85vh]">
         <DialogHeader className="border-b border-border px-4 pt-4 pb-3 shrink-0">
           <DialogTitle className="text-xs font-black uppercase flex items-center gap-1.5">
             <IconBookmark className="size-3.5" /> Guardados ({savedPosts.length})

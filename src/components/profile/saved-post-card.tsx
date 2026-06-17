@@ -19,17 +19,17 @@ export function SavedPostCard({ post, onRemove }: Props) {
     <article className="relative bg-card border border-border flex flex-col p-3 w-full max-w-[250px] overflow-hidden">
       <div className="absolute top-1 right-2 z-20 flex flex-col gap-1">
         <MiniRoundButton aria-label="Ver detalle" onClick={() => setDetailOpen(true)}>
-          <IconInfoCircle className="w-4 h-4" />
+          <IconInfoCircle className="size-4" />
         </MiniRoundButton>
         <MiniRoundButton aria-label="Hacer oferta">
-          <IconCoins className="w-4 h-4" />
+          <IconCoins className="size-4" />
         </MiniRoundButton>
         <MiniRoundButton
           aria-label="Quitar de guardados"
           className="text-destructive"
           onClick={() => onRemove?.(post.id)}
         >
-          <IconBookmarkOff className="w-4 h-4" />
+          <IconBookmarkOff className="size-4" />
         </MiniRoundButton>
       </div>
 
