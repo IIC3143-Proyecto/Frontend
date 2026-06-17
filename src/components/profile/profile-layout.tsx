@@ -1,7 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
-import { useUser } from "@auth0/nextjs-auth0";
+import { useState } from "react";
 import {
   IconBrandInstagram,
   IconDeviceMobile,
@@ -23,16 +22,15 @@ import { SavedSheet } from "./saved-sheet";
 import { FotoDialog } from "./foto-dialog";
 import { usePatchContact } from "@/hooks/use-patch-user";
 import { useUserTagPreferences } from "@/hooks/use-user-tag-preferences";
-import { useMetroStations } from "@/hooks/use-metro-stations";
+import { useStationNameMap } from "@/hooks/use-metro-stations";
 
 type Props = {
   user: UserDto;
   savedPosts: PostDto[];
+  sub: string;
 };
 
-export function ProfileLayout({ user, savedPosts }: Props) {
-  const { user: authUser } = useUser();
-  const sub = authUser?.sub ?? "";
+export function ProfileLayout({ user, savedPosts, sub }: Props) {
 
   const [contactoOpen, setContactoOpen] = useState(false);
   const [metroOpen, setMetroOpen] = useState(false);
@@ -42,12 +40,7 @@ export function ProfileLayout({ user, savedPosts }: Props) {
   const patchContact = usePatchContact();
   const { data: tagPrefs = [] } = useUserTagPreferences(user.id);
 
-  const stationLines = useMetroStations();
-  const stationNameMap = useMemo(() => {
-    const map = new Map<string, string>();
-    stationLines.forEach(l => l.stations.forEach(st => map.set(st.id, st.name)));
-    return map;
-  }, [stationLines]);
+  const stationNameMap = useStationNameMap();
 
   function handleSaveContacto(info: ContactInfo) {
     patchContact.mutate(
@@ -88,7 +81,6 @@ export function ProfileLayout({ user, savedPosts }: Props) {
 
       <div className="flex flex-col gap-4 p-4 max-w-sm mx-auto sm:max-w-none sm:grid sm:grid-cols-2 sm:gap-3 sm:px-[50px] sm:py-4">
 
-        {/* Zona */}
         <section className="bg-card border border-border rounded-2xl p-4 sm:p-3 flex flex-col gap-2">
           <div className="flex items-center justify-between">
             <p className="text-xs font-black uppercase flex items-center gap-1.5 text-muted-foreground">
@@ -194,7 +186,6 @@ export function ProfileLayout({ user, savedPosts }: Props) {
           </Button>
         </section>
 
-        {/* Zona peligrosa — col-span-2 */}
         <section className="bg-destructive/5 border border-destructive/20 rounded-2xl p-4 sm:p-3 sm:col-span-2">
           <p className="text-xs font-black uppercase flex items-center gap-1.5 mb-1 text-destructive">
             <IconAlertTriangle className="size-3.5" /> Eliminar cuenta
