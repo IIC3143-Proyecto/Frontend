@@ -259,7 +259,7 @@ export const OnboardingForm = React.forwardRef<HTMLDivElement, OnboardingFormPro
           <>
             <div className="flex flex-col gap-3 pb-4 shrink-0">
               {!showSummary && (
-                <StepProgress currentStep={currentStep} totalSteps={TOTAL_STEPS} className="w-full max-w-[200px] mx-auto" />
+                <StepProgress currentStep={currentStep} totalSteps={TOTAL_STEPS} className="w-full max-w-50 mx-auto" />
               )}
               <div className="flex flex-col gap-1">
                 <h1 className="text-2xl font-semibold">
@@ -276,7 +276,7 @@ export const OnboardingForm = React.forwardRef<HTMLDivElement, OnboardingFormPro
             </div>
 
             <Form {...form}>
-              <div className="flex-1 overflow-y-auto min-h-0">
+              <div className="flex-1 min-h-0">
                 {showSummary ? (
                   <StepResumen form={form} avatarPreview={avatarPreview} />
                 ) : (

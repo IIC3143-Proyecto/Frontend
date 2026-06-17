@@ -15,17 +15,11 @@ interface StepResumenProps {
   avatarPreview: string | null;
 }
 
-const BIO_MAX = 120;
-
-function truncate(text: string) {
-  return text.length > BIO_MAX ? text.slice(0, BIO_MAX) + "…" : text;
-}
-
 function SLabel({ icon: Icon, children }: { icon: TablerIcon; children: ReactNode }) {
   return (
     <div className="flex items-center gap-1.5">
       <Icon className="size-3.5 text-muted-foreground shrink-0" />
-      <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+      <p className="text-sm font-bold uppercase tracking-wider text-muted-foreground">
         {children}
       </p>
     </div>
@@ -63,7 +57,7 @@ export function StepResumen({ form, avatarPreview }: StepResumenProps) {
         )}
         <p className="font-bold text-lg">@{vals.username.toLowerCase()}</p>
         {vals.bio && (
-          <p className="text-xs text-muted-foreground text-center">{truncate(vals.bio)}</p>
+          <p className="text-xs text-muted-foreground text-center line-clamp-3">{vals.bio}</p>
         )}
       </div>
 

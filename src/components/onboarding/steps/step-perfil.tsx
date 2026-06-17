@@ -1,6 +1,5 @@
 "use client";
 
-import * as React from "react";
 import type { UseFormReturn } from "react-hook-form";
 import { AvatarUpload } from "@/components/common/avatar-upload";
 import { TextInput } from "@/components/common/text-input";
