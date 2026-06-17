@@ -1,4 +1,4 @@
-import type { OfferDto } from "@/lib/types/offer";
+import type { OfferDto, PatchOfferRequest } from "@/lib/types/offer";
 import { OfferDirection } from "@/lib/types/offer-direction.enum";
 import { BASE } from "./base";
 
@@ -25,9 +25,8 @@ export async function getOffers(
   return res.json() as Promise<OfferDto[]>;
 }
 
-// TODO: editar oferta — habilitar cuando el backend documente PATCH /api/offer.
 export async function patchOffer(
-  body: Record<string, unknown> & { id: string },
+  body: PatchOfferRequest,
   accessToken: string,
 ): Promise<void> {
   const res = await fetch(`${BASE}/api/offer`, {
