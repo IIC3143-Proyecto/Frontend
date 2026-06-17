@@ -13,10 +13,7 @@ export default function ProfilePage() {
 
   const { data: dbUser } = useQuery<SyncUserResponse>({
     queryKey: ["dbUser", sub],
-    queryFn: async () => {
-      const data = await syncUser();
-      return { ...data, onboardingCompleted: data.onboardingCompleted ?? false };
-    },
+    queryFn: () => syncUser(),
     enabled: !!sub,
     staleTime: 5 * 60 * 1000,
   });

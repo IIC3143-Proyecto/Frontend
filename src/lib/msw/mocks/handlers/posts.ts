@@ -35,7 +35,6 @@ export const postsHandlers = [
     ]);
   }),
 
-  // El frontend re-fetcha aquí después de subir/borrar imágenes para obtener las URLs actualizadas
   http.get('*/api/post/:id_post', ({ params, request }) => {
     const token = request.headers.get('Authorization');
     if (!token) return HttpResponse.json({ message: 'Unauthorized' }, { status: 401 });
