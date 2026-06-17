@@ -3,7 +3,7 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { IconMail, IconPencil, IconInfoCircle } from "@tabler/icons-react";
+import { IconMail, IconPencil } from "@tabler/icons-react";
 import {
   Dialog,
   DialogContent,
@@ -14,25 +14,25 @@ import {
 import { Form } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { TextInput } from "@/components/common/text-input";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { RestoreFieldHeader } from "./restore-field-header";
 import type { ContactInfo } from "@/lib/types/user";
 
-const contactoSchema = z.object({
-  contactInstagram: z
-    .string()
-    .refine((v) => !v || !/\s/.test(v), "No puede contener espacios")
-    .optional(),
-  contactEmail: z.string().email("Email inválido").optional().or(z.literal("")),
-  contactWhatsapp: z
-    .string()
-    .refine((v) => !v || /^\d{8}$/.test(v), "Debe tener exactamente 8 dígitos")
-    .optional(),
-});
+const contactoSchema = z
+  .object({
+    contactInstagram: z
+      .string()
+      .refine((v) => !v || !/\s/.test(v), "No puede contener espacios")
+      .optional(),
+    contactEmail: z.string().email("Email inválido").optional().or(z.literal("")),
+    contactWhatsapp: z
+      .string()
+      .refine((v) => !v || /^\d{8}$/.test(v), "Debe tener exactamente 8 dígitos")
+      .optional(),
+  })
+  .refine(
+    (v) => v.contactInstagram || v.contactEmail || v.contactWhatsapp,
+    { message: "Ingresa al menos un medio de contacto", path: ["contactInstagram"] },
+  );
 
 type ContactoForm = z.infer<typeof contactoSchema>;
 
@@ -60,44 +60,6 @@ function toContactInfo(form: ContactoForm): ContactInfo {
   };
 }
 
-type FieldHeaderProps = {
-  label: string;
-  tooltip: string;
-  isDirty: boolean;
-  onReset: () => void;
-};
-
-function FieldHeader({ label, tooltip, isDirty, onReset }: FieldHeaderProps) {
-  return (
-    <div className="flex items-center justify-between mb-1.5">
-      <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-        {label}
-      </span>
-      <div className="flex items-center gap-1.5">
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <span className="inline-flex text-muted-foreground/40 hover:text-muted-foreground cursor-default transition-colors">
-                <IconInfoCircle className="size-3" />
-              </span>
-            </TooltipTrigger>
-            <TooltipContent side="left" className="text-[10px]">
-              {tooltip}
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
-        <button
-          type="button"
-          disabled={!isDirty}
-          onClick={onReset}
-          className="text-[10px] text-muted-foreground hover:text-foreground transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-        >
-          Restablecer
-        </button>
-      </div>
-    </div>
-  );
-}
 
 export function ContactoDialog({ open, onOpenChange, contactInfo, onSave, isSaving }: Props) {
   const original = toFormValues(contactInfo);
@@ -121,7 +83,7 @@ export function ContactoDialog({ open, onOpenChange, contactInfo, onSave, isSavi
         <Form {...form}>
           <div className="flex flex-col gap-6">
             <div>
-              <FieldHeader
+              <RestoreFieldHeader
                 label="Instagram"
                 tooltip={`Original: @${original.contactInstagram ?? ""}`}
                 isDirty={!!dirtyFields.contactInstagram}
@@ -136,7 +98,7 @@ export function ContactoDialog({ open, onOpenChange, contactInfo, onSave, isSavi
             </div>
 
             <div>
-              <FieldHeader
+              <RestoreFieldHeader
                 label="Correo"
                 tooltip={`Original: ${original.contactEmail ?? ""}`}
                 isDirty={!!dirtyFields.contactEmail}
@@ -152,7 +114,7 @@ export function ContactoDialog({ open, onOpenChange, contactInfo, onSave, isSavi
             </div>
 
             <div>
-              <FieldHeader
+              <RestoreFieldHeader
                 label="WhatsApp"
                 tooltip={`Original: +569 ${original.contactWhatsapp ?? ""}`}
                 isDirty={!!dirtyFields.contactWhatsapp}
