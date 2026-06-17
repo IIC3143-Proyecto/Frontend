@@ -44,7 +44,6 @@ export function SavedPostCard({ post, view, onRemove }: Props) {
 
   return (
     <article className={cardClasses}>
-      {/* Top mini buttons — only in list/grid2 */}
       {!isCompact && (
         <div className="absolute top-1 right-2 z-20 flex flex-col gap-1">
           <MiniRoundButton aria-label="Ver detalle" onClick={() => setDetailOpen(true)}>

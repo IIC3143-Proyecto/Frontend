@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { AvatarUpload } from "@/components/common/avatar-upload";
-import { useUploadAvatar } from "@/hooks/use-patch-user";
+import { useUploadAvatar } from "@/hooks/use-avatar-upload";
 
 type Props = {
   open: boolean;
