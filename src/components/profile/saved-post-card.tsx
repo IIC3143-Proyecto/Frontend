@@ -6,6 +6,9 @@ import type { PostDto } from "@/lib/types/post";
 import { formatPriceCLP } from "@/lib/utils";
 import { PostDetailModal } from "@/components/common/cards/post-detail-modal";
 import { MiniRoundButton } from "@/components/common/mini-round-button";
+import { MakeOfferForm } from "@/components/offers/make-offer-form";
+import { useCreateOffer } from "@/hooks/use-create-offer";
+import type { OfferForm } from "@/components/offers/offer-schema";
 
 type Props = {
   post: PostDto;
@@ -14,6 +17,12 @@ type Props = {
 
 export function SavedPostCard({ post, onRemove }: Props) {
   const [detailOpen, setDetailOpen] = useState(false);
+  const [offerOpen, setOfferOpen] = useState(false);
+  const createOffer = useCreateOffer();
+
+  function handleOfferSubmit(data: OfferForm) {
+    createOffer.mutate({ postId: post.id, priceClp: data.priceClp, comment: data.comment });
+  }
 
   return (
     <article className="relative bg-card border border-border flex flex-col p-3 w-full max-w-[250px] overflow-hidden">
@@ -21,7 +30,7 @@ export function SavedPostCard({ post, onRemove }: Props) {
         <MiniRoundButton aria-label="Ver detalle" onClick={() => setDetailOpen(true)}>
           <IconInfoCircle className="size-4" />
         </MiniRoundButton>
-        <MiniRoundButton aria-label="Hacer oferta">
+        <MiniRoundButton aria-label="Hacer oferta" onClick={() => setOfferOpen(true)}>
           <IconCoins className="size-4" />
         </MiniRoundButton>
         <MiniRoundButton
@@ -43,6 +52,12 @@ export function SavedPostCard({ post, onRemove }: Props) {
       </div>
 
       <PostDetailModal open={detailOpen} onClose={() => setDetailOpen(false)} post={post} />
+      <MakeOfferForm
+        post={post}
+        open={offerOpen}
+        onOpenChange={setOfferOpen}
+        onSubmit={handleOfferSubmit}
+      />
     </article>
   );
 }
