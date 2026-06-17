@@ -1,6 +1,7 @@
 "use client";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import type { UserDto } from "@/lib/types/user";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { getAccessToken } from "@/actions/auth";
@@ -33,7 +34,10 @@ export function usePatchContact() {
       );
       return { contactInfo };
     },
-    onSuccess: ({ contactInfo }, { sub }) => {
+    onSuccess: ({ contactInfo }, { userId, sub }) => {
+      queryClient.setQueryData<UserDto>(["user", userId], (old) =>
+        old ? { ...old, contactInfo } : old,
+      );
       queryClient.setQueryData<SyncUserResponse>(["dbUser", sub], (old) =>
         old ? { ...old, contactInfo } : old,
       );
@@ -73,7 +77,10 @@ export function usePatchStations() {
       );
       return { stations };
     },
-    onSuccess: ({ stations }, { sub }) => {
+    onSuccess: ({ stations }, { userId, sub }) => {
+      queryClient.setQueryData<UserDto>(["user", userId], (old) =>
+        old ? { ...old, stations } : old,
+      );
       queryClient.setQueryData<SyncUserResponse>(["dbUser", sub], (old) =>
         old ? { ...old, stations } : old,
       );
