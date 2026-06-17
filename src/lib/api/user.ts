@@ -61,19 +61,6 @@ export async function patchUser(
   }
 }
 
-// TODO: no existe endpoint de tags de usuario en ninguna rama documentada.
-export async function patchUserTags(
-  _userId: string,
-  _data: {
-    clothingGender?: string;
-    clothingTypes?: string[];
-    size?: string;
-  },
-  _accessToken: string,
-): Promise<void> {
-  return;
-}
-
 export async function getSavedPosts(userId: string, accessToken: string): Promise<PostDto[]> {
   const res = await fetch(api.savedPosts(userId), {
     headers: { Authorization: `Bearer ${accessToken}` },
