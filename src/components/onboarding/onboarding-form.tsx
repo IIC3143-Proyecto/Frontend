@@ -212,16 +212,11 @@ export const OnboardingForm = React.forwardRef<HTMLDivElement, OnboardingFormPro
           }
         }
 
-        queryClient.setQueriesData(
-          { queryKey: ["dbUser"], exact: false },
-          (old: unknown) =>
-            old && typeof old === "object"
-              ? { ...(old as object), status: 'Activo', photoUrl }
-              : old,
-        );
+        // Invalidate instead of setQueriesData so the BFF re-fetches and updates
+        // the session cookie with status 'Activo' before useAuth redirects to /feed
+        await queryClient.invalidateQueries({ queryKey: ['dbUser'] });
 
         toast.success("¡Perfil completado!", { description: "Tu perfil ha sido actualizado exitosamente." });
-        await onSuccess?.();
       } finally {
         setIsSubmitting(false);
       }

@@ -8,9 +8,6 @@ export type SyncError = Error & { code: number };
 
 type DbUser = { id: string; status: string };
 
-// TODO: sync-user debe llamarse solo una vez por login (propósito: sincronizar Auth0 → DB).
-// Cuando GET /api/user/:id esté disponible en el backend, separar el sync inicial
-// del fetch de datos del usuario.
 export function useAuth() {
   const { user, isLoading: authLoading } = useUser();
   const router = useRouter();
@@ -40,7 +37,7 @@ export function useAuth() {
       }
 
       if (onboardingDone && isOnboardingPage) {
-        router.push('/profile');
+        router.push('/feed');
       }
     }
   }, [dbUser, authLoading, syncLoading, pathname, router]);
