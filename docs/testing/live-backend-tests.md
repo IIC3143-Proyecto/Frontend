@@ -54,6 +54,7 @@ End-to-end lifecycle of an existing Auth0 user starting from an empty database.
 - **Step 3 — Complete onboarding:** fills the multi-step form (avatar upload, username, bio, contact info, metro stations) and submits; user status becomes "Activo"
 - **Step 4 — Active user accesses /feed:** navigates to `/feed`; no redirect loop, no connection error dialog
 - **Step 5 — Server-side redirect (onboarding done):** navigates to `/onboarding`; the proxy returns a 3xx redirect to `/feed` before the page renders (no client-side flicker)
+- **Step 6 — Logout + re-login:** logs out (clears Auth0 session cookie, localStorage, sessionStorage), logs back in, navigates to `/feed`; verifies the app stays on `/feed` without redirecting to `/onboarding` — confirms `status: 'Activo'` was persisted in the DB and the BFF returns it correctly on a fresh session
 
 ### `Sign-up: nuevo usuario en Auth0 → redirige a /onboarding`
 
