@@ -23,7 +23,7 @@ function captureStatus(page: Page, pathname: string): () => number | undefined {
 }
 
 test('Live backend: flujo completo de usuario desde DB vacía', async ({ page }) => {
-  test.setTimeout(90_000);
+  test.setTimeout(120_000);
   const username = `live_${Date.now()}`;
 
   await test.step('1. Nuevo usuario: sync crea el usuario, redirige a /onboarding', async () => {
@@ -90,6 +90,23 @@ test('Live backend: flujo completo de usuario desde DB vacía', async ({ page })
     await expect(page.getByText('Error al conectar con el servidor')).not.toBeVisible();
     expect(status, '/onboarding debe devolver 3xx (redirect de proxy, no renderizar la página)').toBeGreaterThanOrEqual(300);
     expect(status).toBeLessThan(400);
+  });
+
+  await test.step('6. Logout + re-login: /feed carga sin redirect (status persisted in DB)', async () => {
+    await page.goto('/logout');
+    await page.waitForURL(/localhost:3000/, { timeout: 10_000 });
+    await page.evaluate(() => { localStorage.clear(); sessionStorage.clear(); });
+
+    await page.goto('/login');
+    await page.waitForURL(/auth0\.com/, { timeout: 15_000 });
+    await page.fill('[name="username"]', process.env.AUTH0_TEST_EMAIL!);
+    await page.fill('[name="password"]', process.env.AUTH0_TEST_PASSWORD!);
+    await page.click('[name="action"]');
+    await page.waitForURL(/localhost:3000/, { timeout: 15_000 });
+
+    await page.goto('/feed');
+    await page.waitForURL('/feed', { timeout: 15_000 });
+    await expect(page.getByText('Error al conectar con el servidor')).not.toBeVisible();
   });
 });
 
