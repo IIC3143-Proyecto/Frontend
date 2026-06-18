@@ -2,7 +2,6 @@
 
 import { OnboardingForm } from "@/components/onboarding/onboarding-form";
 import { useAuth } from "@/hooks/use-auth";
-
 export default function OnboardingPage() {
   const { dbUser } = useAuth();
 

@@ -7,7 +7,7 @@ export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const session = await auth0.getSession(request);
 
-  const privateRoutes = ['/notifications', '/publications', '/shopping-history', '/onboarding', '/posts', '/profile'];
+  const privateRoutes = ['/feed', '/notifications', '/profile', '/publications', '/shopping-history', '/onboarding', '/posts'];
   const isPrivateRoute = privateRoutes.some(route => pathname.startsWith(route));
 
   if (isPrivateRoute && !session) {
@@ -25,7 +25,7 @@ export async function proxy(request: NextRequest) {
       return NextResponse.redirect(new URL('/onboarding', request.url));
     }
     if (status && status !== 'En proceso de registro' && isOnboardingRoute) {
-      return NextResponse.redirect(new URL('/profile', request.url));
+      return NextResponse.redirect(new URL('/feed', request.url));
     }
   }
 
