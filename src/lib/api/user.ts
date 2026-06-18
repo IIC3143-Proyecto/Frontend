@@ -1,4 +1,14 @@
 import { api } from './index';
+import { BASE } from './base';
+import type { UserDto } from '@/lib/types/user';
+
+export async function getUser(userId: string, accessToken: string): Promise<UserDto> {
+  const res = await fetch(`${BASE}/api/user/${userId}`, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
+  if (!res.ok) throw Object.assign(new Error('Backend error'), { status: res.status });
+  return res.json() as Promise<UserDto>;
+}
 
 export async function uploadUserAvatar(
   userId: string,
