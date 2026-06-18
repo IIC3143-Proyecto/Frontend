@@ -6,9 +6,9 @@ import type { PostDto } from "@/lib/types/post";
 import { formatPriceCLP } from "@/lib/utils";
 import { PostDetailModal } from "@/components/common/cards/post-detail-modal";
 import { MiniRoundButton } from "@/components/common/mini-round-button";
-import { MakeOfferForm } from "@/components/offers/make-offer-form";
+import { MakeOfferForm } from "@/components/common/cards/make-offer/make-offer-form";
 import { useCreateOffer } from "@/hooks/use-create-offer";
-import type { OfferForm } from "@/components/offers/offer-schema";
+import type { OfferForm } from "@/components/common/cards/make-offer/offer-schema";
 
 type Props = {
   post: PostDto;

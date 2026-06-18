@@ -2,7 +2,7 @@
 
 import { useForm, useController } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { IconCoins } from "@tabler/icons-react";
+import { IconCoins, IconPencil } from "@tabler/icons-react";
 import {
   Dialog,
   DialogContent,
@@ -26,7 +26,7 @@ type Props = {
 export function MakeOfferForm({ post, open, onOpenChange, onSubmit }: Props) {
   const hasOffer = post.interactions.some((i) => i.type === "Offered");
 
-  const min = Math.round(post.priceClp * 0.5);
+  const min = 0;
   const max = post.priceClp;
 
   const form = useForm<OfferForm>({
@@ -35,7 +35,7 @@ export function MakeOfferForm({ post, open, onOpenChange, onSubmit }: Props) {
   });
 
   const { field: priceField } = useController({ control: form.control, name: "priceClp" });
-  const currentPrice = Number(priceField.value) || post.priceClp;
+  const currentPrice = Number(priceField.value) || 0;
 
   function handleSlider(e: React.ChangeEvent<HTMLInputElement>) {
     priceField.onChange(Number(e.target.value));
@@ -67,7 +67,28 @@ export function MakeOfferForm({ post, open, onOpenChange, onSubmit }: Props) {
           <Form {...form}>
             <div className="flex flex-col gap-4">
               <div className="flex flex-col items-center gap-1 py-2">
-                <p className="text-3xl font-bold tabular-nums">{formatPriceCLP(currentPrice)}</p>
+                <div className="relative mx-auto w-fit">
+                  <input
+                    type="number"
+                    min={min}
+                    max={max}
+                    step={50}
+                    value={priceField.value ?? ""}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      if (val === "") { priceField.onChange(0); return; }
+                      const num = Number(val);
+                      priceField.onChange(num > max ? max : num);
+                    }}
+                    onBlur={(e) => {
+                      const val = Number(e.target.value);
+                      if (val < 0) priceField.onChange(0);
+                    }}
+                    style={{ width: `${String(max).length + 1}ch` }}
+                    className="text-3xl font-bold tabular-nums text-center bg-transparent border-b-2 border-border focus:border-primary outline-none transition-colors [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  />
+                  <IconPencil className="absolute -right-5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+                </div>
                 <p className="text-xs text-muted-foreground">de {formatPriceCLP(post.priceClp)}</p>
               </div>
 

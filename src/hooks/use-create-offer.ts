@@ -21,6 +21,12 @@ export function useCreateOffer() {
       return createOffer(data, token);
     },
     onSuccess: () => {
+      // TODO: invalidar queries de offers una vez que se mergee edit-offers.
+      // El endpoint retorna offers enviadas o recibidas, por lo que hay que usar
+      // dos query keys distintas (ej. ["offers", "sent"] vs ["offers", "received"])
+      // para no mezclar cachés. Ejemplo:
+      //   const queryClient = useQueryClient();
+      //   queryClient.invalidateQueries({ queryKey: ["offers", "sent"] });
       toast.success("Oferta enviada");
     },
     onError: (err) => {
