@@ -94,6 +94,7 @@ test('Live backend: flujo completo de usuario desde DB vacía', async ({ page })
 
   await test.step('6. Logout + re-login: /feed carga sin redirect (status persisted in DB)', async () => {
     await page.goto('/logout');
+    await page.waitForTimeout(1_000);
     await page.waitForURL(/localhost:3000/, { timeout: 10_000 });
     await page.evaluate(() => { localStorage.clear(); sessionStorage.clear(); });
 
@@ -103,6 +104,8 @@ test('Live backend: flujo completo de usuario desde DB vacía', async ({ page })
     await page.fill('[name="password"]', process.env.AUTH0_TEST_PASSWORD!);
     await page.click('[name="action"]');
     await page.waitForURL(/localhost:3000/, { timeout: 15_000 });
+    await expect(page.getByText('Sincronizando con VTRNA')).not.toBeVisible({ timeout: 20_000 });
+    await page.waitForLoadState('networkidle', { timeout: 10_000 }).catch(() => {});
 
     await page.goto('/feed');
     await page.waitForURL('/feed', { timeout: 15_000 });
