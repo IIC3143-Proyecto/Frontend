@@ -1,4 +1,5 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
 import { getAccessToken } from '@/actions/auth';
 import {
   fetchNotifications,
@@ -19,6 +20,7 @@ export function useNotifications() {
   });
 
   const deleteOne = async (id: string) => {
+    const previous = queryClient.getQueryData<NotificationDto[]>(['notifications']);
     queryClient.setQueryData<NotificationDto[]>(
       ['notifications'],
       (prev) => prev?.filter((n) => n.id !== id) ?? []
@@ -27,17 +29,20 @@ export function useNotifications() {
       const accessToken = await getAccessToken();
       await deleteNotification(id, accessToken);
     } catch {
-      queryClient.invalidateQueries({ queryKey: ['notifications'] });
+      queryClient.setQueryData(['notifications'], previous);
+      toast.error('No se pudo eliminar la notificación');
     }
   };
 
   const deleteAll = async () => {
+    const previous = queryClient.getQueryData<NotificationDto[]>(['notifications']);
     queryClient.setQueryData(['notifications'], []);
     try {
       const accessToken = await getAccessToken();
       await deleteAllNotifications(accessToken);
     } catch {
-      queryClient.invalidateQueries({ queryKey: ['notifications'] });
+      queryClient.setQueryData(['notifications'], previous);
+      toast.error('No se pudieron eliminar las notificaciones');
     }
   };
 
