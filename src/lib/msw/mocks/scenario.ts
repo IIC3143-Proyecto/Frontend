@@ -15,7 +15,7 @@ export function getMockUser(): MockUserScenario {
 }
 
 export function resetMockUser() {
-  currentScenario = 'NEW';
+  currentScenario = 'FULL';
 }
 
 export type OnboardingErrorScenario =
