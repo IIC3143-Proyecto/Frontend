@@ -32,8 +32,8 @@ export async function uploadUserAvatar(
 export async function patchUser(
   userId: string,
   data: {
-    username: string;
-    bio: string;
+    username?: string;
+    bio?: string;
     metro?: string[];
     contactInfo?: { instagram?: string; email?: string; whatsapp?: string };
   },

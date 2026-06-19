@@ -65,7 +65,7 @@ export function ProfileLayout({ user, savedPosts, sub }: Props) {
         >
           <Avatar className="size-20">
             <AvatarImage src={user.photoUrl} alt={user.username} />
-            <AvatarFallback>{user.name[0]}</AvatarFallback>
+            <AvatarFallback>{(user.name || user.username || "?")[0]}</AvatarFallback>
           </Avatar>
           <div className="absolute inset-0 bg-black/40 rounded-full opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
             <IconCamera className="size-5 text-white" />

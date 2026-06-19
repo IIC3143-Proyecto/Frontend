@@ -26,7 +26,7 @@ type Props = {
 export function MakeOfferForm({ post, open, onOpenChange, onSubmit }: Props) {
   const hasOffer = post.interactions.some((i) => i.type === "Offered");
 
-  const min = 0;
+  const min = 1_000;
   const max = post.priceClp;
 
   const form = useForm<OfferForm>({
@@ -76,13 +76,13 @@ export function MakeOfferForm({ post, open, onOpenChange, onSubmit }: Props) {
                     value={priceField.value ?? ""}
                     onChange={(e) => {
                       const val = e.target.value;
-                      if (val === "") { priceField.onChange(0); return; }
+                      if (val === "") { priceField.onChange(min); return; }
                       const num = Number(val);
                       priceField.onChange(num > max ? max : num);
                     }}
                     onBlur={(e) => {
                       const val = Number(e.target.value);
-                      if (val < 0) priceField.onChange(0);
+                      if (val < min) priceField.onChange(min);
                     }}
                     style={{ width: `${String(max).length + 1}ch` }}
                     className="text-3xl font-bold tabular-nums text-center bg-transparent border-b-2 border-border focus:border-primary outline-none transition-colors [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
@@ -92,7 +92,7 @@ export function MakeOfferForm({ post, open, onOpenChange, onSubmit }: Props) {
                 <p className="text-xs text-muted-foreground">de {formatPriceCLP(post.priceClp)}</p>
               </div>
 
-              {post.isNegotiable && (
+              {post.isNegotiable && max >= min && (
                 <FormField
                   control={form.control}
                   name="priceClp"

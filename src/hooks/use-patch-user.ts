@@ -20,18 +20,9 @@ export function usePatchContact() {
   const router = useRouter();
 
   return useMutation({
-    mutationFn: async ({ userId, sub, contactInfo }: PatchContactInput) => {
+    mutationFn: async ({ userId, contactInfo }: PatchContactInput) => {
       const token = await getAccessToken();
-      const current = queryClient.getQueryData<SyncUserResponse>(["dbUser", sub]);
-      await patchUser(
-        userId,
-        {
-          username: current?.username ?? "",
-          bio: current?.bio ?? "",
-          contactInfo,
-        },
-        token,
-      );
+      await patchUser(userId, { contactInfo }, token);
       return { contactInfo };
     },
     onSuccess: ({ contactInfo }, { userId, sub }) => {
@@ -63,18 +54,9 @@ export function usePatchStations() {
   const router = useRouter();
 
   return useMutation({
-    mutationFn: async ({ userId, sub, stations }: PatchStationsInput) => {
+    mutationFn: async ({ userId, stations }: PatchStationsInput) => {
       const token = await getAccessToken();
-      const current = queryClient.getQueryData<SyncUserResponse>(["dbUser", sub]);
-      await patchUser(
-        userId,
-        {
-          username: current?.username ?? "",
-          bio: current?.bio ?? "",
-          metro: stations,
-        },
-        token,
-      );
+      await patchUser(userId, { metro: stations }, token);
       return { stations };
     },
     onSuccess: ({ stations }, { userId, sub }) => {
