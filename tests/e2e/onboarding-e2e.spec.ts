@@ -7,7 +7,4 @@ test.describe('Onboarding E2E (real backend)', () => {
       .toBeVisible({ timeout: 15_000 });
   });
 
-  test.fixme('completing onboarding redirects to /profile', async ({ page }) => {
-    // TODO: upload avatar, fill username + bio, submit, expect /profile
-  });
 });
