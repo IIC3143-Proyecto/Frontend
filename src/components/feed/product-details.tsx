@@ -2,7 +2,7 @@ import { cn } from "@/lib/utils";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { IconX, IconInfoCircle } from "@tabler/icons-react";
+import { IconX, IconInfoCircle, IconChevronDown, IconChevronUp } from "@tabler/icons-react";
 import { formatPriceCLP } from "@/lib/utils";
 
 // type Product = {
@@ -49,7 +49,7 @@ export function ProductDetailsMobile({ details, className }: { details: ProductD
     <div
       className={cn( 
         className, "flex gap-3 flex-col p-6 pt-8 w-full overflow-hidden",
-        "bg-linear-to-t from-black/95 via-black/75 to-transparent",
+        "bg-linear-to-t from-black/75 via-black/35 to-transparent",
       )}
     >
       <h1 className="text-2xl font-black uppercase text-white"> {details.title} </h1>
@@ -78,8 +78,14 @@ export function OpenDesktopDetailsButton({ onClick, className }: { onClick: () =
 
 export function OpenMobileDetailsButton({ onClick, className, active }: { onClick: () => void; className: string; active: boolean}) {
   return (
-    <Button size="icon-xs" variant="secondary" className={cn(className, active && "bg-muted/70")} onClick={onClick}>
-      <IconInfoCircle />
+    <Button
+      size="sm"
+      variant="secondary"
+      className={cn(className, "text-xs gap-1", active && "bg-muted/70")}
+      onClick={onClick}
+    >
+      {active ? <IconChevronDown /> : <IconChevronUp />}
+      {active ? "VER MENOS" : "VER MÁS"}
     </Button>
   );
 }
