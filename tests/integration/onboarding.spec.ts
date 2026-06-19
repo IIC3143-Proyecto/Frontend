@@ -8,7 +8,6 @@ import {
   clickNext,
   clickBack,
   clickFinish,
-  selectMetroStation,
   waitForToast,
   expectError,
   completeAllStepsUntilSummary,
@@ -17,219 +16,178 @@ import { gotoAuthenticated } from '../e2e/helpers/auth';
 import {
   resetErrorScenario,
   setAvatarError,
-  setAvatarNetwork,
   setAvatarSlow,
   setPatchError,
-  setPatchNetwork,
 } from './helpers/form-errors';
 
-test.beforeEach(async ({ page }) => {
+// Happy path starts from the intro screen, so it handles its own navigation.
+test('happy path', async ({ page }) => {
   await gotoAuthenticated(page, '/onboarding', 'NEW');
-  await page.getByRole('button', { name: 'Empezar' }).click();
-  await expect(page.getByRole('heading', { name: 'Tu perfil' })).toBeVisible({
-    timeout: 5_000,
+
+  await test.step('intro screen visible', async () => {
+    await expect(page.getByRole('heading', { name: '¡Arma tu perfil!' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Empezar' })).toBeVisible();
+    await page.getByRole('button', { name: 'Empezar' }).click();
+    await expect(page.getByRole('heading', { name: 'Tu perfil' })).toBeVisible({ timeout: 5_000 });
+    await expect(page.getByText('1', { exact: true }).first()).toBeVisible();
+  });
+
+  await test.step('completar flujo hasta summary', async () => {
+    await completeAllStepsUntilSummary(page);
+    await expect(page.getByRole('heading', { name: 'Resumen' })).toBeVisible();
+    await expect(page.getByText('@testuser')).toBeVisible();
+    await expect(page.getByText('Bio de prueba')).toBeVisible();
+  });
+
+  await test.step('finish → toast de perfil completado', async () => {
+    await clickFinish(page);
+    await waitForToast(page, 'Perfil completado');
   });
 });
 
-test('should show intro screen on first visit', async ({ page }) => {
-  await gotoAuthenticated(page, '/onboarding', 'NEW');
-  await expect(page.getByRole('heading', { name: '¡Arma tu perfil!' })).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Empezar' })).toBeVisible();
-});
+test.describe('desde step 1', () => {
+  test.beforeEach(async ({ page }) => {
+    await gotoAuthenticated(page, '/onboarding', 'NEW');
+    await page.getByRole('button', { name: 'Empezar' }).click();
+    await expect(page.getByRole('heading', { name: 'Tu perfil' })).toBeVisible({ timeout: 5_000 });
+  });
 
-test('should navigate to step 1 when clicking Empezar', async ({ page }) => {
-  await gotoAuthenticated(page, '/onboarding', 'NEW');
-  await page.getByRole('button', { name: 'Empezar' }).click();
-  await expect(page.getByRole('heading', { name: 'Tu perfil' })).toBeVisible();
-});
+  test('form validation', async ({ page }) => {
+    await test.step('step 1 sin campos → 3 errores', async () => {
+      await clickNext(page);
+      await expectError(page, 'Avatar es requerido');
+      await expectError(page, 'Username es requerido');
+      await expectError(page, 'Bio es requerida');
+    });
 
-test('should show step 1 with StepProgress', async ({ page }) => {
-  await expect(page.getByRole('heading', { name: 'Tu perfil' })).toBeVisible();
-  await expect(page.getByText('1', { exact: true }).first()).toBeVisible();
-});
+    await test.step('step 1 con username y bio pero sin avatar → solo error de avatar', async () => {
+      await fillUsername(page, 'testuser');
+      await fillBio(page, 'Bio de prueba');
+      await clickNext(page);
+      await expectError(page, 'Avatar es requerido');
+      await expect(page.getByText('Username es requerido')).not.toBeVisible();
+    });
 
-test('should block step 1 without avatar, username, or bio', async ({ page }) => {
-  await clickNext(page);
-  await expectError(page, 'Avatar es requerido');
-  await expectError(page, 'Username es requerido');
-  await expectError(page, 'Bio es requerida');
-});
+    // Completar step 1 y navegar hasta step 3
+    await uploadAvatar(page);
+    await clickNext(page);
+    await clickNext(page);
 
-test('should block step 1 without avatar when username and bio filled', async ({ page }) => {
-  await fillUsername(page, 'testuser');
-  await fillBio(page, 'Bio de prueba');
-  await clickNext(page);
-  await expectError(page, 'Avatar es requerido');
-  await expect(page.getByText('Username es requerido')).not.toBeVisible();
-});
+    await test.step('step 3 sin contacto → error requerido', async () => {
+      await expect(page.getByRole('heading', { name: 'Contacto' })).toBeVisible();
+      await clickNext(page);
+      await expectError(page, 'Agrega al menos un medio de contacto');
+    });
 
-test('should advance from step 2 without filling anything', async ({ page }) => {
-  await uploadAvatar(page);
-  await fillUsername(page, 'testuser');
-  await fillBio(page, 'Bio de prueba');
-  await clickNext(page);
+    // Completar step 3 y navegar a step 4
+    await fillInstagram(page, 'contacto_test');
+    await clickNext(page);
 
-  await expect(page.getByRole('heading', { name: 'Tu estilo' })).toBeVisible();
-  await clickNext(page);
-  await expect(page.getByRole('heading', { name: 'Contacto' })).toBeVisible();
-});
+    await test.step('step 4 sin metro → error requerido', async () => {
+      await expect(page.getByRole('heading', { name: 'Tu zona' })).toBeVisible();
+      await clickNext(page);
+      await expectError(page, 'Selecciona al menos una estación de metro');
+    });
+  });
 
-test('should block step 3 when all contact fields are empty', async ({ page }) => {
-  await uploadAvatar(page);
-  await fillUsername(page, 'testuser');
-  await fillBio(page, 'Bio de prueba');
-  await clickNext(page);
-  await clickNext(page);
-  await expect(page.getByRole('heading', { name: 'Contacto' })).toBeVisible();
+  test('back navigation y persistencia', async ({ page }) => {
+    await test.step('avatar preview como blob: URL', async () => {
+      const preview = page.locator('img[alt="Vista previa del avatar"]');
+      await expect(preview).toHaveCount(0);
+      await uploadAvatar(page);
+      await expect(preview).toHaveAttribute('src', /^blob:/);
+      await expect(preview).toBeVisible();
+    });
 
-  await clickNext(page);
-  await expectError(page, 'Agrega al menos un medio de contacto');
-});
+    await test.step('volver de step 2 conserva valores de step 1', async () => {
+      await fillUsername(page, 'persisteduser');
+      await fillBio(page, 'Bio que persiste');
+      await clickNext(page);
+      await expect(page.getByRole('heading', { name: 'Tu estilo' })).toBeVisible();
+      await clickBack(page);
+      await expect(page.getByPlaceholder('Escribe tu username')).toHaveValue('persisteduser');
+      await expect(page.getByPlaceholder('Escribe una breve biografía sobre ti...')).toHaveValue('Bio que persiste');
+    });
 
-test('should block summary when no metro station selected', async ({ page }) => {
-  await uploadAvatar(page);
-  await fillUsername(page, 'testuser');
-  await fillBio(page, 'Bio de prueba');
-  await clickNext(page);
-  await clickNext(page);
-  await fillInstagram(page, 'testuser');
-  await clickNext(page);
+    // Navegar fresh para el test de back desde summary
+    await gotoAuthenticated(page, '/onboarding', 'NEW');
+    await page.getByRole('button', { name: 'Empezar' }).click();
+    await expect(page.getByRole('heading', { name: 'Tu perfil' })).toBeVisible({ timeout: 5_000 });
 
-  await expect(page.getByRole('heading', { name: 'Tu zona' })).toBeVisible();
-  await clickNext(page);
-  await expectError(page, 'Selecciona al menos una estación de metro');
-});
+    await test.step('volver del summary muestra step 4', async () => {
+      await completeAllStepsUntilSummary(page);
+      await expect(page.getByRole('heading', { name: 'Resumen' })).toBeVisible();
+      await clickBack(page);
+      await expect(page.getByRole('heading', { name: 'Tu zona' })).toBeVisible();
+    });
+  });
 
-test('should preserve step 1 values when going back from step 2', async ({ page }) => {
-  await uploadAvatar(page);
-  await fillUsername(page, 'persisteduser');
-  await fillBio(page, 'Bio que persiste');
-  await clickNext(page);
+  test('avatar errors', async ({ page }) => {
+    await test.step('422 → error de campo WebP, vuelve a step 1', async () => {
+      await setAvatarError(page, 422);
+      await completeAllStepsUntilSummary(page);
+      await clickFinish(page);
+      await expectError(page, 'File must be a WebP image');
+      await expect(page.getByRole('heading', { name: 'Tu perfil' })).toBeVisible();
+    });
 
-  await expect(page.getByRole('heading', { name: 'Tu estilo' })).toBeVisible();
-  await clickBack(page);
+    await test.step('slow upload → spinner "Guardando..." visible', async () => {
+      await resetErrorScenario(page);
+      await gotoAuthenticated(page, '/onboarding', 'NEW');
+      await page.getByRole('button', { name: 'Empezar' }).click();
+      await expect(page.getByRole('heading', { name: 'Tu perfil' })).toBeVisible({ timeout: 5_000 });
+      await setAvatarSlow(page);
+      await completeAllStepsUntilSummary(page);
+      await clickFinish(page);
+      await expect(page.getByRole('button', { name: 'Guardando...' })).toBeVisible({ timeout: 3_000 });
+      await waitForToast(page, 'Perfil completado', 15_000);
+    });
 
-  await expect(page.getByPlaceholder('Escribe tu username')).toHaveValue('persisteduser');
-  await expect(page.getByPlaceholder('Escribe una breve biografía sobre ti...')).toHaveValue(
-    'Bio que persiste',
-  );
-});
+    await test.step('500 → toast de error, retry funciona', async () => {
+      await resetErrorScenario(page);
+      await gotoAuthenticated(page, '/onboarding', 'NEW');
+      await page.getByRole('button', { name: 'Empezar' }).click();
+      await expect(page.getByRole('heading', { name: 'Tu perfil' })).toBeVisible({ timeout: 5_000 });
+      await setAvatarError(page, 500);
+      await completeAllStepsUntilSummary(page);
+      await clickFinish(page);
+      await waitForToast(page, 'Internal server error');
+      await resetErrorScenario(page);
+      await clickFinish(page);
+      await waitForToast(page, 'Perfil completado');
+    });
+  });
 
-test('should go back from summary to step 4', async ({ page }) => {
-  await completeAllStepsUntilSummary(page);
-  await expect(page.getByRole('heading', { name: 'Resumen' })).toBeVisible();
+  test('patch user errors', async ({ page }) => {
+    await test.step('401 → redirige a session-expired', async () => {
+      await setPatchError(page, 401);
+      await completeAllStepsUntilSummary(page);
+      await clickFinish(page);
+      await page.waitForURL('**/session-expired', { timeout: 8_000 });
+    });
 
-  await clickBack(page);
-  await expect(page.getByRole('heading', { name: 'Tu zona' })).toBeVisible();
-});
+    await gotoAuthenticated(page, '/onboarding', 'NEW');
+    await page.getByRole('button', { name: 'Empezar' }).click();
+    await expect(page.getByRole('heading', { name: 'Tu perfil' })).toBeVisible({ timeout: 5_000 });
 
-test('should display entered data on summary screen', async ({ page }) => {
-  await completeAllStepsUntilSummary(page);
-  await expect(page.getByRole('heading', { name: 'Resumen' })).toBeVisible();
-  await expect(page.getByText('@testuser')).toBeVisible();
-  await expect(page.getByText('Bio de prueba')).toBeVisible();
-});
+    await test.step('409 → error "username ya existe", vuelve a step 1', async () => {
+      await setPatchError(page, 409);
+      await completeAllStepsUntilSummary(page);
+      await clickFinish(page);
+      await expectError(page, 'Username already taken');
+      await expect(page.getByRole('heading', { name: 'Tu perfil' })).toBeVisible();
+    });
 
-test('should complete onboarding successfully', async ({ page }) => {
-  await completeAllStepsUntilSummary(page);
-  await clickFinish(page);
-  await waitForToast(page, 'Perfil completado');
-});
+    await resetErrorScenario(page);
+    await gotoAuthenticated(page, '/onboarding', 'NEW');
+    await page.getByRole('button', { name: 'Empezar' }).click();
+    await expect(page.getByRole('heading', { name: 'Tu perfil' })).toBeVisible({ timeout: 5_000 });
 
-test('should redirect to session-expired when avatar returns 401', async ({ page }) => {
-  await setAvatarError(page, 401);
-  await completeAllStepsUntilSummary(page);
-  await clickFinish(page);
-  await page.waitForURL('**/session-expired', { timeout: 8_000 });
-});
-
-test('should show field error when avatar returns 422', async ({ page }) => {
-  await setAvatarError(page, 422);
-  await completeAllStepsUntilSummary(page);
-  await clickFinish(page);
-  await expectError(page, 'File must be a WebP image');
-  await expect(page.getByRole('heading', { name: 'Tu perfil' })).toBeVisible();
-});
-
-test('should show server error toast on avatar 500 response', async ({ page }) => {
-  await setAvatarError(page, 500);
-  await completeAllStepsUntilSummary(page);
-  await clickFinish(page);
-  await waitForToast(page, 'Internal server error');
-});
-
-test('should show network error toast on avatar connection failure', async ({ page }) => {
-  await setAvatarNetwork(page);
-  await completeAllStepsUntilSummary(page);
-  await clickFinish(page);
-  await waitForToast(page, 'Error de red');
-});
-
-test('should show loading spinner on slow avatar upload', async ({ page }) => {
-  await setAvatarSlow(page);
-  await completeAllStepsUntilSummary(page);
-  await clickFinish(page);
-  await expect(page.getByRole('button', { name: 'Guardando...' })).toBeVisible({ timeout: 3_000 });
-  await waitForToast(page, 'Perfil completado', 15_000);
-});
-
-test('should allow retry after avatar error', async ({ page }) => {
-  await setAvatarError(page, 500);
-  await completeAllStepsUntilSummary(page);
-  await clickFinish(page);
-  await waitForToast(page, 'Internal server error');
-
-  await resetErrorScenario(page);
-  await clickFinish(page);
-  await waitForToast(page, 'Perfil completado');
-});
-
-test('should persist form values after avatar submit error', async ({ page }) => {
-  await setAvatarError(page, 500);
-  await completeAllStepsUntilSummary(page);
-  await clickFinish(page);
-  await waitForToast(page, 'Internal server error');
-
-  await clickBack(page);
-  await clickBack(page);
-  await clickBack(page);
-  await clickBack(page);
-  await expect(page.getByPlaceholder('Escribe tu username')).toHaveValue('testuser');
-});
-
-test('should show avatar preview after file selection', async ({ page }) => {
-  const preview = page.locator('img[alt="Vista previa del avatar"]');
-  await expect(preview).toHaveCount(0);
-  await uploadAvatar(page);
-  await expect(preview).toHaveAttribute('src', /^blob:/);
-  await expect(preview).toBeVisible();
-});
-
-test('should redirect to session-expired when PATCH user returns 401', async ({ page }) => {
-  await setPatchError(page, 401);
-  await completeAllStepsUntilSummary(page);
-  await clickFinish(page);
-  await page.waitForURL('**/session-expired', { timeout: 8_000 });
-});
-
-test('should show field error and return to step 1 when username is already taken', async ({ page }) => {
-  await setPatchError(page, 409);
-  await completeAllStepsUntilSummary(page);
-  await clickFinish(page);
-  await expectError(page, 'Username already taken');
-  await expect(page.getByRole('heading', { name: 'Tu perfil' })).toBeVisible();
-});
-
-test('should show server error toast on PATCH user 500 response', async ({ page }) => {
-  await setPatchError(page, 500);
-  await completeAllStepsUntilSummary(page);
-  await clickFinish(page);
-  await waitForToast(page, 'Internal server error');
-});
-
-test('should show network error toast when PATCH user connection fails', async ({ page }) => {
-  await setPatchNetwork(page);
-  await completeAllStepsUntilSummary(page);
-  await clickFinish(page);
-  await waitForToast(page, 'Error de red');
+    await test.step('500 → toast de error', async () => {
+      await setPatchError(page, 500);
+      await completeAllStepsUntilSummary(page);
+      await clickFinish(page);
+      await waitForToast(page, 'Internal server error');
+    });
+  });
 });
