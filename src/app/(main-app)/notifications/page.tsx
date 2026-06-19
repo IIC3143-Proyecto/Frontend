@@ -37,7 +37,7 @@ export default function NotificationsPage() {
           </div>
         )}
         {notifications.map((item) => (
-          <div key={item.id} className="min-w-[400px]">
+          <div key={item.id} className="min-w-100">
             <NotificationCard
               notification={item}
               onDelete={() => setPending({ type: "one", id: item.id })}
@@ -48,7 +48,7 @@ export default function NotificationsPage() {
 
       {!isLoading && notifications.length === 0 && (
         <p className="text-muted-foreground text-sm text-center py-12">
-          No tenés notificaciones
+          No tienes notificaciones
         </p>
       )}
 
