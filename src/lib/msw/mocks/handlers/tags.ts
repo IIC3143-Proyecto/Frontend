@@ -10,7 +10,10 @@ const MOCK_USER_TAG_PREFERENCES = [
 ];
 
 export const tagsHandlers = [
-  http.get('*/api/tag', () => HttpResponse.json({ tags: TAGS_MOCK })),
+  http.get('*/api/tag', ({ request }) => {
+    if (!request.headers.get('Authorization')) return HttpResponse.json({ message: 'Unauthorized' }, { status: 401 });
+    return HttpResponse.json({ tags: TAGS_MOCK });
+  }),
 
   http.get('*/api/tag/user/:id_user', ({ request }) => {
     const token = request.headers.get('Authorization');
