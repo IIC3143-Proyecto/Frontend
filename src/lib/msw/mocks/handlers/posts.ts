@@ -1,12 +1,12 @@
 import { http, HttpResponse, delay } from 'msw';
-import { mockPost, MOCK_SELLER_POSTS } from '../data/posts';
+import { mockPost, MOCK_SELLER_POSTS, MOCK_SAVED_POSTS } from '../data/posts';
 import { getErrorScenario } from '../scenario';
 
 export const postsHandlers = [
   http.get('*/api/post/saved/:id_user', ({ request }) => {
     const token = request.headers.get('Authorization');
     if (!token) return HttpResponse.json({ message: 'Unauthorized' }, { status: 401 });
-    return HttpResponse.json(MOCK_SELLER_POSTS.slice(0, 2));
+    return HttpResponse.json(MOCK_SAVED_POSTS);
   }),
 
   // TODO: implementar cuando el backend habilite GET /api/post/user/:id_user

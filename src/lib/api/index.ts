@@ -24,4 +24,5 @@ export const api = {
   interaction:        (postId: string) => remote(`/api/interaction/${postId}`),
   post:               () => remote('/api/post'),
   postImages:         (id: string) => remote(`/api/image/post/${id}`),
+  offer:              () => remote('/api/offer'),
 };
