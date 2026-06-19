@@ -25,3 +25,23 @@ export function formatNumberWithSeparators(value: string | number): string {
   const numValue = String(value).replace(/\D/g, "");
   return numValue.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
 }
+
+export function formatRelativeDate(iso: string): string {
+  const date = new Date(iso);
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffMins = Math.floor(diffMs / 60_000);
+  const diffHours = Math.floor(diffMs / 3_600_000);
+  const diffDays = Math.floor(diffMs / 86_400_000);
+
+  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const startOfYesterday = new Date(startOfToday.getTime() - 86_400_000);
+
+  if (diffMins < 1) return "Ahora";
+  if (diffMins < 60) return `Hace ${diffMins} min`;
+  if (diffHours < 24 && date >= startOfToday) return `Hace ${diffHours} h`;
+  if (date >= startOfYesterday && date < startOfToday) return "Ayer";
+  if (diffDays < 7) return `Hace ${diffDays} días`;
+
+  return date.toLocaleDateString("es-CL", { day: "numeric", month: "short" });
+}

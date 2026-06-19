@@ -4,7 +4,7 @@ export type MockUserScenario =
   | 'ONBOARDING_PENDING'
   | 'NEW';
 
-let currentScenario: MockUserScenario = 'NEW';
+let currentScenario: MockUserScenario = 'FULL';
 
 export function setMockUser(scenario: MockUserScenario) {
   currentScenario = scenario;
@@ -15,7 +15,7 @@ export function getMockUser(): MockUserScenario {
 }
 
 export function resetMockUser() {
-  currentScenario = 'NEW';
+  currentScenario = 'FULL';
 }
 
 export type OnboardingErrorScenario =
