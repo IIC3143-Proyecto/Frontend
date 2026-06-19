@@ -21,7 +21,7 @@ type Props = {
   sub: string;
 };
 
-export function FotoDialog({ open, onOpenChange, userId, currentUrl, sub }: Props) {
+export function PhotoDialog({ open, onOpenChange, userId, currentUrl, sub }: Props) {
   const [pendingFile, setPendingFile] = useState<File | null>(null);
   const upload = useUploadAvatar();
 

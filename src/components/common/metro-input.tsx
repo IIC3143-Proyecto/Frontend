@@ -16,7 +16,7 @@ import { cn } from "@/lib/utils";
 
 type MetroInputSize = "sm" | "default" | "lg";
 
-const sizeClasses = {
+const SIZE_CLASS_MAP = {
   sm: {
     label: "text-[9px]",
     input: "h-8 text-xs",
@@ -69,7 +69,7 @@ interface MetroInputProps<TFieldValues extends FieldValues> {
   size?: MetroInputSize;
   /** Disables all interactions and hides scrolling. */
   disabled?: boolean;
-  /** Additional CSS classes. */
+  /** Additional CSS sizeClasses. */
   className?: string;
 }
 
@@ -92,12 +92,12 @@ export function MetroInput<TFieldValues extends FieldValues>({
   const lines = useMetroStations();
   const [search, setSearch] = React.useState("");
   const [activeLine, setActiveLine] = React.useState<string>("");
-  const s = sizeClasses[size];
+  const sizeClasses = SIZE_CLASS_MAP[size];
   const effectiveActiveLine = activeLine || lines[0]?.number || "";
 
   const stationMap = React.useMemo(() => {
     const map = new Map<string, string>();
-    lines.forEach(line => line.stations.forEach(st => map.set(st.id, st.name)));
+    lines.forEach(line => line.stations.forEach(station => map.set(station.id, station.name)));
     return map;
   }, [lines]);
 
@@ -105,12 +105,12 @@ export function MetroInput<TFieldValues extends FieldValues>({
     if (search.trim()) {
       return lines.flatMap(line =>
         line.stations
-          .filter(st => st.name.toLowerCase().includes(search.toLowerCase()))
-          .map(st => ({ id: st.id, name: st.name, line: line.number }))
+          .filter(station => station.name.toLowerCase().includes(search.toLowerCase()))
+          .map(station => ({ id: station.id, name: station.name, line: line.number }))
       );
     }
     const active = lines.find(l => l.number === effectiveActiveLine);
-    return (active?.stations ?? []).map(st => ({ id: st.id, name: st.name, line: effectiveActiveLine }));
+    return (active?.stations ?? []).map(station => ({ id: station.id, name: station.name, line: effectiveActiveLine }));
   }, [search, effectiveActiveLine, lines]);
 
   return (
@@ -131,7 +131,7 @@ export function MetroInput<TFieldValues extends FieldValues>({
         return (
           <FormItem className={cn("w-full space-y-3", className, disabled && "opacity-60 cursor-not-allowed")}>
             {label && (
-              <FormLabel className={cn("font-bold uppercase tracking-wider text-muted-foreground", s.label)}>
+              <FormLabel className={cn("font-bold uppercase tracking-wider text-muted-foreground", sizeClasses.label)}>
                 {label}
               </FormLabel>
             )}
@@ -139,14 +139,14 @@ export function MetroInput<TFieldValues extends FieldValues>({
             <FormControl>
               <div className="w-full space-y-2 overflow-hidden">
                 <div className="flex items-center justify-between gap-2">
-                  <span className={cn("uppercase tracking-wider text-muted-foreground", s.label)}>
+                  <span className={cn("uppercase tracking-wider text-muted-foreground", sizeClasses.label)}>
                     Seleccionadas:
                   </span>
                   {selected.length > 0 && !disabled && (
                     <button
                       type="button"
                       onClick={() => field.onChange([])}
-                      className={cn(s.footer, "text-muted-foreground/50 hover:text-muted-foreground transition-colors")}
+                      className={cn(sizeClasses.footer, "text-muted-foreground/50 hover:text-muted-foreground transition-colors")}
                     >
                       Borrar todo
                     </button>
@@ -154,7 +154,7 @@ export function MetroInput<TFieldValues extends FieldValues>({
                 </div>
                 <div
                   className={cn(
-                    s.pillsContainer,
+                    sizeClasses.pillsContainer,
                     "min-w-0 max-w-full flex flex-nowrap gap-2 rounded-lg border border-dashed p-2 transition-colors",
                     disabled ? "overflow-hidden" : "overflow-x-auto",
                     selected.length === 0 && "border-muted-foreground/20"
@@ -162,14 +162,14 @@ export function MetroInput<TFieldValues extends FieldValues>({
                   style={{ width: 0, minWidth: '100%' }}
                 >
                   {selected.length === 0 ? (
-                    <span className={cn("text-muted-foreground/40 self-center whitespace-nowrap", s.footer)}>
+                    <span className={cn("text-muted-foreground/40 self-center whitespace-nowrap", sizeClasses.footer)}>
                       Ninguna estación seleccionada
                     </span>
                   ) : (
                     selected.map(id => (
                       <span
                         key={id}
-                        className={cn(s.pill, "inline-flex items-center gap-1 rounded-full bg-black text-white font-medium shrink-0")}
+                        className={cn(sizeClasses.pill, "inline-flex items-center gap-1 rounded-full bg-black text-white font-medium shrink-0")}
                       >
                         {stationMap.get(id) ?? id}
                         {!disabled && (
@@ -191,10 +191,10 @@ export function MetroInput<TFieldValues extends FieldValues>({
                   value={search}
                   onChange={e => setSearch(e.target.value)}
                   disabled={disabled}
-                  className={s.input}
+                  className={sizeClasses.input}
                 />
                 <div className="border rounded-lg overflow-hidden">
-                  <div className={cn("flex items-center bg-muted/40 border-b", s.linesRow)}>
+                  <div className={cn("flex items-center bg-muted/40 border-b", sizeClasses.linesRow)}>
                     <ToggleGroup
                           type="single"
                           value={search.trim() ? "" : effectiveActiveLine}
@@ -208,7 +208,7 @@ export function MetroInput<TFieldValues extends FieldValues>({
                               key={line.number}
                               value={line.number}
                               className={cn(
-                                s.lineBtn,
+                                sizeClasses.lineBtn,
                                 "flex-1 rounded-full border border-input bg-muted/40 text-foreground transition-all duration-200",
                                 "hover:bg-muted",
                                 "data-[state=on]:bg-black data-[state=on]:text-white data-[state=on]:border-black",
@@ -222,14 +222,14 @@ export function MetroInput<TFieldValues extends FieldValues>({
                   </div>
                   <div
                     className={cn(
-                      s.stationsArea,
+                      sizeClasses.stationsArea,
                       "p-3 grid gap-x-2 gap-y-0.5 content-start",
                       disabled ? "overflow-hidden" : "overflow-y-auto"
                     )}
-                    style={{ gridTemplateColumns: `repeat(auto-fill, minmax(${s.stationMinCol}, 1fr))` }}
+                    style={{ gridTemplateColumns: `repeat(auto-fill, minmax(${sizeClasses.stationMinCol}, 1fr))` }}
                   >
                     {visibleStations.length === 0 && search && (
-                      <p className={cn("text-muted-foreground col-span-full", s.station)}>
+                      <p className={cn("text-muted-foreground col-span-full", sizeClasses.station)}>
                         Sin resultados para &quot;{search}&quot;
                       </p>
                     )}
@@ -238,7 +238,7 @@ export function MetroInput<TFieldValues extends FieldValues>({
                         key={`${line}-${id}`}
                         className={cn(
                           "flex items-center gap-2 py-1 px-1 rounded cursor-pointer hover:bg-muted/50 transition-colors",
-                          s.station,
+                          sizeClasses.station,
                           disabled && "cursor-not-allowed pointer-events-none"
                         )}
                       >
@@ -264,7 +264,7 @@ export function MetroInput<TFieldValues extends FieldValues>({
             </FormControl>
 
             <div className="min-h-[1.1em]">
-              <FormMessage className={cn("font-bold", s.message)} />
+              <FormMessage className={cn("font-bold", sizeClasses.message)} />
             </div>
           </FormItem>
         );

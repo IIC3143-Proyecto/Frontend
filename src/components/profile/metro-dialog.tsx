@@ -4,6 +4,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { IconMapPin } from "@tabler/icons-react";
+import { toast } from "sonner";
 import {
   Dialog,
   DialogContent,
@@ -52,7 +53,12 @@ export function MetroDialog({ open, onOpenChange, user, sub }: Props) {
   function handleSave(values: MetroForm) {
     patchStations.mutate(
       { userId: user.id, sub, stations: values.metro },
-      { onSuccess: () => onOpenChange(false) },
+      {
+        onSuccess: () => onOpenChange(false),
+        onError: (error) => {
+          toast.error(error.message ?? "No se pudo cambiar la estación");
+        },
+      },
     );
   }
 

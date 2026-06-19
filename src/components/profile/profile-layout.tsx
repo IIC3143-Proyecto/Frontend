@@ -13,14 +13,13 @@ import {
 } from "@tabler/icons-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import type { UserDto, ContactInfo } from "@/lib/types/user";
+import type { UserDto } from "@/lib/types/user";
 import type { PostDto } from "@/lib/types/post";
 import { groupTagPreferencesByCategory } from "@/lib/tag-utils";
-import { ContactoDialog } from "./contacto-dialog";
+import { ContactDialog } from "./contact-dialog";
 import { MetroDialog } from "./metro-dialog";
 import { SavedSheet } from "./saved-sheet";
-import { FotoDialog } from "./foto-dialog";
-import { usePatchContact } from "@/hooks/use-patch-user";
+import { PhotoDialog } from "./photo-dialog";
 import { useUserTagPreferences } from "@/hooks/use-user-tag-preferences";
 import { useStationNameMap } from "@/hooks/use-metro-stations";
 
@@ -32,22 +31,14 @@ type Props = {
 
 export function ProfileLayout({ user, savedPosts, sub }: Props) {
 
-  const [contactoOpen, setContactoOpen] = useState(false);
+  const [contactOpen, setContactOpen] = useState(false);
   const [metroOpen, setMetroOpen] = useState(false);
   const [savedOpen, setSavedOpen] = useState(false);
-  const [fotoOpen, setFotoOpen] = useState(false);
+  const [photoOpen, setPhotoOpen] = useState(false);
 
-  const patchContact = usePatchContact();
   const { data: tagPrefs = [] } = useUserTagPreferences(user.id);
 
   const stationNameMap = useStationNameMap();
-
-  function handleSaveContacto(info: ContactInfo) {
-    patchContact.mutate(
-      { userId: user.id, sub, contactInfo: info },
-      { onSuccess: () => setContactoOpen(false) },
-    );
-  }
 
   const prefsByCategory = groupTagPreferencesByCategory(tagPrefs);
   const hasPrefs = Object.keys(prefsByCategory).length > 0;
@@ -58,10 +49,10 @@ export function ProfileLayout({ user, savedPosts, sub }: Props) {
 
   return (
     <div>
-      <header className="bg-sidebar border-b border-border p-6 sm:p-8 sm:px-[50px] flex flex-col items-center gap-3 text-center">
+      <header className="bg-sidebar border-b border-border p-6 sm:p-8 sm:px-12.5 flex flex-col items-center gap-3 text-center">
         <div
           className="relative group cursor-pointer"
-          onClick={() => setFotoOpen(true)}
+          onClick={() => setPhotoOpen(true)}
         >
           <Avatar className="size-20">
             <AvatarImage src={user.photoUrl} alt={user.username} />
@@ -79,7 +70,7 @@ export function ProfileLayout({ user, savedPosts, sub }: Props) {
         </div>
       </header>
 
-      <div className="flex flex-col gap-4 p-4 max-w-sm mx-auto sm:max-w-none sm:grid sm:grid-cols-2 sm:gap-3 sm:px-[50px] sm:py-4">
+      <div className="flex flex-col gap-4 p-4 max-w-sm mx-auto sm:max-w-none sm:grid sm:grid-cols-2 sm:gap-3 sm:px-12.5 sm:py-4">
 
         <section className="bg-card border border-border rounded-2xl p-4 sm:p-3 flex flex-col gap-2">
           <div className="flex items-center justify-between">
@@ -118,7 +109,7 @@ export function ProfileLayout({ user, savedPosts, sub }: Props) {
             <button
               type="button"
               className="text-xs text-muted-foreground hover:text-foreground transition-colors"
-              onClick={() => setContactoOpen(true)}
+              onClick={() => setContactOpen(true)}
             >
               Editar
             </button>
@@ -199,12 +190,12 @@ export function ProfileLayout({ user, savedPosts, sub }: Props) {
         </section>
       </div>
 
-      <ContactoDialog
-        open={contactoOpen}
-        onOpenChange={setContactoOpen}
+      <ContactDialog
+        open={contactOpen}
+        onOpenChange={setContactOpen}
         contactInfo={user.contactInfo ?? {}}
-        onSave={handleSaveContacto}
-        isSaving={patchContact.isPending}
+        userId={user.id}
+        sub={sub}
       />
       <SavedSheet
         open={savedOpen}
@@ -218,9 +209,9 @@ export function ProfileLayout({ user, savedPosts, sub }: Props) {
         user={user}
         sub={sub}
       />
-      <FotoDialog
-        open={fotoOpen}
-        onOpenChange={setFotoOpen}
+      <PhotoDialog
+        open={photoOpen}
+        onOpenChange={setPhotoOpen}
         userId={user.id}
         currentUrl={user.photoUrl}
         sub={sub}

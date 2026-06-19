@@ -15,9 +15,10 @@ import { Form } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { TextInput } from "@/components/common/text-input";
 import { RestoreFieldHeader } from "./restore-field-header";
+import { usePatchContact } from "@/hooks/use-patch-user";
 import type { ContactInfo } from "@/lib/types/user";
 
-const contactoSchema = z
+const contactSchema = z
   .object({
     contactInstagram: z
       .string()
@@ -34,17 +35,17 @@ const contactoSchema = z
     { message: "Ingresa al menos un medio de contacto", path: ["contactInstagram"] },
   );
 
-type ContactoForm = z.infer<typeof contactoSchema>;
+type ContactForm = z.infer<typeof contactSchema>;
 
 type Props = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   contactInfo: ContactInfo;
-  onSave: (info: ContactInfo) => void;
-  isSaving: boolean;
+  userId: string;
+  sub: string;
 };
 
-function toFormValues(contactInfo: ContactInfo): ContactoForm {
+function toFormValues(contactInfo: ContactInfo): ContactForm {
   return {
     contactInstagram: contactInfo.instagram?.replace(/^@/, ""),
     contactEmail: contactInfo.email,
@@ -52,7 +53,7 @@ function toFormValues(contactInfo: ContactInfo): ContactoForm {
   };
 }
 
-function toContactInfo(form: ContactoForm): ContactInfo {
+function toContactInfo(form: ContactForm): ContactInfo {
   return {
     instagram: form.contactInstagram || undefined,
     email: form.contactEmail || undefined,
@@ -60,16 +61,23 @@ function toContactInfo(form: ContactoForm): ContactInfo {
   };
 }
 
-
-export function ContactoDialog({ open, onOpenChange, contactInfo, onSave, isSaving }: Props) {
+export function ContactDialog({ open, onOpenChange, contactInfo, userId, sub }: Props) {
   const original = toFormValues(contactInfo);
+  const patchContact = usePatchContact();
 
-  const form = useForm<ContactoForm>({
-    resolver: zodResolver(contactoSchema),
+  const form = useForm<ContactForm>({
+    resolver: zodResolver(contactSchema),
     defaultValues: original,
   });
 
   const { dirtyFields } = form.formState;
+
+  function handleSave(values: ContactForm) {
+    patchContact.mutate(
+      { userId, sub, contactInfo: toContactInfo(values) },
+      { onSuccess: () => onOpenChange(false) },
+    );
+  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -133,14 +141,14 @@ export function ContactoDialog({ open, onOpenChange, contactInfo, onSave, isSavi
         </Form>
 
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isSaving}>
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={patchContact.isPending}>
             Cancelar
           </Button>
           <Button
-            onClick={form.handleSubmit((values) => onSave(toContactInfo(values)))}
-            disabled={isSaving}
+            onClick={form.handleSubmit(handleSave)}
+            disabled={patchContact.isPending}
           >
-            {isSaving ? "Guardando…" : "Guardar"}
+            {patchContact.isPending ? "Guardando…" : "Guardar"}
           </Button>
         </DialogFooter>
       </DialogContent>
