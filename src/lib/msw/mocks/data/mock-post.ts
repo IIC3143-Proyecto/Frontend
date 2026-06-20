@@ -5,6 +5,9 @@ export function mockPostDto(id: string, body: Record<string, unknown> = {}): Pos
   return {
     id,
     sellerId: 'seller-mock-1',
+    buyerId: null,
+    buyer: null,
+    imagesUrls: '',
     seller: {
       id: 'seller-mock-1',
       name: 'Mock Seller',
