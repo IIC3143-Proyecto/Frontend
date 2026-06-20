@@ -1,8 +1,16 @@
+import { useMemo } from 'react';
 import metroData from '@/lib/msw/mocks/data/metro-stations.json';
 import type { MetroLine } from '@/lib/types/metro';
 
-// TODO backend [PR #80]: el endpoint GET /api/station no será usado desde el frontend.
-// Las estaciones se manejan con datos locales.
 export function useMetroStations(): MetroLine[] {
   return metroData.lines as MetroLine[];
+}
+
+export function useStationNameMap(): Map<string, string> {
+  const lines = useMetroStations();
+  return useMemo(() => {
+    const map = new Map<string, string>();
+    lines.forEach(l => l.stations.forEach(st => map.set(st.id, st.name)));
+    return map;
+  }, [lines]);
 }

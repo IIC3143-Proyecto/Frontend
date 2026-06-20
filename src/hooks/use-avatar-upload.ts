@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { getAccessToken } from "@/actions/auth";
 import { uploadUserAvatar } from "@/lib/api/user";
 import type { SyncUserResponse } from "@/lib/types/auth";
+import type { UserDto } from "@/lib/types/user";
 
 export interface UseAvatarUploadOptions {
   /** Max output file size in MB (default: 1) */
@@ -126,7 +127,10 @@ export function useUploadAvatar() {
       const token = await getAccessToken();
       return uploadUserAvatar(userId, file, token);
     },
-    onSuccess: (newPhotoUrl, { sub }) => {
+    onSuccess: (newPhotoUrl, { userId, sub }) => {
+      queryClient.setQueryData<UserDto>(["user", userId], (old) =>
+        old ? { ...old, photoUrl: newPhotoUrl } : old,
+      );
       queryClient.setQueryData<SyncUserResponse>(["dbUser", sub], (old) =>
         old ? { ...old, photoUrl: newPhotoUrl } : old,
       );
