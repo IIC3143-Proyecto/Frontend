@@ -15,12 +15,10 @@ describe('resolveProfileUser', () => {
   it('devuelve el tercero conocido cuando el id corresponde a otro usuario', () => {
     const result = resolveProfileUser('auth0|other_456', currentUser);
     expect(result).toBe(MOCK_OTHER_USERS['auth0|other_456']);
-    expect(result.id).not.toBe(currentUser.id);
+    expect(result?.id).not.toBe(currentUser.id);
   });
 
-  it('cae en un tercero por defecto cuando el id es desconocido', () => {
-    const result = resolveProfileUser('auth0|inexistente', currentUser);
-    expect(result.id).not.toBe(currentUser.id);
-    expect(result.id).toBe('auth0|other_456');
+  it('devuelve null cuando el id es desconocido (→ 404 / no encontrado)', () => {
+    expect(resolveProfileUser('auth0|inexistente', currentUser)).toBeNull();
   });
 });

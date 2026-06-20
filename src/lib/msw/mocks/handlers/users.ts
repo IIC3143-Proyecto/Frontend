@@ -15,7 +15,11 @@ export const usersHandlers = [
     }
     // El id puede pedir el perfil propio o el de un tercero (`/profile/[id]`).
     const requestedId = params.id_user as string;
-    return HttpResponse.json(resolveProfileUser(requestedId, currentUser));
+    const user = resolveProfileUser(requestedId, currentUser);
+    if (!user) {
+      return HttpResponse.json({ message: 'User not found' }, { status: 404 });
+    }
+    return HttpResponse.json(user);
   }),
 
   http.patch('*/api/user/:id_user', async ({ request }) => {

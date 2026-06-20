@@ -102,19 +102,16 @@ export const MOCK_OTHER_USERS: Record<string, SyncUserResponse> = {
   },
 };
 
-/** Tercero por defecto cuando el id solicitado no corresponde a uno conocido. */
-const DEFAULT_OTHER_USER = MOCK_OTHER_USERS['auth0|other_456'];
-
 /**
  * Decide qué usuario devuelve `GET /api/user/:id`:
  * - Si el id pedido es el del usuario autenticado → ese mismo (perfil propio).
  * - Si coincide con un tercero conocido → ese tercero.
- * - En cualquier otro caso → un tercero genérico por defecto.
+ * - En cualquier otro caso → `null` (el handler responde 404 → "usuario no encontrado").
  */
 export function resolveProfileUser(
   requestedId: string,
   currentUser: SyncUserResponse,
-): SyncUserResponse {
+): SyncUserResponse | null {
   if (requestedId === currentUser.id) return currentUser;
-  return MOCK_OTHER_USERS[requestedId] ?? DEFAULT_OTHER_USER;
+  return MOCK_OTHER_USERS[requestedId] ?? null;
 }

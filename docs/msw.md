@@ -63,7 +63,7 @@ Handles `GET /auth/sync-user`. Checks `OnboardingErrorScenario` first — return
 ### `handlers/users.ts`
 Handles `GET /api/user/:id_user` and `PATCH /api/user/:id_user`.
 
-`GET` resolves which user to return via `resolveProfileUser(id, currentUser)` (in `data/mock-users.ts`): the active scenario user when the id matches the authenticated user, otherwise a third-party user from `MOCK_OTHER_USERS`. This backs the reusable profile view `/profile/[id]`, which renders edit controls only when viewing your own profile.
+`GET` resolves which user to return via `resolveProfileUser(id, currentUser)` (in `data/mock-users.ts`): the active scenario user when the id matches the authenticated user, a third-party user from `MOCK_OTHER_USERS` when the id is known, or `404` when the id is unknown. This backs the reusable profile view `/profile/[id]`, which renders edit controls only when viewing your own profile and a "usuario no encontrado" state on 404.
 
 `PATCH` reads `OnboardingErrorScenario` for `PATCH_*` errors.
 
@@ -102,8 +102,10 @@ Returned by `GET /api/user/:id` when the requested id is **not** the authenticat
 
 | id | `username` | Shape |
 |---|---|---|
-| `auth0\|other_456` | `Vale_Vecina` | full: photo, bio, zona, contacto (also the default fallback) |
+| `auth0\|other_456` | `Vale_Vecina` | full: photo, bio, zona, contacto |
 | `auth0\|other_789` | `Tomi_Tercero` | minimal: no bio, contacto, or zona (empty states) |
+
+Any other id returns `404`, which the profile page renders as a "usuario no encontrado" state.
 
 ### Error Scenarios (`OnboardingErrorScenario`)
 
