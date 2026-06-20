@@ -2,6 +2,7 @@ import { type NextRequest, NextResponse } from 'next/server';
 import { auth0 } from './lib/auth0';
 
 type UserStatus = 'En proceso de registro' | 'Activo';
+const REGISTERING: UserStatus = 'En proceso de registro';
 
 export async function proxy(request: NextRequest) {
   const authResponse = await auth0.middleware(request);
@@ -23,10 +24,10 @@ export async function proxy(request: NextRequest) {
     const isOnboardingRoute = pathname.startsWith('/onboarding');
 
     // undefined → primer login antes de sync-user; useAuth lo maneja
-    if (status === 'En proceso de registro' && isPrivateRoute && !isOnboardingRoute) {
+    if (status === REGISTERING && isPrivateRoute && !isOnboardingRoute) {
       return NextResponse.redirect(new URL('/onboarding', request.url));
     }
-    if (status && status !== 'En proceso de registro' && isOnboardingRoute) {
+    if (status && status !== REGISTERING && isOnboardingRoute) {
       return NextResponse.redirect(new URL('/feed', request.url));
     }
   }
