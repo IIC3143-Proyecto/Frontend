@@ -21,12 +21,8 @@ test.describe('Login — sin sesión', () => {
   });
 });
 
-test.describe('Login — con sesión', () => {
-  test('usuario sin onboarding es redirigido a /onboarding', async ({ page }) => {
-    await gotoAuthenticated(page, '/profile');
-    await page.waitForURL('/onboarding', { timeout: 15_000 });
-  });
-});
+// Redirect to /onboarding for users in 'En proceso de registro' state is covered
+// by the live-backend spec, which starts from a clean DB with a new user.
 
 test.describe('Logout', () => {
   test('GET /logout limpia sesión y redirige a /', async ({ page }) => {
