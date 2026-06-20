@@ -37,7 +37,7 @@ export default function NotificationsPage() {
           </div>
         )}
         {notifications.map((item) => (
-          <div key={item.id} className="min-w-100">
+          <div key={item.id} className="min-w-70">
             <NotificationCard
               notification={item}
               onDelete={() => setPending({ type: "one", id: item.id })}
