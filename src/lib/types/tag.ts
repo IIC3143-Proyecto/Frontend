@@ -1,5 +1,7 @@
 export type TagCategories = Record<string, string[]>;
 
+export type TagDto = { id: number; title: string; category: string };
+
 export type TagsByCategoryDto = {
   tags: TagCategories;
 };

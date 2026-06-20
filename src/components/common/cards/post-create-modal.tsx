@@ -26,6 +26,7 @@ import { ToggleInputGroup } from "@/components/common/toggle-input";
 import { StepProgress } from "@/components/common/step-progress";
 import { PhotoUploadGrid } from "@/components/common/photo-upload-grid";
 import { useCreatePost, type CreatePostInput } from "@/hooks/use-create-post";
+import { TagSuggestionModal } from "@/components/common/tag-suggestion-modal";
 import type { PhotoItem } from "@/lib/types/post";
 import { useTags } from "@/hooks/use-tags";
 
@@ -284,9 +285,12 @@ export function PostCreateModal({ isOpen, onClose }: CreatePostModalProps) {
     isPostCreated,
     isSubmitting,
     isLastStep,
+    showTagSuggestionModal,
     handleNext,
     handleBack,
     handlePublish,
+    handleManualTags,
+    handleGeminiTags,
     reset,
   } = useCreatePost(onClose);
 
@@ -346,6 +350,11 @@ export function PostCreateModal({ isOpen, onClose }: CreatePostModalProps) {
           isMobile ? "h-[640px]" : "h-[640px] md:max-w-2xl"
         )}
       >
+        <TagSuggestionModal
+          isOpen={showTagSuggestionModal}
+          onManual={handleManualTags}
+          onGemini={handleGeminiTags}
+        />
         {/* Header */}
         <DialogHeader className="px-6 pt-5 pb-4 shrink-0">
           <div className="flex items-center justify-between">
