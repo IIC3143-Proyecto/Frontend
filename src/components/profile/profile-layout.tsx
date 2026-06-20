@@ -28,10 +28,15 @@ type Props = {
   user: UserDto;
   savedPosts: PostDto[];
   sub: string;
+  isOwner?: boolean;
 };
 
-export function ProfileLayout({ user, savedPosts, sub }: Props) {
-
+export function ProfileLayout({
+  user,
+  savedPosts,
+  sub,
+  isOwner = true,
+}: Props) {
   const [contactOpen, setContactOpen] = useState(false);
   const [metroOpen, setMetroOpen] = useState(false);
   const [savedOpen, setSavedOpen] = useState(false);
@@ -52,19 +57,25 @@ export function ProfileLayout({ user, savedPosts, sub }: Props) {
     <div>
       <header className="bg-sidebar border-b border-border p-6 sm:p-8 sm:px-12.5 flex flex-col items-center gap-3 text-center">
         <div
-          className="relative group cursor-pointer"
-          onClick={() => setPhotoOpen(true)}
+          className={`relative group ${isOwner ? "cursor-pointer" : ""}`}
+          onClick={isOwner ? () => setPhotoOpen(true) : undefined}
         >
           <Avatar className="size-20">
             <AvatarImage src={user.photoUrl} alt={user.username} />
-            <AvatarFallback>{(user.name || user.username || "?")[0]}</AvatarFallback>
+            <AvatarFallback>
+              {(user.name || user.username || "?")[0]}
+            </AvatarFallback>
           </Avatar>
-          <div className="absolute inset-0 bg-black/40 rounded-full opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-            <IconCamera className="size-5 text-white" />
-          </div>
+          {isOwner && (
+            <div className="absolute inset-0 bg-black/40 rounded-full opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+              <IconCamera className="size-5 text-white" />
+            </div>
+          )}
         </div>
         <div>
-          <p className="text-sm font-black uppercase tracking-wide">@{user.username}</p>
+          <p className="text-sm font-black uppercase tracking-wide">
+            @{user.username}
+          </p>
           {user.bio && (
             <p className="text-sm mt-2 max-w-xs leading-relaxed">{user.bio}</p>
           )}
@@ -72,19 +83,20 @@ export function ProfileLayout({ user, savedPosts, sub }: Props) {
       </header>
 
       <div className="flex flex-col gap-4 p-4 max-w-sm mx-auto sm:max-w-none sm:grid sm:grid-cols-2 sm:gap-3 sm:px-12.5 sm:py-4">
-
         <section className="bg-card border border-border rounded-2xl p-4 sm:p-3 flex flex-col gap-2">
           <div className="flex items-center justify-between">
             <p className="text-xs font-black uppercase flex items-center gap-1.5 text-muted-foreground">
               <IconMapPin className="size-3.5" /> Zona
             </p>
-            <button
-              type="button"
-              className="text-xs text-muted-foreground hover:text-foreground transition-colors"
-              onClick={() => setMetroOpen(true)}
-            >
-              Editar
-            </button>
+            {isOwner && (
+              <button
+                type="button"
+                className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+                onClick={() => setMetroOpen(true)}
+              >
+                Editar
+              </button>
+            )}
           </div>
           <div className="flex flex-wrap gap-1">
             {user.stations && user.stations.length > 0 ? (
@@ -97,7 +109,9 @@ export function ProfileLayout({ user, savedPosts, sub }: Props) {
                 </span>
               ))
             ) : (
-              <span className="text-xs text-muted-foreground">Sin zona definida</span>
+              <span className="text-xs text-muted-foreground">
+                Sin zona definida
+              </span>
             )}
           </div>
         </section>
@@ -107,13 +121,15 @@ export function ProfileLayout({ user, savedPosts, sub }: Props) {
             <p className="text-xs font-black uppercase flex items-center gap-1.5 text-muted-foreground">
               Contacto
             </p>
-            <button
-              type="button"
-              className="text-xs text-muted-foreground hover:text-foreground transition-colors"
-              onClick={() => setContactOpen(true)}
-            >
-              Editar
-            </button>
+            {isOwner && (
+              <button
+                type="button"
+                className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+                onClick={() => setContactOpen(true)}
+              >
+                Editar
+              </button>
+            )}
           </div>
           <div className="flex flex-col gap-1 text-xs">
             {user.contactInfo?.instagram && (
@@ -135,7 +151,9 @@ export function ProfileLayout({ user, savedPosts, sub }: Props) {
               </div>
             )}
             {!hasContact && (
-              <span className="text-muted-foreground">Sin información de contacto</span>
+              <span className="text-muted-foreground">
+                Sin información de contacto
+              </span>
             )}
           </div>
         </section>
@@ -169,63 +187,79 @@ export function ProfileLayout({ user, savedPosts, sub }: Props) {
           )}
         </section>
 
-        <section className="bg-card border border-border rounded-2xl p-4 sm:p-3 sm:col-span-2 flex items-center justify-between">
-          <p className="text-xs font-black uppercase flex items-center gap-1.5 text-muted-foreground">
-            <IconBookmark className="size-3.5" /> Guardados ({savedPosts.length})
-          </p>
-          <Button size="sm" variant="outline" onClick={() => setSavedOpen(true)}>
-            Ver guardados
-          </Button>
-        </section>
+        {isOwner && (
+          <>
+            <section className="bg-card border border-border rounded-2xl p-4 sm:p-3 sm:col-span-2 flex items-center justify-between">
+              <p className="text-xs font-black uppercase flex items-center gap-1.5 text-muted-foreground">
+                <IconBookmark className="size-3.5" /> Guardados (
+                {savedPosts.length})
+              </p>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => setSavedOpen(true)}
+              >
+                Ver guardados
+              </Button>
+            </section>
 
-        <section className="bg-card border border-border rounded-2xl p-4 sm:p-3 sm:col-span-2 flex items-center justify-between">
-          <p className="text-xs font-black uppercase flex items-center gap-1.5 text-muted-foreground">
-            <IconLogout className="size-3.5" /> Cerrar sesión
-          </p>
-          <Button size="sm" variant="outline" asChild>
-            <a href="/logout">Salir</a>
-          </Button>
-        </section>
+            <section className="bg-card border border-border rounded-2xl p-4 sm:p-3 sm:col-span-2 flex items-center justify-between">
+              <p className="text-xs font-black uppercase flex items-center gap-1.5 text-muted-foreground">
+                <IconLogout className="size-3.5" /> Cerrar sesión
+              </p>
+              <Button size="sm" variant="outline" asChild>
+                <a href="/logout">Salir</a>
+              </Button>
+            </section>
 
-        <section className="bg-destructive/5 border border-destructive/20 rounded-2xl p-4 sm:p-3 sm:col-span-2">
-          <p className="text-xs font-black uppercase flex items-center gap-1.5 mb-1 text-destructive">
-            <IconAlertTriangle className="size-3.5" /> Eliminar cuenta
-          </p>
-          <p className="text-xs text-muted-foreground leading-relaxed">
-            Para eliminar tu cuenta, escríbenos a{" "}
-            <a href="mailto:soporte@ejemplo.com" className="underline text-foreground">
-              soporte@ejemplo.com
-            </a>
-          </p>
-        </section>
+            <section className="bg-destructive/5 border border-destructive/20 rounded-2xl p-4 sm:p-3 sm:col-span-2">
+              <p className="text-xs font-black uppercase flex items-center gap-1.5 mb-1 text-destructive">
+                <IconAlertTriangle className="size-3.5" /> Eliminar cuenta
+              </p>
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                Para eliminar tu cuenta, escríbenos a{" "}
+                <a
+                  href="mailto:soporte@ejemplo.com"
+                  className="underline text-foreground"
+                >
+                  soporte@ejemplo.com
+                </a>
+              </p>
+            </section>
+          </>
+        )}
       </div>
 
-      <ContactDialog
-        open={contactOpen}
-        onOpenChange={setContactOpen}
-        contactInfo={user.contactInfo ?? {}}
-        userId={user.id}
-        sub={sub}
-      />
-      <SavedSheet
-        open={savedOpen}
-        onOpenChange={setSavedOpen}
-        savedPosts={savedPosts}
-        userId={user.id}
-      />
-      <MetroDialog
-        open={metroOpen}
-        onOpenChange={setMetroOpen}
-        user={user}
-        sub={sub}
-      />
-      <PhotoDialog
-        open={photoOpen}
-        onOpenChange={setPhotoOpen}
-        userId={user.id}
-        currentUrl={user.photoUrl}
-        sub={sub}
-      />
+      {isOwner && (
+        <>
+          <ContactDialog
+            open={contactOpen}
+            onOpenChange={setContactOpen}
+            contactInfo={user.contactInfo ?? {}}
+            userId={user.id}
+            sub={sub}
+          />
+          <SavedSheet
+            open={savedOpen}
+            onOpenChange={setSavedOpen}
+            savedPosts={savedPosts}
+            userId={user.id}
+          />
+          <MetroDialog
+            open={metroOpen}
+            onOpenChange={setMetroOpen}
+            user={user}
+            sub={sub}
+          />
+          <PhotoDialog
+            open={photoOpen}
+            onOpenChange={setPhotoOpen}
+            userId={user.id}
+            currentUrl={user.photoUrl}
+            sub={sub}
+          />
+        </>
+      )}
     </div>
   );
 }
