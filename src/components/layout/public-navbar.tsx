@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/sheet";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { IconMenu2 } from "@tabler/icons-react";
+import { useUser } from '@auth0/nextjs-auth0';
 
 
 type NavigationButtonsDirection = {
@@ -20,6 +21,9 @@ type NavigationButtonsDirection = {
 };
 
 function NavigationButtons( { direction } : NavigationButtonsDirection ) {
+  const { user, isLoading } = useUser();
+  const isLoggedIn = !!user;
+  
   return (
     <nav className={cn("flex gap-3", direction === "row" ? "flex-row" : "flex-col px-6 py-6")}>
       <Button asChild type="button" variant="link">
@@ -28,12 +32,24 @@ function NavigationButtons( { direction } : NavigationButtonsDirection ) {
       <Button asChild type="button" variant="link">
         <Link href="/faq">FAQ</Link>
       </Button>
-      <Button asChild type="button" variant="default">
-        <Link href="/signup">Sign up</Link>
-      </Button>
-      <Button asChild type="button" variant="outline">
-        <Link href="/login">Login</Link>
-      </Button>
+
+      {!isLoading && (
+        isLoggedIn ? (
+          <Button asChild type="button" variant="default">
+            <Link href="/logout">Logout</Link>
+          </Button>
+        ) : (
+          <>
+            <Button asChild type="button" variant="default">
+              <Link href="/signup">Sign up</Link>
+            </Button>
+
+            <Button asChild type="button" variant="outline">
+              <Link href="/login">Login</Link>
+            </Button>
+          </>
+        )
+      )}
     </nav>
   )
 }

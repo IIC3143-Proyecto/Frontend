@@ -34,7 +34,7 @@ export function NotificationCard({
       <div className="w-14 h-14 rounded-full flex items-center justify-center shrink-0 bg-muted">
         <Icon className="w-8 h-8 text-foreground" />
       </div>
-      <div className="flex flex-col gap-0.5 min-w-0 flex-1">
+      <div className="flex flex-col gap-0.5 flex-1 overflow-hidden">
         <p className="text-sm font-semibold leading-snug">{n.title}</p>
         <p className="text-sm text-muted-foreground leading-snug">{n.content}</p>
         <span className="text-xs text-muted-foreground mt-1">{formatRelativeDate(n.createdAtUtcMinus3)}</span>
