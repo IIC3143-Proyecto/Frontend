@@ -14,6 +14,7 @@ VTRNA uses a Testing Trophy approach — more integration tests than E2E, with u
 | **Integration** | Playwright + MSW | Dev server | 43 |
 | **Contract** | Playwright | `BACKEND_API_URL` + Auth0 creds | 22 |
 | **E2E** | Playwright | Auth0 creds | 4 |
+| **Live Backend** | Playwright | Backend + DB limpia + Auth0 creds | ~5 |
 
 ---
 
@@ -48,6 +49,11 @@ npm run test:e2e            # Run E2E suite
 ### Both E2E + Integration
 ```bash
 npm run test:all            # Runs e2e + integration projects
+```
+
+### Live backend tests (requires backend running with a clean DB)
+```bash
+npm run test:live
 ```
 
 ### Contract tests (requires real backend)
@@ -146,3 +152,4 @@ In CI:
 - [MSW Documentation](../msw.md)
 - [Unit Tests Guide](unit-tests.md)
 - [Contract Tests Guide](contract-tests.md)
+- [Live Backend Tests](live-backend-tests.md)

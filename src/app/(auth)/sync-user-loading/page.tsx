@@ -13,10 +13,15 @@ export default function AuthLoading() {
   useEffect(() => {
     fetch('/sync-user')
       .then(res => {
+        if (res.status === 401) {
+          router.replace(`/login?returnTo=${encodeURIComponent(redirectTo)}`);
+          return;
+        }
         if (!res.ok) throw new Error(`sync-user ${res.status}`);
-        router.replace(redirectTo);
+        // '/' is the landing page — send authenticated users to the feed instead
+        router.replace(redirectTo === '/' ? '/feed' : redirectTo);
       })
-      .catch(() => router.replace('/'));
+      .catch(() => router.replace('/login'));
   }, [redirectTo, router]);
 
   return (
