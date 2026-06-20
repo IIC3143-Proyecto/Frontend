@@ -30,7 +30,7 @@ export function NotificationCard({
 }) {
   const Icon = TYPE_ICON[n.type] ?? IconSettings;
   return (
-    <div className="relative bg-card border border-border rounded-xl p-4 flex gap-3">
+    <div data-testid="notification-card" className="relative bg-card border border-border rounded-xl p-4 flex gap-3">
       <div className="w-14 h-14 rounded-full flex items-center justify-center shrink-0 bg-muted">
         <Icon className="w-8 h-8 text-foreground" />
       </div>

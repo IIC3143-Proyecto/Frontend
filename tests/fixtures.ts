@@ -6,6 +6,7 @@ export const test = base.extend({
     await page.evaluate(() => {
       (window as Window & { __resetErrorScenario?: () => void }).__resetErrorScenario?.();
       (window as Window & { __resetMockUser?: () => void }).__resetMockUser?.();
+      (window as Window & { __resetNotifications?: () => void }).__resetNotifications?.();
     }).catch(() => {});
   },
 });
