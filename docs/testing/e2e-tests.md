@@ -1,6 +1,6 @@
 # E2E Tests
 
-E2E tests verify authentication flows against the real Auth0 tenant. They use real browser sessions and do not mock any network requests. MSW is blocked (`serviceWorkers: 'block'`) for this project.
+E2E tests verify authentication flows and route protection against the real Auth0 tenant. They use real browser sessions and do not mock any network requests. MSW is blocked (`serviceWorkers: 'block'`) for this project.
 
 ---
 
@@ -24,19 +24,18 @@ Without credentials, the auth setup skips and all E2E tests are skipped. Integra
 
 Runs once before all E2E tests. Authenticates against the real Auth0 tenant and saves the session to `tests/e2e/.auth/user.json`. All spec files in the `e2e` project reuse this session via `storageState`.
 
-During setup, `page.route()` intercepts `/auth/sync-user` and returns a mock `FULL` user with `onboardingCompleted: true` — this prevents the onboarding redirect during setup. The real Auth0 `appSession` cookie is still obtained and saved.
+During setup, `page.addInitScript` intercepts the MSW init scenario to return a mock `FULL` user — this prevents the onboarding redirect during setup. The real Auth0 `appSession` cookie is still obtained and saved.
 
 ---
 
 ## Test Files
 
-| File | What it covers |
-|------|----------------|
-| `auth.spec.ts` | Login redirects to Auth0, signup with `screen_hint=signup`, authenticated user accesses `/profile`, logout clears session and redirects to `/`, post-logout private routes redirect with `returnTo` |
-| `routes.spec.ts` | Public routes (`/`, `/about-us`, `/faq`) accessible without auth; private routes (`/notifications`, `/profile`, `/publications`, `/shopping-history`, `/onboarding`, `/posts`) redirect to `/login?returnTo=...` |
-| `auth-integration.spec.ts` | Real backend connectivity — self-skips when `NEXT_PUBLIC_API_URL` is not set. Verifies `/health`, `sync-user` reaches the backend, response has expected fields (`id`, `email`, `onboardingCompleted`, `providerAuth0`), `onboardingCompleted` is derived from `bio` |
-| `onboarding-e2e.spec.ts` | `test.fixme` — new user sees onboarding form; completing onboarding redirects to `/profile` |
-| `create-post-e2e.spec.ts` | `test.fixme` — authenticated user opens create-post modal and completes all steps |
+| File | Tests | What it covers |
+|------|-------|----------------|
+| `auth.spec.ts` | 4 | `/login` → Auth0, `/signup` with `screen_hint=signup`, `/logout` clears session and redirects to `/`, post-logout private route redirects with `returnTo` |
+| `routes.spec.ts` | 10 | Public routes (`/`, `/about-us`, `/faq`) accessible without auth; private routes (`/feed`, `/notifications`, `/posts`, `/profile`, `/publications`, `/shopping-history`, `/onboarding`) redirect to `/login?returnTo=...` |
+
+The redirect of a completed user away from `/onboarding` (proxy redirect) is covered by the live backend test, which has the full session state.
 
 ---
 
@@ -46,12 +45,10 @@ During setup, `page.route()` intercepts `/auth/sync-user` and returns a mock `FU
 
 ```ts
 waitForMSW(page)
-// Wait for MSWProvider's loading screen to disappear.
-// Not typically needed in e2e tests since MSW is blocked,
-// but used for consistency with integration tests.
+// Wait for MSWProvider's loading screen ("Cargando") to disappear.
 
 gotoAuthenticated(page, path, scenario?)
-// Navigate with a pre-set MSW scenario (via page.addInitScript).
+// Navigate with a pre-set MSW scenario via page.addInitScript.
 // Used in routes.spec.ts for client-side redirect assertions.
 ```
 
@@ -59,13 +56,13 @@ gotoAuthenticated(page, path, scenario?)
 
 ## Technical Notes
 
-- ⚠️ `onboarding-e2e.spec.ts` and `create-post-e2e.spec.ts` are entirely `test.fixme` — pending a dedicated test account with a completed onboarding profile
-- `auth-integration.spec.ts` tests self-skip if `NEXT_PUBLIC_API_URL` is not configured; they are not included in `test:e2e` by default since they require both Auth0 credentials and a running backend
-- The `tests/e2e/.auth/` directory is git-ignored — `user.json` is generated at runtime
+- `tests/e2e/.auth/` is git-ignored — `user.json` is generated at runtime
+- Route tests use `test.use({ storageState: { cookies: [], origins: [] } })` for unauthenticated requests
+- The proxy redirect (`/onboarding` → `/feed` for completed users) depends on `status` being set in the Auth0 session cookie, which only happens after a real sync-user BFF call — not testable in the MSW-based suite
 
 ---
 
 ## References
 
-- [Auth0 Setup](../auth0.md)
 - [Integration Tests](integration-tests.md) — for feature-level testing without real Auth0
+- [Live Backend Tests](live-backend-tests.md) — for full lifecycle including proxy redirects
