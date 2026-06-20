@@ -150,6 +150,32 @@ export const OnboardingForm = React.forwardRef<HTMLDivElement, OnboardingFormPro
 
         const { username, bio, contactInstagram, contactEmail, contactWhatsapp, metro, clothingGender, clothingTypes, size } = form.getValues();
 
+        const tags: Record<string, string[]> = {};
+        if (clothingGender) tags['Género'] = [clothingGender];
+        if (clothingTypes?.length) tags['Tipo de prenda'] = clothingTypes;
+        if (size) tags['Talla'] = [size];
+
+        // patchUserTags activa la cuenta (En proceso de registro → Activo);
+        // patchUser requiere status Activo, por eso va después
+        try {
+          await patchUserTags({ tags }, token);
+        } catch (err) {
+          const status = (err as { status?: number }).status;
+          if (status === undefined) {
+            toast.error('Error de red', { description: 'Verifica tu conexión e inténtalo de nuevo.' });
+            return;
+          }
+          if (status === 401) {
+            router.push('/session-expired');
+            return;
+          }
+          if (status !== 403) {
+            const message = err instanceof Error ? err.message : 'Error al guardar preferencias de estilo';
+            toast.error('Error', { description: message });
+            return;
+          }
+        }
+
         try {
           await patchUser(
             userId,
@@ -186,30 +212,6 @@ export const OnboardingForm = React.forwardRef<HTMLDivElement, OnboardingFormPro
           }
           toast.error('Error', { description: message });
           return;
-        }
-
-        const tags: Record<string, string[]> = {};
-        if (clothingGender) tags['Género'] = [clothingGender];
-        if (clothingTypes?.length) tags['Tipo de prenda'] = clothingTypes;
-        if (size) tags['Talla'] = [size];
-
-        try {
-          await patchUserTags({ tags }, token);
-        } catch (err) {
-          const status = (err as { status?: number }).status;
-          if (status === undefined) {
-            toast.error('Error de red', { description: 'Verifica tu conexión e inténtalo de nuevo.' });
-            return;
-          }
-          if (status === 401) {
-            router.push('/session-expired');
-            return;
-          }
-          if (status !== 403) {
-            const message = err instanceof Error ? err.message : 'Error al guardar preferencias de estilo';
-            toast.error('Error', { description: message });
-            return;
-          }
         }
 
         // Invalidate instead of setQueriesData so the BFF re-fetches and updates
