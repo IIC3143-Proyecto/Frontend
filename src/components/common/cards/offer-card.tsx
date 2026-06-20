@@ -2,11 +2,12 @@
 
 import { IconInfoCircle, IconPencil } from "@tabler/icons-react";
 import { useState } from "react";
-import { toast } from "sonner";
 import type { OfferDto } from "@/lib/types/offer";
 import { OfferDirection } from "@/lib/types/offer-direction.enum";
+import { getOfferActions, getRoleForDirection } from "@/lib/offer-transitions";
 import { formatPriceCLP } from "@/lib/utils";
 import { OfferDetailModal } from "./offer-detail-modal";
+import { OfferEditModal } from "./offer-edit-modal";
 import { MiniRoundButton } from "@/components/common/mini-round-button";
 import { Button } from "@/components/ui/button";
 
@@ -17,6 +18,7 @@ type OfferCardProps = {
 
 export function OfferCard({ offer, direction }: OfferCardProps) {
   const [detailOpen, setDetailOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
 
   const { post } = offer;
   const counterparty =
@@ -24,7 +26,10 @@ export function OfferCard({ offer, direction }: OfferCardProps) {
   const counterpartyLabel =
     direction === OfferDirection.RECEIVED ? "De" : "Para";
   const firstImage = post.imagesUrls?.split(",").filter(Boolean)[0];
-  const canModify = direction === OfferDirection.MADE;
+  // El lápiz abre el modal de gestión solo si el usuario tiene alguna
+  // transición disponible sobre la oferta en su estado actual.
+  const canManage =
+    getOfferActions(offer.status, getRoleForDirection(direction)).length > 0;
 
   return (
     <article className="relative bg-card border border-border flex flex-row p-3 gap-3 overflow-hidden">
@@ -54,10 +59,10 @@ export function OfferCard({ offer, direction }: OfferCardProps) {
                 <IconInfoCircle className="w-4 h-4" />
               </MiniRoundButton>
 
-              {canModify && (
+              {canManage && (
                 <MiniRoundButton
-                  aria-label="Editar"
-                  onClick={() => toast.info("Editar")}
+                  aria-label="Gestionar oferta"
+                  onClick={() => setEditOpen(true)}
                 >
                   <IconPencil className="w-4 h-4" />
                 </MiniRoundButton>
@@ -83,21 +88,17 @@ export function OfferCard({ offer, direction }: OfferCardProps) {
             {offer.status}
           </span>
         </div>
-
-        <div className="flex gap-2 mt-3 w-full pt-1">
-          <Button
-            variant="outline"
-            className="w-full"
-            onClick={() => setDetailOpen(true)}
-          >
-            Ver detalle
-          </Button>
-        </div>
       </div>
 
       <OfferDetailModal
         open={detailOpen}
         onClose={() => setDetailOpen(false)}
+        offer={offer}
+        direction={direction}
+      />
+      <OfferEditModal
+        open={editOpen}
+        onClose={() => setEditOpen(false)}
         offer={offer}
         direction={direction}
       />
