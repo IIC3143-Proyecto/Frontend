@@ -61,7 +61,11 @@ src/lib/msw/
 Handles `GET /auth/sync-user`. Checks `OnboardingErrorScenario` first — returns the corresponding error if a `SYNC_USER_*` scenario is set. Otherwise returns the mock user for the active `MockUserScenario`.
 
 ### `handlers/users.ts`
-Handles `PATCH /api/user/:id_user`. Reads `OnboardingErrorScenario` for `PATCH_*` errors.
+Handles `GET /api/user/:id_user` and `PATCH /api/user/:id_user`.
+
+`GET` resolves which user to return via `resolveProfileUser(id, currentUser)` (in `data/mock-users.ts`): the active scenario user when the id matches the authenticated user, otherwise a third-party user from `MOCK_OTHER_USERS`. This backs the reusable profile view `/profile/[id]`, which renders edit controls only when viewing your own profile.
+
+`PATCH` reads `OnboardingErrorScenario` for `PATCH_*` errors.
 
 ### `handlers/avatar.ts`
 Handles `POST /api/image/user/:id_user` (returns `{ message }` on success, matching the real backend) and `DELETE /api/image/user/:id_user`. Reads `OnboardingErrorScenario` for `AVATAR_*` errors.
@@ -91,6 +95,15 @@ Controls what `GET /auth/sync-user` returns.
 | `NEW` | `Flo_Nuevo` | `null` | `false` |
 
 Default: `FULL`.
+
+### Third-party users (`MOCK_OTHER_USERS`)
+
+Returned by `GET /api/user/:id` when the requested id is **not** the authenticated user — used to test the read-only third-party profile at `/profile/[id]`. Indexed by id in `data/mock-users.ts`.
+
+| id | `username` | Shape |
+|---|---|---|
+| `auth0\|other_456` | `Vale_Vecina` | full: photo, bio, zona, contacto (also the default fallback) |
+| `auth0\|other_789` | `Tomi_Tercero` | minimal: no bio, contacto, or zona (empty states) |
 
 ### Error Scenarios (`OnboardingErrorScenario`)
 
