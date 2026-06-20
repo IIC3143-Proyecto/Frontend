@@ -155,8 +155,8 @@ export const OnboardingForm = React.forwardRef<HTMLDivElement, OnboardingFormPro
         if (clothingTypes?.length) tags['Tipo de prenda'] = clothingTypes;
         if (size) tags['Talla'] = [size];
 
-        // patchUserTags activa la cuenta (En proceso de registro → Activo);
-        // patchUser requiere status Activo, por eso va después
+        // NOTE: patchUserTags activates the account (Registering → Active).
+        // patchUser requires the account to be Active, hence it must run afterwards.
         try {
           await patchUserTags({ tags }, token);
         } catch (err) {
