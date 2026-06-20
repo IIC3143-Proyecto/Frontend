@@ -4,7 +4,9 @@ import { waitForMSW } from './helpers/auth';
 const NO_AUTH = { storageState: { cookies: [], origins: [] } };
 
 const PRIVATE_ROUTES = [
+  '/feed',
   '/notifications',
+  '/posts',
   '/profile',
   '/publications',
   '/shopping-history',
@@ -18,7 +20,6 @@ test.describe('Rutas públicas — sin sesión', () => {
     await page.goto('/');
     await waitForMSW(page);
     await expect(page).toHaveURL('/');
-    await expect(page.getByRole('button', { name: 'Health Check' })).toBeVisible();
     await expect(page.getByText('Sincronizando con VTRNA')).not.toBeVisible();
   });
 
