@@ -16,14 +16,14 @@ import {
 } from "@/components/feed/interaction-buttons";
 import { products } from "./hardcoded_example";
 
-export default function Page() {
+export default function Feed() {
   const [isDesktopDetailsOpen, setIsDetailsOpen] = useState(true);
   const toggleDetails = () => setIsDetailsOpen((isOpen) => !isOpen);
 
   const product = products[1]; // ejemplo hardcodeado
 
   return (
-    <main className="flex-1 flex flex-row min-h-0">
+    <main className="flex-1 flex flex-row min-h-0 h-full">
 
       {/* LEFT */}
       <div className="flex-1 flex flex-col min-h-0 min-w-0">
