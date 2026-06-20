@@ -10,6 +10,7 @@ import {
   IconAlertTriangle,
   IconCamera,
   IconSparkles,
+  IconLogout,
 } from "@tabler/icons-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -174,6 +175,15 @@ export function ProfileLayout({ user, savedPosts, sub }: Props) {
           </p>
           <Button size="sm" variant="outline" onClick={() => setSavedOpen(true)}>
             Ver guardados
+          </Button>
+        </section>
+
+        <section className="bg-card border border-border rounded-2xl p-4 sm:p-3 sm:col-span-2 flex items-center justify-between">
+          <p className="text-xs font-black uppercase flex items-center gap-1.5 text-muted-foreground">
+            <IconLogout className="size-3.5" /> Cerrar sesión
+          </p>
+          <Button size="sm" variant="outline" asChild>
+            <a href="/logout">Salir</a>
           </Button>
         </section>
 
