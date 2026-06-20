@@ -15,8 +15,6 @@ export function mockPostDto(id: string, body: Record<string, unknown> = {}): Pos
       updatedAtUtcMinus3: new Date().toISOString(),
       posts: [],
       interactions: [],
-      following: [],
-      followers: [],
     },
     title: typeof body.title === 'string' ? body.title : '',
     description: typeof body.description === 'string' ? body.description : '',
