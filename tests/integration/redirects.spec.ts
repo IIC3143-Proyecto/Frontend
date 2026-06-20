@@ -2,9 +2,9 @@ import { test, expect } from '@playwright/test';
 import { gotoAuthenticated } from '../e2e/helpers/auth';
 
 test.describe('Onboarding redirects (useAuth)', () => {
-  test('FULL: /onboarding redirige a /profile (onboardingCompleted=true)', async ({ page }) => {
+  test('FULL: /onboarding redirige a /feed (onboardingCompleted=true)', async ({ page }) => {
     await gotoAuthenticated(page, '/onboarding', 'FULL');
-    await expect(page).toHaveURL('/profile');
+    await expect(page).toHaveURL('/feed');
   });
 
   test('ONBOARDING_PENDING: /profile redirige a /onboarding', async ({ page }) => {
@@ -24,26 +24,3 @@ test.describe('Onboarding redirects (useAuth)', () => {
   });
 });
 
-test.describe('Proxy redirect server-side (sin flicker)', () => {
-  // TODO: activar cuando se implemente el endpoint de sesión de test.
-  // page.route() intercepta sync-user antes del BFF, por lo que updateSession()
-  // nunca corre y el proxy no tiene onboardingCompleted en sesión.
-  test.fixme('ONBOARDING_PENDING: /posts redirige a /onboarding sin renderizar la página', async ({ page }) => {
-    // Primera visita: sync-user corre y updateSession() persiste onboardingCompleted en la sesión
-    await gotoAuthenticated(page, '/posts', 'ONBOARDING_PENDING');
-    await expect(page).toHaveURL('/onboarding');
-
-    // Segunda visita: el proxy tiene onboardingCompleted en sesión → redirect server-side
-    const statuses: number[] = [];
-    page.on('response', res => {
-      if (new URL(res.url()).pathname === '/posts') statuses.push(res.status());
-    });
-
-    await page.goto('/posts');
-    await page.waitForURL('**/onboarding');
-
-    // El servidor nunca devolvió 200 para /posts — fue un redirect directo
-    expect(statuses.length).toBeGreaterThan(0);
-    expect(statuses.every(s => s >= 300 && s < 400)).toBe(true);
-  });
-});

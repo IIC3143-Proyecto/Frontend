@@ -15,7 +15,8 @@
     "test:ui": "playwright test --ui",
     "test:unit": "vitest run",
     "test:unit:watch": "vitest",
-    "test:contract": "playwright test --project=contract"
+    "test:contract": "playwright test --project=contract",
+    "test:live": "LIVE_TEST=true playwright test --config=playwright.config.live.ts --headed"
   },
   "dependencies": {
     "@auth0/nextjs-auth0": "^4.20.0",
