@@ -14,7 +14,8 @@ import {
   SaveButton,
   OfferButton,
 } from "@/components/feed/interaction-buttons";
-import { products } from "./hardcoded_example";
+import { products } from "./hardcoded_posts";
+import { tagsByCategory } from "./hardcoded_filters";
 
 export default function Feed() {
   const [isDesktopDetailsOpen, setIsDetailsOpen] = useState(true);
@@ -22,13 +23,19 @@ export default function Feed() {
 
   const product = products[1]; // ejemplo hardcodeado
 
+  const [appliedFilters , setAppliedFilters] = useState<string[]>([]);
+  
   return (
     <main className="flex-1 flex flex-row min-h-0 h-full">
-
-      {/* LEFT */}
       <div className="flex-1 flex flex-col min-h-0 min-w-0">
-        <Filters />
+        {/* FILTERS */}
+        <Filters 
+          filtersByCategory={tagsByCategory}
+          appliedFilters={appliedFilters}
+          setAppliedFilters={setAppliedFilters}
+        />
 
+        {/* MAIN CONTENT*/}
         <div className="flex-1 overflow-hidden flex justify-center items-center gap-8 md:px-4">
           <IgnoreButton className="hidden md:flex" />
 
@@ -40,6 +47,7 @@ export default function Feed() {
           <LikeButton className="hidden md:flex" />
         </div>
 
+        {/* INTERACTION BUTTONS */}
         <div className="md:h-20 md:border-t flex items-center justify-center gap-6 my-6 md:my-0 overflow-hidden">
           <SaveButton />
           <IgnoreButton className="md:hidden" />
@@ -49,7 +57,7 @@ export default function Feed() {
         </div>
       </div>
 
-      {/* RIGHT */}
+      {/* DESKTOP SIDEBAR */}
       {isDesktopDetailsOpen && (
         <div className="w-1/3 hidden md:block border-l overflow-hidden">
           <ProductDetailsDesktop details={product.details} onClose={toggleDetails} />
