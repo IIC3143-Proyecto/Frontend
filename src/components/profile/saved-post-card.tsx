@@ -25,7 +25,7 @@ export function SavedPostCard({ post, onRemove }: Props) {
   }
 
   return (
-    <article className="relative bg-card border border-border flex flex-col p-3 w-full max-w-[250px] overflow-hidden">
+    <article className="relative bg-card border border-border flex flex-col p-3 w-full max-w-62.5 overflow-hidden">
       <div className="absolute top-1 right-2 z-20 flex flex-col gap-1">
         <MiniRoundButton aria-label="Ver detalle" onClick={() => setDetailOpen(true)}>
           <IconInfoCircle className="size-4" />
@@ -42,7 +42,7 @@ export function SavedPostCard({ post, onRemove }: Props) {
         </MiniRoundButton>
       </div>
 
-      <div className="bg-muted aspect-[5/6] w-full flex items-center justify-center text-xs text-muted-foreground">
+      <div className="bg-muted aspect-5/6 w-full flex items-center justify-center text-xs text-muted-foreground">
         Imagen
       </div>
 

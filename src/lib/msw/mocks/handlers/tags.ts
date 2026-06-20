@@ -21,6 +21,12 @@ export const tagsHandlers = [
     return HttpResponse.json(MOCK_USER_TAG_PREFERENCES);
   }),
 
+  http.get('*/api/tag/user/:id_user', ({ request }) => {
+    const token = request.headers.get('Authorization');
+    if (!token) return HttpResponse.json({ message: 'Unauthorized' }, { status: 401 });
+    return HttpResponse.json(MOCK_USER_TAG_PREFERENCES);
+  }),
+
   http.post('*/api/tag/user/onboarding', ({ request }) => {
     const token = request.headers.get('Authorization');
     if (!token) return HttpResponse.json({ message: 'Unauthorized' }, { status: 401 });
