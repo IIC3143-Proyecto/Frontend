@@ -139,6 +139,51 @@ export async function appendPostImages(postId: string, fd: FormData, accessToken
   }
 }
 
+export async function getPost(postId: string, accessToken: string): Promise<PostDto> {
+  const res = await fetch(api.postById(postId), {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
+  if (!res.ok) {
+    const json = await res.json().catch(() => ({}));
+    throw Object.assign(
+      new Error((json as { message?: string }).message ?? 'Error al obtener la publicación'),
+      { status: res.status },
+    );
+  }
+  return res.json() as Promise<PostDto>;
+}
+
+export async function getFeed(accessToken: string, quantity = 20): Promise<PostDto[]> {
+  const url = `${api.feed()}?quantity=${quantity}`;
+  const res = await fetch(url, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
+  if (!res.ok) {
+    const json = await res.json().catch(() => ({}));
+    throw Object.assign(
+      new Error((json as { message?: string }).message ?? 'Error al obtener el feed'),
+      { status: res.status },
+    );
+  }
+  return res.json() as Promise<PostDto[]>;
+}
+
+export async function searchByTags(tags: string[], accessToken: string): Promise<PostDto[]> {
+  const params = tags.map((t) => `tags=${encodeURIComponent(t)}`).join('&');
+  const url = `${api.search()}?${params}`;
+  const res = await fetch(url, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
+  if (!res.ok) {
+    const json = await res.json().catch(() => ({}));
+    throw Object.assign(
+      new Error((json as { message?: string }).message ?? 'Error al buscar publicaciones'),
+      { status: res.status },
+    );
+  }
+  return res.json() as Promise<PostDto[]>;
+}
+
 export async function deletePostImages(postId: string, urls: string[], accessToken: string): Promise<void> {
   const res = await fetch(`${BASE}/api/image/post/${postId}`, {
     method: 'DELETE',

@@ -1,8 +1,29 @@
 import { http, HttpResponse, delay } from 'msw';
-import { mockPost, MOCK_SELLER_POSTS, MOCK_SAVED_POSTS } from '../data/posts';
+import { mockPost, MOCK_SELLER_POSTS, MOCK_SAVED_POSTS, MOCK_FEED_POSTS, MOCK_FEED_POST_TAGS } from '../data/posts';
 import { getErrorScenario } from '../scenario';
 
 export const postsHandlers = [
+  http.get('*/api/post/feed', ({ request }) => {
+    const token = request.headers.get('Authorization');
+    if (!token) return HttpResponse.json({ message: 'Unauthorized' }, { status: 401 });
+    const url = new URL(request.url);
+    const quantity = parseInt(url.searchParams.get('quantity') ?? '20', 10);
+    return HttpResponse.json(MOCK_FEED_POSTS.slice(0, quantity));
+  }),
+
+  http.get('*/api/post/search', ({ request }) => {
+    const token = request.headers.get('Authorization');
+    if (!token) return HttpResponse.json({ message: 'Unauthorized' }, { status: 401 });
+    const url = new URL(request.url);
+    const tags = url.searchParams.getAll('tags').map((t) => t.toLowerCase());
+    if (!tags.length) return HttpResponse.json([], { status: 200 });
+    const results = MOCK_FEED_POSTS.filter((p) => {
+      const postTags = (MOCK_FEED_POST_TAGS[p.id] ?? []).map((t) => t.toLowerCase());
+      return tags.some((t) => postTags.includes(t));
+    });
+    return HttpResponse.json(results);
+  }),
+
   http.get('*/api/post/saved/:id_user', ({ request }) => {
     const token = request.headers.get('Authorization');
     if (!token) return HttpResponse.json({ message: 'Unauthorized' }, { status: 401 });
@@ -15,10 +36,11 @@ export const postsHandlers = [
     return HttpResponse.json(MOCK_SELLER_POSTS);
   }),
 
-  // TODO: implementar cuando el backend habilite GET /api/post/search
-  http.get('*/api/post/search', () =>
-    HttpResponse.json({ message: 'Not implemented' }, { status: 404 })
-  ),
+  http.get('*/api/post/seller/:id_user', ({ request }) => {
+    const token = request.headers.get('Authorization');
+    if (!token) return HttpResponse.json({ message: 'Unauthorized' }, { status: 401 });
+    return HttpResponse.json(MOCK_SELLER_POSTS);
+  }),
 
   http.get('*/api/tag/post/:id_post', ({ request }) => {
     const token = request.headers.get('Authorization');

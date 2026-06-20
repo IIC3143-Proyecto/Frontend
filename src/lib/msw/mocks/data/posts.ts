@@ -71,6 +71,41 @@ export const MOCK_SELLER_POSTS: PostDto[] = [
   { ...mockPost('post_5'), title: 'Archive Nike Bag', description: 'Bolso Nike de colección.', priceClp: 30000, isNegotiable: false, status: PostStatus.SOLD, isActive: false, likesCount: 10, viewsCount: 40, imagesUrls: '' },
 ];
 
+const MOCK_SELLER_2: UserDto = {
+  id: 'seller-mock-2',
+  name: 'Otro Vendedor',
+  username: 'otro_vendedor',
+  email: 'otro@mock.cl',
+  providerAuth0: 'auth0|seller_mock_2',
+  status: 'Activo',
+  createdAtUtcMinus3: '2025-03-01T00:00:00.000Z',
+  updatedAtUtcMinus3: '2025-03-01T00:00:00.000Z',
+  posts: [],
+  interactions: [],
+};
+
+export const MOCK_FEED_POSTS: PostDto[] = [
+  { ...mockPost('feed_1'), sellerId: MOCK_SELLER.id, seller: MOCK_SELLER, title: 'Parka Oversized Beige', description: 'Parka cálida, perfecta para invierno.', priceClp: 32000, isNegotiable: true, status: PostStatus.PUBLISHED, likesCount: 12, savesCount: 5, viewsCount: 30, imagesUrls: 'https://picsum.photos/seed/feed1a/400/500,https://picsum.photos/seed/feed1b/400/500' },
+  { ...mockPost('feed_2'), sellerId: MOCK_SELLER_2.id, seller: MOCK_SELLER_2, title: 'Camiseta Vintage Nike', description: 'Talla L, sin uso.', priceClp: 14000, isNegotiable: false, status: PostStatus.PUBLISHED, likesCount: 7, savesCount: 2, viewsCount: 18, imagesUrls: 'https://picsum.photos/seed/feed2a/400/500' },
+  { ...mockPost('feed_3'), sellerId: MOCK_SELLER.id, seller: MOCK_SELLER, title: 'Jeans Mom Azul', description: 'Talla 28, en buen estado.', priceClp: 21000, isNegotiable: true, status: PostStatus.PUBLISHED, likesCount: 3, savesCount: 1, viewsCount: 9, imagesUrls: 'https://picsum.photos/seed/feed3a/400/500,https://picsum.photos/seed/feed3b/400/500,https://picsum.photos/seed/feed3c/400/500' },
+  { ...mockPost('feed_4'), sellerId: MOCK_SELLER_2.id, seller: MOCK_SELLER_2, title: 'Poleron Adidas Clásico', description: 'Talla M, ligero uso.', priceClp: 18500, isNegotiable: false, status: PostStatus.PUBLISHED, likesCount: 20, savesCount: 8, viewsCount: 55, imagesUrls: 'https://picsum.photos/seed/feed4a/400/500' },
+  { ...mockPost('feed_5'), sellerId: MOCK_SELLER.id, seller: MOCK_SELLER, title: 'Falda Midi Floral', description: 'Talla S, nueva con etiqueta.', priceClp: 9500, isNegotiable: false, status: PostStatus.PUBLISHED, likesCount: 6, savesCount: 3, viewsCount: 14, imagesUrls: 'https://picsum.photos/seed/feed5a/400/500,https://picsum.photos/seed/feed5b/400/500' },
+  { ...mockPost('feed_6'), sellerId: MOCK_SELLER_2.id, seller: MOCK_SELLER_2, title: 'Chaqueta Denim Negra', description: 'Talla XL, estilo vintage.', priceClp: 27000, isNegotiable: true, status: PostStatus.PUBLISHED, likesCount: 15, savesCount: 6, viewsCount: 40, imagesUrls: 'https://picsum.photos/seed/feed6a/400/500' },
+  { ...mockPost('feed_7'), sellerId: MOCK_SELLER.id, seller: MOCK_SELLER, title: 'Shorts Cargo Verde', description: 'Talla M, poco uso.', priceClp: 11000, isNegotiable: true, status: PostStatus.PUBLISHED, likesCount: 4, savesCount: 0, viewsCount: 7, imagesUrls: 'https://picsum.photos/seed/feed7a/400/500' },
+  { ...mockPost('feed_8'), sellerId: MOCK_SELLER_2.id, seller: MOCK_SELLER_2, title: 'Bolso Cuero Camel', description: 'Cuero genuino, muy poco uso.', priceClp: 40000, isNegotiable: false, status: PostStatus.PUBLISHED, likesCount: 9, savesCount: 4, viewsCount: 22, imagesUrls: 'https://picsum.photos/seed/feed8a/400/500,https://picsum.photos/seed/feed8b/400/500' },
+];
+
+export const MOCK_FEED_POST_TAGS: Record<string, string[]> = {
+  feed_1: ['Abrigo', 'Invierno', 'Nuevo', 'Femenino'],
+  feed_2: ['Polera', 'Nike', 'Casual', 'Sin uso'],
+  feed_3: ['Pantalón', 'Azul', 'M', 'Casi nuevo'],
+  feed_4: ['Poleron', 'Adidas', 'M', 'Deportivo'],
+  feed_5: ['Falda', 'S', 'Nuevo', 'Femenino', 'Floral'],
+  feed_6: ['Chaqueta', 'Denim', 'XL', 'Vintage', 'Negro'],
+  feed_7: ['Shorts', 'M', 'Verde', 'Casual'],
+  feed_8: ['Bolso', 'Cuero', 'Camel', 'Casi nuevo'],
+};
+
 export const MOCK_SAVED_POSTS: PostDto[] = [
   MOCK_SELLER_POSTS[0],
   MOCK_SELLER_POSTS[1],
