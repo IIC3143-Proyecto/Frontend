@@ -18,7 +18,7 @@ export async function syncUserFromBackend(token: string): Promise<UserDto> {
     headers: { Authorization: `Bearer ${token}` },
   });
   if (!res.ok)
-    throw Object.assign(new Error("Backend error"), { status: res.status });
+    throw Object.assign(new Error("BACKEND ERROR"), { status: res.status });
   const { data } = (await res.json()) as { data: UserDto; message: string };
   return data;
 }
