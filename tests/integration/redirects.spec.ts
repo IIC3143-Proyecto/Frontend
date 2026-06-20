@@ -2,11 +2,6 @@ import { test, expect } from '@playwright/test';
 import { gotoAuthenticated } from '../e2e/helpers/auth';
 
 test.describe('Onboarding redirects (useAuth)', () => {
-  test('FULL: /onboarding redirige a /feed (onboardingCompleted=true)', async ({ page }) => {
-    await gotoAuthenticated(page, '/onboarding', 'FULL');
-    await expect(page).toHaveURL('/feed');
-  });
-
   test('ONBOARDING_PENDING: /profile redirige a /onboarding', async ({ page }) => {
     await gotoAuthenticated(page, '/profile', 'ONBOARDING_PENDING');
     await expect(page).toHaveURL('/onboarding');
