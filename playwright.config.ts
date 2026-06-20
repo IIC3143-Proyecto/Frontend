@@ -3,7 +3,9 @@ import dotenv from 'dotenv';
 
 dotenv.config({ path: '.env.local' });
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, '');
+const BACKEND_URL = process.env.CHECK_BACKEND
+  ? process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, '')
+  : undefined;
 
 export default defineConfig({
   fullyParallel: false,
