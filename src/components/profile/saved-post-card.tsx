@@ -26,7 +26,7 @@ export function SavedPostCard({ post, onRemove, canOffer = true }: Props) {
   }
 
   return (
-    <article className="relative bg-card border border-border flex flex-col p-3 w-full max-w-62.5 overflow-hidden">
+    <article data-testid="saved-post-card" className="relative bg-card border border-border flex flex-col p-3 w-full max-w-62.5 overflow-hidden">
       <div className="absolute top-1 right-2 z-20 flex flex-col gap-1">
         <MiniRoundButton aria-label="Ver detalle" onClick={() => setDetailOpen(true)}>
           <IconInfoCircle className="size-4" />
