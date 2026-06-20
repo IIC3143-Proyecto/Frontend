@@ -1,7 +1,15 @@
 "use client";
 
 import { useState } from "react";
-import { IconLoader2, IconLock } from "@tabler/icons-react";
+import {
+  IconCalendar,
+  IconCoin,
+  IconCoinOff,
+  IconLoader2,
+  IconLock,
+  IconMailCheck,
+  IconUser,
+} from "@tabler/icons-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -15,7 +23,7 @@ import { usePatchOffer } from "@/hooks/use-patch-offer";
 import { getOfferActions, getRoleForDirection } from "@/lib/offer-transitions";
 import type { OfferDto } from "@/lib/types/offer";
 import { OfferDirection } from "@/lib/types/offer-direction.enum";
-import type { OfferPatchAction } from "@/lib/types/offer-patch-action.enum";
+import { OfferPatchAction } from "@/lib/types/offer-patch-action.enum";
 import { formatPriceCLP } from "@/lib/utils";
 
 type Props = {
@@ -25,13 +33,20 @@ type Props = {
   direction: OfferDirection;
 };
 
-function FieldLabel({ children }: { children: React.ReactNode }) {
-  return (
-    <p className="text-sm font-bold uppercase tracking-wider text-muted-foreground mb-1">
-      {children}
-    </p>
-  );
+function formatDate(value: string): string {
+  return new Date(value).toLocaleDateString("es-CL", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
 }
+
+const ACTION_ICONS: Partial<Record<OfferPatchAction, React.ReactNode>> = {
+  [OfferPatchAction.ACCEPT]: <IconCoin className="size-5" />,
+  [OfferPatchAction.REJECT]: <IconCoinOff className="size-5" />,
+  [OfferPatchAction.SELLER_CONFIRM]: <IconMailCheck className="size-5" />,
+  [OfferPatchAction.BUYER_CONFIRM]: <IconMailCheck className="size-5" />,
+};
 
 export function OfferEditModal({ open, onClose, offer, direction }: Props) {
   const [activeAction, setActiveAction] = useState<OfferPatchAction | null>(
@@ -43,6 +58,8 @@ export function OfferEditModal({ open, onClose, offer, direction }: Props) {
 
   const { post } = offer;
   const actions = getOfferActions(offer.status, getRoleForDirection(direction));
+  const counterparty =
+    direction === OfferDirection.RECEIVED ? offer.buyer : post.seller;
 
   const handleClose = () => {
     if (isPending) return;
@@ -62,74 +79,82 @@ export function OfferEditModal({ open, onClose, offer, direction }: Props) {
       <DialogContent
         showCloseButton={false}
         aria-describedby={undefined}
-        className="flex flex-col p-0 gap-0 w-full sm:max-w-md"
+        className="flex flex-col gap-0 p-0 w-full sm:max-w-sm"
       >
         <DialogHeader className="px-6 pt-5 pb-4 shrink-0">
-          <DialogTitle className="text-base font-semibold">
-            Gestionar oferta
-          </DialogTitle>
+          <div className="flex items-center justify-between gap-3">
+            <DialogTitle className="text-xs font-black uppercase tracking-wider">
+              Gestionar oferta
+            </DialogTitle>
+            <span className="text-xs font-medium border border-border rounded-full px-2 py-0.5 whitespace-nowrap">
+              {offer.status}
+            </span>
+          </div>
         </DialogHeader>
 
         <Separator />
 
-        <div className="flex flex-col gap-4 px-6 py-5">
-          <div className="flex flex-col gap-1">
-            <p className="text-lg font-bold uppercase leading-tight truncate">
+        <div className="flex flex-col gap-5 px-6 py-5">
+          <div className="flex flex-col items-center text-center gap-1">
+            <p className="text-sm text-muted-foreground truncate max-w-full">
               {post.title}
             </p>
-            <div className="flex items-baseline gap-2 flex-wrap">
-              <span className="font-bold text-chart-3">
-                {formatPriceCLP(offer.priceClp)}
-              </span>
-              <span className="text-xs text-muted-foreground line-through">
-                {formatPriceCLP(post.priceClp)}
-              </span>
-            </div>
+            <p className="text-4xl font-bold text-chart-3">
+              {formatPriceCLP(offer.priceClp)}
+            </p>
+            <p className="text-sm text-muted-foreground line-through">
+              {formatPriceCLP(post.priceClp)}
+            </p>
           </div>
 
-          <div>
-            <FieldLabel>Estado actual</FieldLabel>
-            <span className="inline-block text-xs font-bold uppercase border border-border rounded-full px-2 py-0.5">
-              {offer.status}
+          <div className="flex flex-wrap justify-center gap-x-5 gap-y-2 text-sm">
+            <span className="flex items-center gap-1 text-muted-foreground">
+              <IconUser className="size-3.5 shrink-0" />
+              {counterparty?.name ?? counterparty?.username ?? "—"}
+            </span>
+            <span className="flex items-center gap-1 text-muted-foreground">
+              <IconCalendar className="size-3.5 shrink-0" />
+              {formatDate(offer.createdAtUtcMinus3)}
             </span>
           </div>
 
-          <Separator />
-
           {actions.length > 0 ? (
-            <div className="flex flex-col gap-2">
-              <FieldLabel>Acciones disponibles</FieldLabel>
+            <div
+              className={
+                actions.length >= 2
+                  ? "flex flex-row gap-2"
+                  : "flex flex-col gap-2"
+              }
+            >
               {actions.map((action) => (
                 <Button
                   key={action.action}
                   variant={action.variant}
                   disabled={isPending}
                   onClick={() => runAction(action.action)}
+                  className={actions.length >= 2 ? "flex-1" : undefined}
                 >
-                  {activeAction === action.action && (
-                    <IconLoader2 className="mr-1.5 size-4 animate-spin" />
+                  {activeAction === action.action ? (
+                    <IconLoader2 className="size-4 animate-spin" />
+                  ) : (
+                    ACTION_ICONS[action.action]
                   )}
                   {action.label}
                 </Button>
               ))}
             </div>
           ) : (
-            <div className="flex items-center justify-center gap-2 rounded-3xl bg-muted px-3 py-3 text-sm font-black uppercase text-muted-foreground">
+            <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
               <IconLock className="size-3.5 shrink-0" />
-              <span>No hay acciones disponibles</span>
+              No hay acciones disponibles
             </div>
           )}
         </div>
 
         <Separator />
 
-        <div className="px-6 py-4 flex items-center justify-end shrink-0">
-          <Button
-            variant="ghost"
-            onClick={handleClose}
-            disabled={isPending}
-            className="text-muted-foreground"
-          >
+        <div className="px-6 py-4 flex justify-end shrink-0">
+          <Button variant="outline" onClick={handleClose} disabled={isPending}>
             Cerrar
           </Button>
         </div>
