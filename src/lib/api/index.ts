@@ -14,12 +14,15 @@ function local(path: string): string {
 }
 
 export const api = {
-  syncUser:          () => local('/sync-user'),                        // BFF — always local
-  tags:              () => remote('/api/tag'),
-  userImage:         (id: string) => remote(`/api/image/user/${id}`),
-  user:              (id: string) => remote(`/api/user/${id}`),
-  userTags:          (id: string) => remote(`/api/tag/user/${id}`),
+  syncUser:           () => local('/sync-user'),                        // BFF — always local
+  tags:               () => remote('/api/tag'),
+  userImage:          (id: string) => remote(`/api/image/user/${id}`),
+  user:               (id: string) => remote(`/api/user/${id}`),
+  userTags:           (id: string) => remote(`/api/tag/user/${id}`),
   userTagsOnboarding: () => remote('/api/tag/user/onboarding'),
-  post:              () => remote('/api/post'),
-  postImages:        (id: string) => remote(`/api/image/post/${id}`),
+  savedPosts:         (id: string) => remote(`/api/post/saved/${id}`),
+  interaction:        (postId: string) => remote(`/api/interaction/${postId}`),
+  post:               () => remote('/api/post'),
+  postImages:         (id: string) => remote(`/api/image/post/${id}`),
+  offer:              () => remote('/api/offer'),
 };
