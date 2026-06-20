@@ -1,6 +1,8 @@
 import { type NextRequest, NextResponse } from 'next/server';
 import { auth0 } from './lib/auth0';
 
+type UserStatus = 'En proceso de registro' | 'Activo';
+
 export async function proxy(request: NextRequest) {
   const authResponse = await auth0.middleware(request);
 
@@ -17,7 +19,7 @@ export async function proxy(request: NextRequest) {
   }
 
   if (session) {
-    const { status } = session.user as { status?: string };
+    const { status } = session.user as { status?: UserStatus };
     const isOnboardingRoute = pathname.startsWith('/onboarding');
 
     // undefined → primer login antes de sync-user; useAuth lo maneja
