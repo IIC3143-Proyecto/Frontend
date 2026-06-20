@@ -32,7 +32,9 @@ export type OnboardingErrorScenario =
   | 'DELETE_IMAGE_401' | 'DELETE_IMAGE_500' | 'DELETE_IMAGE_NETWORK'
   | 'APPEND_IMAGE_401' | 'APPEND_IMAGE_500' | 'APPEND_IMAGE_NETWORK'
   // Sync-user errors (pre-navigation)
-  | 'SYNC_USER_401' | 'SYNC_USER_403' | 'SYNC_USER_500' | 'SYNC_USER_503';
+  | 'SYNC_USER_401' | 'SYNC_USER_403' | 'SYNC_USER_500' | 'SYNC_USER_503'
+  // Gemini tag analysis
+  | 'GEMINI_500';
 
 let currentErrorScenario: OnboardingErrorScenario = 'NONE';
 
