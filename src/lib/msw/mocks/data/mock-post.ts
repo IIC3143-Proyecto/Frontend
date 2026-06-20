@@ -13,6 +13,7 @@ export function mockPostDto(id: string, body: Record<string, unknown> = {}): Pos
       providerAuth0: 'auth0|seller_mock',
       createdAtUtcMinus3: new Date().toISOString(),
       updatedAtUtcMinus3: new Date().toISOString(),
+      status: 'active',
       posts: [],
       interactions: [],
     },
