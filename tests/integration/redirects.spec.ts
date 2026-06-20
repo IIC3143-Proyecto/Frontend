@@ -2,9 +2,9 @@ import { test, expect } from '@playwright/test';
 import { gotoAuthenticated } from '../e2e/helpers/auth';
 
 test.describe('Onboarding redirects (useAuth)', () => {
-  test('FULL: /onboarding redirige a /profile (onboardingCompleted=true)', async ({ page }) => {
+  test('FULL: /onboarding redirige a /feed (onboardingCompleted=true)', async ({ page }) => {
     await gotoAuthenticated(page, '/onboarding', 'FULL');
-    await expect(page).toHaveURL('/profile');
+    await expect(page).toHaveURL('/feed');
   });
 
   test('ONBOARDING_PENDING: /profile redirige a /onboarding', async ({ page }) => {
@@ -23,3 +23,4 @@ test.describe('Onboarding redirects (useAuth)', () => {
     await expect(page).toHaveURL('/onboarding');
   });
 });
+

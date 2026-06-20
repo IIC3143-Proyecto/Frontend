@@ -1,12 +1,17 @@
 import { PostStatus } from './post-status.enum';
 import type { UserDto, InteractionDto } from './user';
 
+export interface PhotoItem {
+  file: File;
+  preview: string;
+}
+
 export type PostDto = {
   id: string;
   sellerId: string;
-  buyerId?: string;
+  buyerId: string | null;
   seller: UserDto;
-  buyer?: UserDto;
+  buyer: UserDto | null;
   title: string;
   description: string;
   priceClp: number;
@@ -18,7 +23,7 @@ export type PostDto = {
   offersCount?: number;
   isActive: boolean;
   isDeleted: boolean;
-  images?: string;
+  imagesUrls: string;
   createdAtUtcMinus3: string;
   interactions: InteractionDto[];
 };
@@ -28,4 +33,15 @@ export type NewPostDto = {
   description: string;
   priceClp: number;
   isNegotiable: boolean;
+};
+
+export type PostTagsDto = {
+  Talla: string[];
+  Condición: string;
+  'Tipo de prenda': string[];
+  Marca: string[];
+  Color: string[];
+  Género: string[];
+  Estilo: string[];
+  Temporada: string[];
 };

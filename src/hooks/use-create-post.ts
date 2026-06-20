@@ -1,6 +1,6 @@
 "use client";
 
-import * as React from "react";
+import { useState, useEffect, useRef, useCallback, useLayoutEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -9,19 +9,9 @@ import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { getAccessToken } from "@/actions/auth";
 import { createPost, patchPostTags, uploadPostImages } from "@/lib/api/post";
-
-function handleApiError(err: unknown, label: string, router: { push: (url: string) => void }) {
-  const status = (err as { status?: number }).status;
-  const message = err instanceof Error ? err.message : `Error en ${label}`;
-
-  if (status === undefined) {
-    toast.error("Error de red", { description: "Verifica tu conexión e inténtalo de nuevo." });
-  } else if (status === 401) {
-    router.push("/session-expired");
-  } else {
-    toast.error(label, { description: message });
-  }
-}
+import { desktopToMobile, mobileToDesktop } from '@/lib/post-steps';
+import { handleApiError } from "@/lib/api/handle-error";
+import type { PhotoItem } from "@/lib/types/post";
 
 export const createPostSchema = z.object({
   title: z.string().min(1, "Título requerido").max(100, "Máximo 100 caracteres"),
@@ -43,19 +33,16 @@ export const createPostSchema = z.object({
 export type CreatePostSchema = z.infer<typeof createPostSchema>;
 export type CreatePostInput = z.input<typeof createPostSchema>;
 
-export interface PhotoItem {
-  file: File;
-  preview: string;
-}
+export type { PhotoItem };
 
 function useIsMobile() {
-  const [isMobile, setIsMobile] = React.useState(() =>
+  const [isMobile, setIsMobile] = useState(() =>
     typeof window !== "undefined"
       ? window.matchMedia("(max-width: 767px)").matches
       : false
   );
 
-  React.useEffect(() => {
+  useEffect(() => {
     const mq = window.matchMedia("(max-width: 767px)");
     const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
     mq.addEventListener("change", handler);
@@ -63,24 +50,6 @@ function useIsMobile() {
   }, []);
 
   return isMobile;
-}
-
-function desktopToMobile(step: number, photoCount: number): number {
-  switch (step) {
-    case 1: return photoCount > 0 ? 2 : 1;
-    case 2: return 3;
-    case 3: return 4;
-    default: return 1;
-  }
-}
-
-function mobileToDesktop(step: number): number {
-  switch (step) {
-    case 3: return 2;
-    case 4:
-    case 5: return 3;
-    default: return 1;
-  }
 }
 
 export interface UseCreatePostReturn {
@@ -109,26 +78,26 @@ export function useCreatePost(onClose: () => void): UseCreatePostReturn {
   const isMobile = useIsMobile();
   const totalSteps = isMobile ? 5 : 3;
 
-  const [step, setStep] = React.useState(1);
-  const [photos, setPhotos] = React.useState<PhotoItem[]>([]);
-  const [photoError, setPhotoError] = React.useState<string | null>(null);
-  const [isUploading, setIsUploading] = React.useState(false);
-  const [isPosting, setIsPosting] = React.useState(false);
-  const [isSubmitting, setIsSubmitting] = React.useState(false);
-  const [isPostCreated, setIsPostCreated] = React.useState(false);
-  const postIdRef = React.useRef<string>('');
-  const photosUploadedRef = React.useRef<boolean>(false);
+  const [step, setStep] = useState(1);
+  const [photos, setPhotos] = useState<PhotoItem[]>([]);
+  const [photoError, setPhotoError] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [isPosting, setIsPosting] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isPostCreated, setIsPostCreated] = useState(false);
+  const postIdRef = useRef<string>('');
+  const photosUploadedRef = useRef<boolean>(false);
 
-  const photosRef = React.useRef(photos);
-  React.useLayoutEffect(() => {
+  const photosRef = useRef(photos);
+  useLayoutEffect(() => {
     photosRef.current = photos;
   }, [photos]);
 
   const isLastStep = step === totalSteps;
   const isPhotoStep = isMobile ? step === 2 : step === 1;
 
-  const isMountedRef = React.useRef(false);
-  React.useEffect(() => {
+  const isMountedRef = useRef(false);
+  useEffect(() => {
     if (!isMountedRef.current) {
       isMountedRef.current = true;
       return;
@@ -159,19 +128,19 @@ export function useCreatePost(onClose: () => void): UseCreatePostReturn {
     },
   });
 
-  const addPhoto = React.useCallback((file: File, preview: string) => {
+  const addPhoto = useCallback((file: File, preview: string) => {
     setPhotos((prev) => [...prev, { file, preview }]);
     setPhotoError(null);
   }, []);
 
-  const removePhoto = React.useCallback((index: number) => {
+  const removePhoto = useCallback((index: number) => {
     setPhotos((prev) => {
       URL.revokeObjectURL(prev[index].preview);
       return prev.filter((_, i) => i !== index);
     });
   }, []);
 
-  const validateStep = React.useCallback(async (): Promise<boolean> => {
+  const validateStep = useCallback(async (): Promise<boolean> => {
     if (isMobile) {
       switch (step) {
         case 1:
@@ -205,7 +174,7 @@ export function useCreatePost(onClose: () => void): UseCreatePostReturn {
     }
   }, [isMobile, step, photos.length, form]);
 
-  const doUpload = React.useCallback(async (): Promise<boolean> => {
+  const doUpload = useCallback(async (): Promise<boolean> => {
     if (photosUploadedRef.current) return true;
     setIsUploading(true);
     try {
@@ -229,7 +198,7 @@ export function useCreatePost(onClose: () => void): UseCreatePostReturn {
     }
   }, [photos, router]);
 
-  const doCreatePost = React.useCallback(async (): Promise<boolean> => {
+  const doCreatePost = useCallback(async (): Promise<boolean> => {
     if (postIdRef.current) return true;
     setIsPosting(true);
     try {
@@ -262,7 +231,7 @@ export function useCreatePost(onClose: () => void): UseCreatePostReturn {
     }
   }, [form, router]);
 
-  const handleNext = React.useCallback(async () => {
+  const handleNext = useCallback(async () => {
     const valid = await validateStep();
     if (!valid) return;
 
@@ -279,11 +248,11 @@ export function useCreatePost(onClose: () => void): UseCreatePostReturn {
     setStep((s) => s + 1);
   }, [validateStep, step, doCreatePost, isPhotoStep, doUpload]);
 
-  const handleBack = React.useCallback(() => {
+  const handleBack = useCallback(() => {
     setStep((s) => Math.max(1, s - 1));
   }, []);
 
-  const reset = React.useCallback(() => {
+  const reset = useCallback(() => {
     form.reset();
     setPhotos((prev) => {
       prev.forEach((p) => URL.revokeObjectURL(p.preview));
@@ -296,7 +265,7 @@ export function useCreatePost(onClose: () => void): UseCreatePostReturn {
     setIsPostCreated(false);
   }, [form]);
 
-  const handlePublish = React.useCallback(async () => {
+  const handlePublish = useCallback(async () => {
     const valid = await validateStep();
     if (!valid) return;
 
@@ -342,7 +311,7 @@ export function useCreatePost(onClose: () => void): UseCreatePostReturn {
     )();
 
     setIsSubmitting(false);
-}, [validateStep, form, onClose, reset, router, queryClient]);
+  }, [validateStep, form, onClose, reset, router, queryClient]);
 
   return {
     form,

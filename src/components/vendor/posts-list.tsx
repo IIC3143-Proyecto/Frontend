@@ -41,8 +41,8 @@ export function PostsList() {
   }, [posts, tab]);
 
   return (
-    <div className="w-full">
-      <div className="flex justify-center gap-5 p-3 border-y border-border bg-sidebar">
+    <div className="w-full relative">
+      <div className="flex justify-center gap-5 p-3 border-y border-border bg-sidebar h-11 sticky top-7 md:top-27 z-30">
         {VIEWS.map(({ id, label, Icon }) => (
           <button
             key={id}
@@ -60,7 +60,7 @@ export function PostsList() {
         ))}
       </div>
 
-      <div className="flex border-b border-border">
+      <div className="flex border-b border-border sticky top-18 md:top-38 z-30 bg-background">
         {TABS.map(({ id, label }) => (
           <button
             key={id}

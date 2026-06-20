@@ -6,7 +6,7 @@ import { syncUser } from '@/lib/api/auth';
 
 export type SyncError = Error & { code: number };
 
-type DbUser = { id: string; onboardingCompleted: boolean };
+type DbUser = { id: string; status: string };
 
 export function useAuth() {
   const { user, isLoading: authLoading } = useUser();
@@ -19,7 +19,7 @@ export function useAuth() {
       const data = await syncUser();
       return {
         ...data,
-        onboardingCompleted: data.onboardingCompleted ?? false,
+        status: data.status ?? 'En proceso de registro',
       };
     },
     enabled: !!user,
@@ -30,13 +30,14 @@ export function useAuth() {
   useEffect(() => {
     if (!authLoading && !syncLoading && dbUser) {
       const isOnboardingPage = pathname === '/onboarding';
+      const onboardingDone = dbUser.status !== 'En proceso de registro';
 
-      if (!dbUser.onboardingCompleted && !isOnboardingPage) {
+      if (!onboardingDone && !isOnboardingPage) {
         router.push('/onboarding');
       }
 
-      if (dbUser.onboardingCompleted && isOnboardingPage) {
-        router.push('/profile');
+      if (onboardingDone && isOnboardingPage) {
+        router.push('/feed');
       }
     }
   }, [dbUser, authLoading, syncLoading, pathname, router]);

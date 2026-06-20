@@ -4,115 +4,152 @@ This folder contains documentation on testing strategies and test suites.
 
 ---
 
-## Overview
+## Test Suites
 
-VTRNA implements different testing layers using Playwright for E2E testing.
+VTRNA uses a Testing Trophy approach — more integration tests than E2E, with unit tests for pure logic and contract tests to validate the real backend.
+
+| Suite | Tool | Requires | ~Count |
+|-------|------|----------|--------|
+| **Unit** | Vitest | Nothing | 14 |
+| **Integration** | Playwright + MSW | Dev server | 43 |
+| **Contract** | Playwright | `BACKEND_API_URL` + Auth0 creds | 22 |
+| **E2E** | Playwright | Auth0 creds | 4 |
+| **Live Backend** | Playwright | Backend + DB limpia + Auth0 creds | ~5 |
 
 ---
 
 ## Installation
 
-Before running E2E tests for the first time, install Playwright and its dependencies:
+Before running Playwright tests for the first time, install browsers and dependencies:
 
 ```bash
-npx playwright install --with-deps    # Install Playwright + browser dependencies
-```
-
-Or use the npm script (if available):
-```bash
-npm run e2e:install                   # Alternative: install via npm script
+npm run test:install
 ```
 
 ---
 
 ## Running Tests
 
-### E2E Tests
+### Unit tests (Vitest)
 ```bash
-npm run e2e                    # Run all E2E tests (headless)
-npm run e2e -- --ui           # Interactive UI mode
-npm run e2e -- --headed       # Run with browser visible
-npm run e2e -- --debug        # Debug mode with inspector
-npm run e2e:report            # Open last HTML report
+npm run test:unit           # Run once
+npm run test:unit:watch     # Watch mode
 ```
 
-### Specific Test File
+### Integration tests (Playwright + MSW)
 ```bash
-npm run e2e -- onboarding.spec.ts    # Run specific test
-npm run e2e -- -g "pattern"           # Run tests matching pattern
+npm run test:integration    # Run integration suite
 ```
+
+### E2E tests (real Auth0)
+```bash
+npm run test:e2e            # Run E2E suite
+```
+
+### Both E2E + Integration
+```bash
+npm run test:all            # Runs e2e + integration projects
+```
+
+### Live backend tests (requires backend running with a clean DB)
+```bash
+npm run test:live
+```
+
+### Contract tests (requires real backend)
+```bash
+BACKEND_API_URL=https://your-backend.com npm run test:contract
+```
+
+### Utilities
+```bash
+npm run test:report         # Open last HTML report
+```
+
+---
+
+## Prerequisites
+
+### Integration tests
+```env
+NEXT_PUBLIC_ENABLE_MSW=true
+```
+
+### Contract tests
+```env
+NEXT_PUBLIC_API_URL=https://your-backend.com
+AUTH0_TEST_EMAIL=user@example.com
+AUTH0_TEST_PASSWORD=yourpassword
+ENABLE_TEST_ENDPOINTS=true
+```
+
+### E2E tests
+```env
+AUTH0_TEST_EMAIL=user@example.com
+AUTH0_TEST_PASSWORD=yourpassword
+```
+
+Without Auth0 credentials, the setup fixture saves an empty auth state and skips — integration tests still run.
+
+---
+
+## How Each Suite Works
+
+### Unit tests
+Pure logic, no DOM, no network. Files live next to the module they test (`src/**/*.test.ts`). See [unit-tests.md](unit-tests.md).
+
+### Integration tests
+Run against a dev server with MSW active (`serviceWorkers: 'allow'`, `NEXT_PUBLIC_ENABLE_MSW=true`). Use `window.__setErrorScenario()` for error injection and `page.addInitScript()` for pre-navigation scenarios. The `tests/fixtures.ts` fixture auto-resets MSW state after each test. See [MSW documentation](../msw.md).
+
+### Contract tests
+Make direct HTTP requests to a real backend. Validate response shapes and detect when pending endpoints are implemented. Self-skip without credentials. See [contract-tests.md](contract-tests.md).
+
+### E2E tests
+Real Auth0 OAuth flow. `serviceWorkers: 'block'` — MSW does not intercept. Require valid credentials in `.env.local`.
 
 ---
 
 ## Configuration
 
 See `playwright.config.ts` for:
-- Test directory: `./e2e`
+- Projects: `setup`, `e2e`, `integration`, `contract-setup`, `contract`
 - Base URL: `http://localhost:3000`
-- Browser: Chromium
 - Sequential execution (1 worker)
-- HTML reporting
-- Auto-start dev server
+- HTML reporting, traces on first retry
 
 ---
 
 ## Best Practices
 
-### E2E Tests
-- ✓ Use semantic locators (role, text) over CSS selectors
-- ✓ Wait for content visibility before assertions
-- ✓ Reset state in `beforeEach` or `beforeAll`
-- ✗ Avoid fixed delays (`sleep`)
-- ✗ Don't make actual API calls (use `page.route()` mocks)
+### Integration tests
+- Use `gotoAuthenticated(page, path, scenario)` to navigate as a specific user
+- Set error scenarios after navigation, before the triggering action
+- Import `test` from `tests/fixtures.ts` (not `@playwright/test`) to get auto-reset
+- Use semantic locators (role, text) over CSS selectors
 
-### Debugging
-```bash
-npx playwright test --debug        # Step-by-step debugging
-npm run e2e:ui                     # Interactive test runner
-npx playwright test --trace on     # Generate traces
-```
+### Unit tests
+- Test pure functions — no mocks, no DOM, no network
+- Keep test files next to the module: `src/lib/foo.ts` → `src/lib/foo.test.ts`
 
-### Performance
-- Tests run sequentially for reliability
-- `page.route()` intercepts all network calls (MSW service worker is blocked during tests)
-- Typical run: 20-30 seconds
+### General
+- Never use fixed `sleep()` delays — use explicit waits
+- `workers: 1` — tests run sequentially for reliability
 
 ---
 
-## CI/CD Integration
+## CI/CD
 
-In CI environment:
-- `forbidOnly: true` — prevents skipped tests
+In CI:
+- `forbidOnly: true` — prevents accidentally committed `.only` tests
 - 2 retries on failure
-- HTML report generated
-- Traces on first retry
-
----
-
-## Prerequisites
-
-Ensure `.env.local` contains:
-```
-NEXT_PUBLIC_ENABLE_MSW=true
-```
-
-MSW must be enabled for tests to work correctly.
-
----
-
-## Adding New Tests
-
-1. **Call helpers first** — ensure MSW and page state ready
-2. **Reset scenarios** — each test starts clean
-3. **Use explicit waits** — `await expect(...).toBeVisible()`
-4. **Add fixtures to `e2e/fixtures/`** — for images, PDFs, etc
-5. **Reference the feature E2E doc** — for available helpers and scenarios
+- HTML report and traces generated automatically
 
 ---
 
 ## References
 
-- [Playwright Documentation](https://playwright.dev)
-- [Playwright Best Practices](https://playwright.dev/docs/best-practices)
+- [Playwright Documentation](https://playwright.dev/docs/intro)
 - [MSW Documentation](../msw.md)
-
+- [Unit Tests Guide](unit-tests.md)
+- [Contract Tests Guide](contract-tests.md)
+- [Live Backend Tests](live-backend-tests.md)
