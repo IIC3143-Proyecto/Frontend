@@ -23,6 +23,7 @@ import { ContactDialog } from "./contact-dialog";
 import { MetroDialog } from "./metro-dialog";
 import { SavedSheet } from "./saved-sheet";
 import { PhotoDialog } from "./photo-dialog";
+import { RateSellerDialog } from "./rate-seller-dialog";
 import { useUserTagPreferences } from "@/hooks/use-user-tag-preferences";
 import { useStationNameMap } from "@/hooks/use-metro-stations";
 import { useSellerRating } from "@/hooks/use-seller-rating";
@@ -39,6 +40,7 @@ export function ProfileLayout({ user, savedPosts, sub }: Props) {
   const [metroOpen, setMetroOpen] = useState(false);
   const [savedOpen, setSavedOpen] = useState(false);
   const [photoOpen, setPhotoOpen] = useState(false);
+  const [rateOpen, setRateOpen] = useState(false);
 
   const { data: tagPrefs = [] } = useUserTagPreferences(user.id);
   const { data: rating } = useSellerRating(user.id);
@@ -196,6 +198,16 @@ export function ProfileLayout({ user, savedPosts, sub }: Props) {
           </Button>
         </section>
 
+        {/* TEMP: prueba del modal de calificación */}
+        <section className="bg-card border border-border rounded-2xl p-4 sm:p-3 sm:col-span-2 flex items-center justify-between">
+          <p className="text-xs font-black uppercase flex items-center gap-1.5 text-muted-foreground">
+            <IconStar className="size-3.5" /> Calificar (prueba)
+          </p>
+          <Button size="sm" variant="outline" onClick={() => setRateOpen(true)}>
+            Calificar
+          </Button>
+        </section>
+
         <section className="bg-card border border-border rounded-2xl p-4 sm:p-3 sm:col-span-2 flex items-center justify-between">
           <p className="text-xs font-black uppercase flex items-center gap-1.5 text-muted-foreground">
             <IconLogout className="size-3.5" /> Cerrar sesión
@@ -243,6 +255,12 @@ export function ProfileLayout({ user, savedPosts, sub }: Props) {
         userId={user.id}
         currentUrl={user.photoUrl}
         sub={sub}
+      />
+      <RateSellerDialog
+        open={rateOpen}
+        onOpenChange={setRateOpen}
+        sellerId={user.id}
+        sellerName={user.username}
       />
     </div>
   );
