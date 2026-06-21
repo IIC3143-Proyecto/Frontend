@@ -1,8 +1,10 @@
 import type { TagCategories, TagsByCategoryDto } from '@/lib/types/tag';
 import { api } from './index';
 
-export async function fetchTags(): Promise<TagCategories> {
-  const res = await fetch(api.tags());
+export async function fetchTags(accessToken: string): Promise<TagCategories> {
+  const res = await fetch(api.tags(), {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
   if (!res.ok) throw new Error(`fetchTags: HTTP ${res.status}`);
   const data = await res.json() as TagsByCategoryDto;
   return data.tags;

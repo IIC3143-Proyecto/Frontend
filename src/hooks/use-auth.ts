@@ -37,7 +37,7 @@ export function useAuth() {
       }
 
       if (onboardingDone && isOnboardingPage) {
-        router.push('/profile');
+        router.push('/feed');
       }
     }
   }, [dbUser, authLoading, syncLoading, pathname, router]);
