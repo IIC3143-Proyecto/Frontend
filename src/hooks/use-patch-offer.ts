@@ -22,6 +22,7 @@ export const usePatchOffer = (options?: Options) => {
       queryClient.invalidateQueries({
         queryKey: offerKeys.list(getDirectionForAction(status)),
       });
+      queryClient.invalidateQueries({ queryKey: ["posts"] });
       toast.success("Oferta actualizada");
       options?.onSuccess?.();
     },
