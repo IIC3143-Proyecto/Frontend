@@ -6,8 +6,8 @@ import { usePathname } from "next/navigation";
 import { NavigationIconButton } from "@/components/common/navigation-icon-button";
 import {
   IconHome,
-  IconTags,
-  IconBuildingStore,
+  IconReportMoney,
+  IconHanger,
   IconBell,
   IconUser,
 } from "@tabler/icons-react";
@@ -25,13 +25,13 @@ function NavigationButtons() {
       />
       <NavigationIconButton
         href="/posts"
-        icon={IconBuildingStore}
+        icon={IconHanger}
         label="ir a mis publicaciones"
         highlighted={pathname.startsWith("/posts")}
       />
       <NavigationIconButton
         href="/offers"
-        icon={IconTags}
+        icon={IconReportMoney}
         label="ir a mis ofertas"
         highlighted={pathname.startsWith("/offers")}
       />
