@@ -107,6 +107,28 @@ export async function getUser(userId: string, accessToken: string): Promise<User
   return res.json() as Promise<UserDto>;
 }
 
+export async function createInteraction(
+  postId: string,
+  type: 'Liked' | 'Saved',
+  accessToken: string,
+): Promise<void> {
+  const res = await fetch(api.interaction(postId), {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ type }),
+  });
+  if (!res.ok) {
+    const json = await res.json().catch(() => ({}));
+    throw Object.assign(
+      new Error((json as { message?: string }).message ?? 'Error al registrar interacción'),
+      { status: res.status },
+    );
+  }
+}
+
 export async function removeInteraction(
   postId: string,
   type: 'Saved' | 'Liked',

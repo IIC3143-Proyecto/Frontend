@@ -25,4 +25,8 @@ export const api = {
   post:               () => remote('/api/post'),
   postImages:         (id: string) => remote(`/api/image/post/${id}`),
   offer:              () => remote('/api/offer'),
+  postById:           (id: string) => remote(`/api/post/${id}`),
+  feed:               () => remote('/api/post/feed'),
+  search:             () => remote('/api/post/search'),
+  sellerRating:       (id: string) => remote(`/api/seller/rating/${id}`),
 };
