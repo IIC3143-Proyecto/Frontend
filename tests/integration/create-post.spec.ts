@@ -15,6 +15,7 @@ import {
   fillStep1,
   uploadPhotos,
   selectRequiredTags,
+  dismissGeminiSuggestions,
 } from './helpers/create-post';
 
 test.describe('Create Post — desktop', () => {
@@ -73,6 +74,7 @@ test.describe('Create Post — desktop', () => {
       await fillStep1(page, { title: 'Camiseta', price: 10000 });
       await uploadPhotos(page, 3);
       await clickNext(page);
+      await dismissGeminiSuggestions(page);
       await clickNext(page);
       await expectError(page, 'Selecciona al menos una talla');
     });
@@ -87,6 +89,7 @@ test.describe('Create Post — desktop', () => {
       await fillStep1(page, { title: 'Camiseta', price: 10000 });
       await uploadPhotos(page, 3);
       await clickNext(page);
+      await dismissGeminiSuggestions(page);
       await expect(page.getByText('Tags obligatorios')).toBeVisible();
       await expect(page.getByRole('button', { name: 'Atrás' })).toBeDisabled();
     });
