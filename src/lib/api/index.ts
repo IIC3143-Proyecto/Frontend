@@ -27,5 +27,6 @@ export const api = {
   postById:           (id: string) => remote(`/api/post/${id}`),
   postImages:         (id: string) => remote(`/api/image/post/${id}`),
   offer:              () => remote('/api/offer'),
+  sellerRating:       (id: string) => remote(`/api/seller/rating/${id}`),
   geminiTags:         () => remote('/api/tag/post/image/analyze'),
 };

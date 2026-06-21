@@ -11,6 +11,8 @@ import {
   IconCamera,
   IconSparkles,
   IconLogout,
+  IconStar,
+  IconStarFilled,
 } from "@tabler/icons-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -23,6 +25,7 @@ import { SavedSheet } from "./saved-sheet";
 import { PhotoDialog } from "./photo-dialog";
 import { useUserTagPreferences } from "@/hooks/use-user-tag-preferences";
 import { useStationNameMap } from "@/hooks/use-metro-stations";
+import { useSellerRating } from "@/hooks/use-seller-rating";
 
 type Props = {
   user: UserDto;
@@ -43,6 +46,7 @@ export function ProfileLayout({
   const [photoOpen, setPhotoOpen] = useState(false);
 
   const { data: tagPrefs = [] } = useUserTagPreferences(user.id);
+  const { data: rating } = useSellerRating(user.id);
 
   const stationNameMap = useStationNameMap();
 
@@ -76,6 +80,20 @@ export function ProfileLayout({
           <p className="text-sm font-black uppercase tracking-wide">
             @{user.username}
           </p>
+          {rating && rating.timesRated > 0 && (
+            <div className="flex items-center justify-center gap-1 mt-1">
+              {Array.from({ length: 5 }, (_, i) =>
+                i < Math.round(rating.score) ? (
+                  <IconStarFilled key={i} className="size-3.5 text-yellow-400" />
+                ) : (
+                  <IconStar key={i} className="size-3.5 text-muted-foreground" />
+                )
+              )}
+              <span className="text-xs text-muted-foreground ml-1">
+                {rating.score.toFixed(1)}
+              </span>
+            </div>
+          )}
           {user.bio && (
             <p className="text-sm mt-2 max-w-xs leading-relaxed">{user.bio}</p>
           )}
