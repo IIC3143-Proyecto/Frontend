@@ -46,7 +46,7 @@ export interface UseEditPostReturn {
 
 function buildInitialPhotos(imagesUrls: string): PhotoItem[] {
   return imagesUrls
-    .split(",")
+    .split(";")
     .filter(Boolean)
     .map((url) => ({
       preview: url,
@@ -61,7 +61,7 @@ export function useEditPost(post: PostDto, onClose: () => void): UseEditPostRetu
   const isLocked = (post.offersCount ?? 0) > 0;
 
   const initialExistingUrls = useRef(
-    new Set(post.imagesUrls?.split(",").filter(Boolean) ?? [])
+    new Set(post.imagesUrls?.split(";").filter(Boolean) ?? [])
   );
 
   const [allPhotos, setAllPhotos] = useState<PhotoItem[]>(() =>
@@ -95,14 +95,14 @@ export function useEditPost(post: PostDto, onClose: () => void): UseEditPostRetu
     if (!postTags) return;
     form.reset({
       ...form.getValues(),
-      Talla: postTags.Talla ?? [],
-      Condición: postTags.Condición ?? "",
-      "Tipo de prenda": postTags["Tipo de prenda"] ?? [],
-      Marca: postTags.Marca ?? [],
-      Color: postTags.Color ?? [],
-      Género: postTags.Género ?? [],
-      Estilo: postTags.Estilo ?? [],
-      Temporada: postTags.Temporada ?? [],
+      Talla: postTags['Talla'] ?? [],
+      Condición: postTags['Condición']?.[0] ?? "",
+      "Tipo de prenda": postTags['Tipo de prenda'] ?? [],
+      Marca: postTags['Marca'] ?? [],
+      Color: postTags['Color'] ?? [],
+      Género: postTags['Género'] ?? [],
+      Estilo: postTags['Estilo'] ?? [],
+      Temporada: postTags['Temporada'] ?? [],
     });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [postTags]);

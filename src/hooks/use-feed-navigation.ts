@@ -12,36 +12,38 @@ type HistoryEntry = {
 export function useFeedNavigation() {
   const [index, setIndex] = useState(0);
   const [history, setHistory] = useState<HistoryEntry[]>([]);
+  const [cursor, setCursor] = useState(0);
 
   const advance = useCallback(
     (postId: string, interaction: "Liked" | "Saved" | null) => {
-      setHistory((prev) => [...prev, { postId, interaction }]);
+      setHistory((prev) => [...prev.slice(0, cursor), { postId, interaction }]);
+      setCursor((prev) => prev + 1);
       setIndex((prev) => prev + 1);
     },
-    [],
+    [cursor],
   );
 
   const goBack = useCallback(async () => {
-    if (history.length === 0) return;
+    if (cursor === 0) return;
 
-    const last = history[history.length - 1];
+    const entry = history[cursor - 1];
 
-    if (last.interaction) {
+    if (entry?.interaction) {
       try {
         const token = await getAccessToken();
-        await removeInteraction(last.postId, last.interaction, token);
+        await removeInteraction(entry.postId, entry.interaction, token);
       } catch {
         // El post sigue siendo visible aunque falle el rollback
       }
     }
 
-    setHistory((prev) => prev.slice(0, -1));
+    setCursor((prev) => Math.max(0, prev - 1));
     setIndex((prev) => Math.max(0, prev - 1));
-  }, [history]);
+  }, [cursor, history]);
 
   return {
     currentIndex: index,
-    canGoBack: history.length > 0,
+    canGoBack: cursor > 0,
     history,
     advance,
     goBack,

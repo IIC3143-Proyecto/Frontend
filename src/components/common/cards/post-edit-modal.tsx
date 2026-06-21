@@ -79,6 +79,9 @@ function NegotiableSwitch({
   );
 }
 
+const REQUIRED_TAG_CATEGORIES = ['Talla', 'Condición', 'Tipo de prenda'] as const;
+const SINGLE_SELECT_CATEGORIES = ['Condición'] as const;
+
 export function PostEditModal({ open, onClose, post }: Props) {
   const {
     form,
@@ -221,7 +224,9 @@ export function PostEditModal({ open, onClose, post }: Props) {
                 <AccordionTrigger className="hover:no-underline">
                   <div className="flex flex-col items-start gap-0.5">
                     <span className="text-xs font-black uppercase tracking-wider">Especificaciones esenciales</span>
-                    <span className="text-[10px] text-muted-foreground font-normal normal-case tracking-normal">Talla · Condición · Tipo de prenda</span>
+                    <span className="text-[10px] text-muted-foreground font-normal normal-case tracking-normal">
+                      {REQUIRED_TAG_CATEGORIES.join(' · ')}
+                    </span>
                   </div>
                 </AccordionTrigger>
                 <AccordionContent className="pb-4">
@@ -232,27 +237,16 @@ export function PostEditModal({ open, onClose, post }: Props) {
                     </div>
                   ) : (
                     <div className="flex flex-col gap-5">
-                      <ToggleInputGroup
-                        control={form.control}
-                        name="Talla"
-                        label="Talla"
-                        options={opts("Talla")}
-                        type="multiple"
-                      />
-                      <ToggleInputGroup
-                        control={form.control}
-                        name="Condición"
-                        label="Condición"
-                        options={opts("Condición")}
-                        type="single"
-                      />
-                      <ToggleInputGroup
-                        control={form.control}
-                        name="Tipo de prenda"
-                        label="Tipo de prenda"
-                        options={opts("Tipo de prenda")}
-                        type="multiple"
-                      />
+                      {REQUIRED_TAG_CATEGORIES.filter((cat) => categories[cat]).map((cat) => (
+                        <ToggleInputGroup
+                          key={cat}
+                          control={form.control as Control<EditPostInput>}
+                          name={cat as keyof EditPostInput}
+                          label={cat}
+                          options={opts(cat)}
+                          type={SINGLE_SELECT_CATEGORIES.includes(cat as typeof SINGLE_SELECT_CATEGORIES[number]) ? "single" : "multiple"}
+                        />
+                      ))}
                     </div>
                   )}
                 </AccordionContent>
@@ -263,7 +257,9 @@ export function PostEditModal({ open, onClose, post }: Props) {
                 <AccordionTrigger className="hover:no-underline">
                   <div className="flex flex-col items-start gap-0.5">
                     <span className="text-xs font-black uppercase tracking-wider">Especificaciones opcionales</span>
-                    <span className="text-[10px] text-muted-foreground font-normal normal-case tracking-normal">Marca · Color · Género · Estilo · Temporada</span>
+                    <span className="text-[10px] text-muted-foreground font-normal normal-case tracking-normal">
+                      {Object.keys(categories).filter((k) => !REQUIRED_TAG_CATEGORIES.includes(k as typeof REQUIRED_TAG_CATEGORIES[number])).join(' · ')}
+                    </span>
                   </div>
                 </AccordionTrigger>
                 <AccordionContent className="pb-4">
@@ -274,41 +270,18 @@ export function PostEditModal({ open, onClose, post }: Props) {
                     </div>
                   ) : (
                     <div className="flex flex-col gap-5">
-                      <ToggleInputGroup
-                        control={form.control}
-                        name="Marca"
-                        label="Marca"
-                        options={opts("Marca")}
-                        type="multiple"
-                      />
-                      <ToggleInputGroup
-                        control={form.control}
-                        name="Color"
-                        label="Color"
-                        options={opts("Color")}
-                        type="multiple"
-                      />
-                      <ToggleInputGroup
-                        control={form.control}
-                        name="Género"
-                        label="Género"
-                        options={opts("Género")}
-                        type="multiple"
-                      />
-                      <ToggleInputGroup
-                        control={form.control}
-                        name="Estilo"
-                        label="Estilo"
-                        options={opts("Estilo")}
-                        type="multiple"
-                      />
-                      <ToggleInputGroup
-                        control={form.control}
-                        name="Temporada"
-                        label="Temporada"
-                        options={opts("Temporada")}
-                        type="multiple"
-                      />
+                      {Object.entries(categories)
+                        .filter(([k]) => !REQUIRED_TAG_CATEGORIES.includes(k as typeof REQUIRED_TAG_CATEGORIES[number]))
+                        .map(([cat]) => (
+                          <ToggleInputGroup
+                            key={cat}
+                            control={form.control as Control<EditPostInput>}
+                            name={cat as keyof EditPostInput}
+                            label={cat}
+                            options={opts(cat)}
+                            type="multiple"
+                          />
+                        ))}
                     </div>
                   )}
                 </AccordionContent>
