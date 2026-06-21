@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/form";
 import { TextInput } from "@/components/common/text-input";
 import { ToggleInputGroup } from "@/components/common/toggle-input";
+import { SizeSelector } from "@/components/common/size-selector";
 import { StepProgress } from "@/components/common/step-progress";
 import { PhotoUploadGrid } from "@/components/common/photo-upload-grid";
 import { useCreatePost, type CreatePostInput } from "@/hooks/use-create-post";
@@ -153,11 +154,11 @@ function RequiredTagsStep({ control, opts, tagsLoading }: TagStepProps) {
   if (tagsLoading) return <TagsLoadingState />;
   return (
     <div className="flex flex-col gap-6">
-      <ToggleInputGroup
+      <SizeSelector
         control={control}
         name="Talla"
         label="Talla *"
-        options={opts("Talla")}
+        options={opts("Talla").map((o) => o.value)}
         type="multiple"
       />
       <ToggleInputGroup
