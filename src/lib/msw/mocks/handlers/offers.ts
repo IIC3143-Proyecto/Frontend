@@ -29,7 +29,6 @@ export const offersHandlers = [
     const token = request.headers.get("Authorization");
     if (!token)
       return HttpResponse.json({ message: "Unauthorized" }, { status: 401 });
-
     const incoming = new URL(request.url).searchParams.get("incoming");
     // truthy (≠ '0'/'false'/'') → ofertas realizadas; en otro caso → recibidas.
     const isMade = !!incoming && incoming !== "0" && incoming !== "false";
@@ -42,7 +41,6 @@ export const offersHandlers = [
     const token = request.headers.get("Authorization");
     if (!token)
       return HttpResponse.json({ message: "Unauthorized" }, { status: 401 });
-
     const { id, status } = (await request.json()) as {
       id?: string;
       status?: string;
@@ -52,7 +50,6 @@ export const offersHandlers = [
         { message: "id y status son requeridos" },
         { status: 400 },
       );
-
     const offer =
       MOCK_OFFERS_MADE.find((o) => o.id === id) ??
       MOCK_OFFERS_RECEIVED.find((o) => o.id === id);
@@ -61,15 +58,20 @@ export const offersHandlers = [
         { message: "Oferta no encontrada" },
         { status: 404 },
       );
-
     const nextStatus = resolveStatus(offer.status, status);
     if (!nextStatus)
       return HttpResponse.json(
         { message: `Acción no válida: ${status}` },
         { status: 400 },
       );
-
     offer.status = nextStatus;
     return HttpResponse.json(offer, { status: 200 });
+  }),
+
+  http.post("*/api/offer", ({ request }) => {
+    const token = request.headers.get("Authorization");
+    if (!token)
+      return HttpResponse.json({ message: "Unauthorized" }, { status: 401 });
+    return HttpResponse.json({ message: "Oferta creada" }, { status: 201 });
   }),
 ];

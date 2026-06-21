@@ -1,14 +1,14 @@
-import type { NewPostDto, PostDto } from '@/lib/types/post';
+import type { NewPostDto, PostDto, PostTagsDto } from '@/lib/types/post';
 import { BASE } from './base';
+import { api } from './index';
 
 export const deletePost = async (postId: string): Promise<void> => {
-  const res = await fetch(`${BASE}/api/post/${postId}`, { method: 'DELETE' });
+  const res = await fetch(api.postById(postId), { method: 'DELETE' });
   if (!res.ok) throw new Error('Error al eliminar post');
 };
 
-// GET /api/post/seller/{id_user} — endpoint pendiente de documentación backend
 export async function getPostsBySeller(sellerId: string, accessToken: string): Promise<PostDto[]> {
-  const res = await fetch(`${BASE}/api/post/seller/${sellerId}`, {
+  const res = await fetch(api.userPosts(sellerId), {
     headers: { Authorization: `Bearer ${accessToken}` },
   });
   if (!res.ok) {
@@ -22,7 +22,7 @@ export async function getPostsBySeller(sellerId: string, accessToken: string): P
 }
 
 export async function createPost(body: NewPostDto, accessToken: string): Promise<string> {
-  const res = await fetch(`${BASE}/api/post`, {
+  const res = await fetch(api.post(), {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${accessToken}`,
@@ -41,9 +41,54 @@ export async function createPost(body: NewPostDto, accessToken: string): Promise
   return id;
 }
 
-// PATCH /api/post/:id/tags — backend #48 not ready; always succeeds (demo)
-export async function patchPostTags(_postId: string, _tags: Record<string, string | string[]>, _accessToken: string): Promise<void> {
-  return;
+export async function patchPostTags(postId: string, tags: Record<string, string | string[]>, accessToken: string): Promise<void> {
+  const tagsArray = Object.entries(tags).flatMap(([category, values]) =>
+    (Array.isArray(values) ? values : [values]).map((title) => ({ title, category }))
+  );
+  const res = await fetch(`${BASE}/api/post/${postId}/tags`, {
+    method: 'PATCH',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ tags: tagsArray }),
+  });
+  if (!res.ok) {
+    const json = await res.json().catch(() => ({}));
+    throw Object.assign(
+      new Error((json as { message?: string }).message ?? 'Error al actualizar tags'),
+      { status: res.status }
+    );
+  }
+}
+
+export async function fetchPostTags(postId: string, accessToken: string): Promise<PostTagsDto> {
+  const res = await fetch(`${BASE}/api/tag/post/${postId}`, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
+  if (!res.ok) {
+    const json = await res.json().catch(() => ({}));
+    throw Object.assign(
+      new Error((json as { message?: string }).message ?? 'Error al obtener tags del post'),
+      { status: res.status }
+    );
+  }
+  const items = await res.json() as Array<{ tag: { title: string; category: string } }>;
+  const grouped: Record<string, string[]> = {};
+  for (const item of items) {
+    const { title, category } = item.tag;
+    (grouped[category] ??= []).push(title);
+  }
+  return {
+    Talla: grouped['Talla'] ?? [],
+    Condición: grouped['Condición']?.[0] ?? '',
+    'Tipo de prenda': grouped['Tipo de prenda'] ?? [],
+    Marca: grouped['Marca'] ?? [],
+    Color: grouped['Color'] ?? [],
+    Género: grouped['Género'] ?? [],
+    Estilo: grouped['Estilo'] ?? [],
+    Temporada: grouped['Temporada'] ?? [],
+  };
 }
 
 export async function patchPost(body: Record<string, unknown> & { id: string }, accessToken: string): Promise<void> {
@@ -74,6 +119,39 @@ export async function uploadPostImages(postId: string, fd: FormData, accessToken
     const json = await res.json().catch(() => ({}));
     throw Object.assign(
       new Error((json as { message?: string }).message ?? 'Error al subir las fotos'),
+      { status: res.status }
+    );
+  }
+}
+
+export async function appendPostImages(postId: string, fd: FormData, accessToken: string): Promise<void> {
+  const res = await fetch(`${BASE}/api/image/post/${postId}`, {
+    method: 'PATCH',
+    headers: { Authorization: `Bearer ${accessToken}` },
+    body: fd,
+  });
+  if (!res.ok) {
+    const json = await res.json().catch(() => ({}));
+    throw Object.assign(
+      new Error((json as { message?: string }).message ?? 'Error al agregar las fotos'),
+      { status: res.status }
+    );
+  }
+}
+
+export async function deletePostImages(postId: string, urls: string[], accessToken: string): Promise<void> {
+  const res = await fetch(`${BASE}/api/image/post/${postId}`, {
+    method: 'DELETE',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ urls }),
+  });
+  if (!res.ok) {
+    const json = await res.json().catch(() => ({}));
+    throw Object.assign(
+      new Error((json as { message?: string }).message ?? 'Error al eliminar las fotos'),
       { status: res.status }
     );
   }

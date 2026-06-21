@@ -1,6 +1,4 @@
 import type { UserDto } from './user';
 
-// BFF adds onboardingCompleted derived from UserDto.bio
-export type SyncUserResponse = UserDto & {
-  onboardingCompleted: boolean;
-};
+// BFF returns UserDto directly — status is the canonical onboarding signal
+export type SyncUserResponse = UserDto;

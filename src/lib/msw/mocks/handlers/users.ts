@@ -1,17 +1,25 @@
 import { http, HttpResponse, delay } from 'msw';
 import { getMockUser, getErrorScenario } from '../scenario';
 import type { SyncUserResponse } from '@/lib/types/auth';
-import { MOCK_USERS } from '../data/mock-users';
+import { MOCK_USERS, resolveProfileUser } from '../data/mock-users';
 
 let currentUser: SyncUserResponse = { ...MOCK_USERS[getMockUser()] };
 
 export const usersHandlers = [
-  http.get('*/api/user/:id_user', () => {
+  http.get('*/api/user/:id_user', ({ request, params }) => {
+    const token = request.headers.get('Authorization');
+    if (!token) return HttpResponse.json({ message: 'Unauthorized' }, { status: 401 });
     const scenario = getMockUser();
     if (currentUser.username !== MOCK_USERS[scenario].username) {
       currentUser = { ...MOCK_USERS[scenario] };
     }
-    return HttpResponse.json(currentUser);
+    // El id puede pedir el perfil propio o el de un tercero (`/profile/[id]`).
+    const requestedId = params.id_user as string;
+    const user = resolveProfileUser(requestedId, currentUser);
+    if (!user) {
+      return HttpResponse.json({ message: 'User not found' }, { status: 404 });
+    }
+    return HttpResponse.json(user);
   }),
 
   http.patch('*/api/user/:id_user', async ({ request }) => {

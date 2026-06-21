@@ -12,7 +12,6 @@ export const MOCK_USERS: Record<MockUserScenario, SyncUserResponse> = {
     bio: 'Bio completa del usuario',
     photoUrl: 'https://vtrna.com/avatars/full.webp',
     status: 'Activo',
-    onboardingCompleted: true,
     createdAtUtcMinus3: '2025-01-01T00:00:00.000Z',
     updatedAtUtcMinus3: '2025-01-01T00:00:00.000Z',
     posts: [],
@@ -26,7 +25,6 @@ export const MOCK_USERS: Record<MockUserScenario, SyncUserResponse> = {
     providerAuth0: 'auth0|no_photo_123',
     bio: 'Bio sin foto de perfil',
     status: 'Activo',
-    onboardingCompleted: true,
     createdAtUtcMinus3: '2025-01-01T00:00:00.000Z',
     updatedAtUtcMinus3: '2025-01-01T00:00:00.000Z',
     posts: [],
@@ -39,7 +37,6 @@ export const MOCK_USERS: Record<MockUserScenario, SyncUserResponse> = {
     email: 'flo_pendiente@vtrna.cl',
     providerAuth0: 'auth0|pending_123',
     status: 'En proceso de registro',
-    onboardingCompleted: false,
     createdAtUtcMinus3: '2025-01-01T00:00:00.000Z',
     updatedAtUtcMinus3: '2025-01-01T00:00:00.000Z',
     posts: [],
@@ -52,10 +49,69 @@ export const MOCK_USERS: Record<MockUserScenario, SyncUserResponse> = {
     email: 'flo_nuevo@vtrna.cl',
     providerAuth0: 'auth0|new_123',
     status: 'En proceso de registro',
-    onboardingCompleted: false,
     createdAtUtcMinus3: '2025-01-01T00:00:00.000Z',
     updatedAtUtcMinus3: '2025-01-01T00:00:00.000Z',
     posts: [],
     interactions: [],
   },
 };
+
+/**
+ * Usuarios "terceros" — perfiles de otras personas que el usuario autenticado
+ * puede visitar en `/profile/[id]`. La vista debe mostrarlos en solo lectura
+ * (sin botones de edición, guardados ni cerrar sesión).
+ *
+ * Están indexados por id para que `GET /api/user/:id` pueda resolverlos.
+ */
+export const MOCK_OTHER_USERS: Record<string, SyncUserResponse> = {
+  // Tercero "completo": foto, bio, zona y contacto. Buen caso para verificar
+  // que toda la info básica se muestra sin opciones de edición.
+  'auth0|other_456': {
+    id: 'auth0|other_456',
+    name: 'Vale Vecina',
+    username: 'Vale_Vecina',
+    email: 'vale_vecina@vtrna.cl',
+    providerAuth0: 'auth0|other_456',
+    bio: 'Vendo y arriendo cosas cerca del metro 🚇',
+    photoUrl: 'https://vtrna.com/avatars/other.webp',
+    contactInfo: {
+      instagram: '@vale.vecina',
+      whatsapp: '+56912345678',
+      email: 'vale_vecina@vtrna.cl',
+    },
+    stations: ['L1_ECUADOR', 'L1_LAS_REJAS'],
+    status: 'Activo',
+    createdAtUtcMinus3: '2025-01-01T00:00:00.000Z',
+    updatedAtUtcMinus3: '2025-01-01T00:00:00.000Z',
+    posts: [],
+    interactions: [],
+  },
+  // Tercero "mínimo": sin bio, sin contacto y sin zona. Verifica los estados
+  // vacíos ("Sin zona definida", "Sin información de contacto").
+  'auth0|other_789': {
+    id: 'auth0|other_789',
+    name: 'Tomi Tercero',
+    username: 'Tomi_Tercero',
+    email: 'tomi_tercero@vtrna.cl',
+    providerAuth0: 'auth0|other_789',
+    status: 'Activo',
+    createdAtUtcMinus3: '2025-01-01T00:00:00.000Z',
+    updatedAtUtcMinus3: '2025-01-01T00:00:00.000Z',
+    posts: [],
+    interactions: [],
+  },
+};
+
+/**
+ * Decide qué usuario devuelve `GET /api/user/:id`:
+ * - Si el id pedido es el del usuario autenticado → ese mismo (perfil propio).
+ * - Si coincide con un tercero conocido → ese tercero.
+ * - En cualquier otro caso → `null` (el handler responde 404 → "usuario no encontrado").
+ */
+export function resolveProfileUser(
+  requestedId: string,
+  currentUser: SyncUserResponse,
+): SyncUserResponse | null {
+  if (requestedId === currentUser.id) return currentUser;
+  return MOCK_OTHER_USERS[requestedId] ?? null;
+}

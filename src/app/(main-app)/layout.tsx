@@ -1,10 +1,10 @@
+import { PrivateNavbar } from "@/components/layout/private-navbar";
+
 export default function MainAppLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div>
-      <header>main-app header</header>
-      <main>
-        {children}
-      </main>
-    </div>
+    <>
+      <PrivateNavbar />
+      <main className="flex-1">{children}</main>
+    </>
   );
 }

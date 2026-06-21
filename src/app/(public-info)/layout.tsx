@@ -1,10 +1,10 @@
+import { PublicNavbar } from "@/components/layout/public-navbar";
+
 export default function PublicInfoLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div>
-      <header>public-info header</header>
-      <main>
-        {children}
-      </main>
-    </div>
+    <>
+      <PublicNavbar />
+      <main className="flex-1">{children}</main>
+    </>
   );
 }
