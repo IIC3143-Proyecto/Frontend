@@ -10,6 +10,7 @@ import {
   FormControl,
   FormMessage,
 } from "@/components/ui/form";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 interface SizeSelectorProps<TFieldValues extends FieldValues> {
@@ -33,20 +34,19 @@ function SizePill({
   disabled?: boolean;
 }) {
   return (
-    <button
+    <Button
       type="button"
       disabled={disabled}
       onClick={onClick}
       className={cn(
-        "h-9 px-4 text-sm rounded-full border transition-all duration-200",
+        "h-9 px-4 text-sm border",
         selected
           ? "bg-black text-white border-black"
-          : "bg-[#F8F7F4] border-transparent text-foreground hover:border-zinc-300",
-        disabled && "pointer-events-none opacity-50"
+          : "bg-[var(--surface-subtle)] border-transparent text-foreground hover:border-zinc-300"
       )}
     >
       {label}
-    </button>
+    </Button>
   );
 }
 
@@ -62,20 +62,19 @@ function NumericBtn({
   disabled?: boolean;
 }) {
   return (
-    <button
+    <Button
       type="button"
       disabled={disabled}
       onClick={onClick}
       className={cn(
-        "h-10 w-10 text-sm rounded-md border transition-all duration-200 shrink-0",
+        "h-10 w-10 text-sm border shrink-0",
         selected
           ? "bg-black text-white border-black"
-          : "bg-[#F8F7F4] border-transparent text-foreground hover:border-zinc-300",
-        disabled && "pointer-events-none opacity-50"
+          : "bg-[var(--surface-subtle)] border-transparent text-foreground hover:border-zinc-300"
       )}
     >
       {value}
-    </button>
+    </Button>
   );
 }
 
