@@ -8,7 +8,11 @@ export const products = [
       price: 25000,
       size: "L",
     },
-    images: ["https://res.cloudinary.com/demo/image/upload/woman-blackdress-stairs.webp"],
+    images: [
+      "https://res.cloudinary.com/demo/image/upload/woman-blackdress-stairs.webp",
+      "https://res.cloudinary.com/demo/image/upload/woman-blackdress-stairs.webp",
+      "https://res.cloudinary.com/demo/image/upload/woman-blackdress-stairs.webp",
+    ],
   },
   {
     id: "2",

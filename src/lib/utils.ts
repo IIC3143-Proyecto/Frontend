@@ -26,6 +26,10 @@ export function formatNumberWithSeparators(value: string | number): string {
   return numValue.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
 }
 
+export function arraysEqual<T>(a: T[], b: T[]): boolean {
+  return a.length === b.length && a.every((v, i) => v === b[i]);
+}
+
 export function formatRelativeDate(iso: string): string {
   const date = new Date(iso);
   const now = new Date();
