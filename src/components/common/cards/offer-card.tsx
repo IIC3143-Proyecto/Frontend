@@ -64,7 +64,7 @@ export function OfferCard({ offer, direction }: OfferCardProps) {
                   aria-label="Gestionar oferta"
                   onClick={() => setEditOpen(true)}
                 >
-                  <IconPencil className="w-4 h-4" />
+                  <IconSettingsDollar className="w-4 h-4" />
                 </MiniRoundButton>
               )}
             </div>
