@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { ProductImages } from "@/components/feed/product-images";
 import { Filters } from "@/components/feed/filters/filters";
+import { SellerAvatar } from "@/components/feed/seller-avatar";
 import {
   ProductDetailsMobile,
   ProductDetailsDesktop,
@@ -16,27 +17,26 @@ import {
   OfferButton,
   RewindButton,
 } from "@/components/feed/interaction-buttons";
-import { SellerAvatar } from "@/components/feed/seller-avatar";
-import { products } from "./hardcoded_posts";
-import { tagsByCategory } from "./hardcoded_filters";
+import { usePaginatedFeed, useSearchByTags } from "@/hooks/use-feed";
+import { useFeedNavigation } from "@/hooks/use-feed-navigation";
+import { useCreateInteraction } from "@/hooks/use-interaction";
+import { useTags } from "@/hooks/use-tags";
 
 type FeedAction = "like" | "dislike" | "save" | "offer" | "rewind" | null;
 type ExitDir = "right" | "left" | "up";
+
 const ANIM_DURATION = 380;
 
 function exitClass(action: FeedAction): string {
   if (!action || action === "rewind") return "";
-
   const dir: ExitDir =
     action === "like" ? "right" :
     action === "dislike" ? "left" : "up";
-
   const base =
     dir === "right" ? "translate-x-full" :
     dir === "left"  ? "-translate-x-full" :
     "-translate-y-full";
   const rot = dir === "right" ? "rotate-12" : dir === "left" ? "-rotate-12" : "rotate-6";
-
   return `transition-all duration-[380ms] ease-in ${base} ${rot}`;
 }
 
@@ -46,37 +46,84 @@ function enterClass(dir: ExitDir | null): string {
   return `animate-in ${from} duration-[380ms]`;
 }
 
+function parseImages(raw: string): string[] {
+  if (!raw) return [];
+  return raw.split(";").filter(Boolean);
+}
+
 export default function Feed() {
   const [isDesktopDetailsOpen, setIsDetailsOpen] = useState(true);
-  const toggleDetails = () => setIsDetailsOpen((isOpen) => !isOpen);
+  const toggleDetails = () => setIsDetailsOpen((open) => !open);
 
-  const [currentIndex, setCurrentIndex] = useState(0);
   const [appliedFilters, setAppliedFilters] = useState<string[]>([]);
   const [feedAction, setFeedAction] = useState<FeedAction>(null);
   const [lastDir, setLastDir] = useState<ExitDir | null>(null);
   const [isEntering, setIsEntering] = useState(false);
+  const [searchIndex, setSearchIndex] = useState(0);
 
-  const product = products[currentIndex % products.length];
+  const { posts, isFetching, prefetchIfNeeded } = usePaginatedFeed();
+  const { currentIndex, canGoBack, advance, goBack } = useFeedNavigation();
+  const createInteraction = useCreateInteraction();
+  const { categories: tagsByCategory } = useTags();
 
-  const trigger = useCallback((action: FeedAction) => {
+  const isFiltering = appliedFilters.length > 0;
+  const { data: searchResults = [], isFetching: isSearching } = useSearchByTags(
+    isFiltering ? appliedFilters : []
+  );
+
+  const post = isFiltering
+    ? searchResults[searchIndex]
+    : posts[currentIndex];
+
+  // Prefetch cuando se acerca al final del feed
+  useEffect(() => {
+    if (!isFiltering) prefetchIfNeeded(currentIndex);
+  }, [currentIndex, isFiltering, prefetchIfNeeded]);
+
+  // Resetear índice de búsqueda cuando cambian los filtros
+  useEffect(() => { setSearchIndex(0); }, [appliedFilters]);
+
+  const trigger = useCallback(async (action: FeedAction) => {
+    if (!post) return;
+
     if (action === "rewind") {
-      if (currentIndex === 0 || !lastDir) return;
+      if (isFiltering) {
+        setSearchIndex((i) => Math.max(0, i - 1));
+        return;
+      }
+      if (!canGoBack || !lastDir) return;
       setIsEntering(true);
-      setCurrentIndex((i) => i - 1);
+      await goBack();
       setTimeout(() => setIsEntering(false), ANIM_DURATION);
       return;
     }
+
     const dir: ExitDir =
       action === "like" ? "right" :
       action === "dislike" ? "left" : "up";
 
     setFeedAction(action);
     setLastDir(dir);
+
     setTimeout(() => {
-      setCurrentIndex((i) => i + 1);
+      if (isFiltering) {
+        setSearchIndex((i) => i + 1);
+      } else {
+        const interaction: "Liked" | "Saved" | null =
+          action === "like" ? "Liked" :
+          action === "save" || action === "offer" ? "Saved" : null;
+        advance(post.id, interaction);
+        if (interaction) {
+          createInteraction.mutate({ postId: post.id, type: interaction });
+        }
+      }
       setFeedAction(null);
     }, ANIM_DURATION);
-  }, [currentIndex, lastDir]);
+  }, [post, isFiltering, canGoBack, lastDir, advance, goBack, createInteraction]);
+
+  const images = parseImages(post?.imagesUrls ?? "");
+  const isLoading = isFetching && !post;
+  const isEmpty = !post && !isFetching && !isSearching;
 
   return (
     <main className="flex-1 flex flex-row min-h-0 h-full">
@@ -93,7 +140,7 @@ export default function Feed() {
           <IgnoreButton className="hidden md:flex" onClick={() => trigger("dislike")} />
 
           <div
-            key={currentIndex}
+            key={isFiltering ? `s-${searchIndex}` : currentIndex}
             className={cn(
               "relative h-full min-h-75 aspect-3/4 md:border-x overflow-hidden",
               isEntering
@@ -101,23 +148,50 @@ export default function Feed() {
                 : exitClass(feedAction)
             )}
           >
-            <ProductImages images={product.images} />
-            <SellerAvatar
-              name="María González"
-              imageUrl="https://res.cloudinary.com/demo/image/upload/w_100,h_100,c_fill,g_face/sample.jpg"
-            />
-            <ProductDetailsMobile details={product.details} className="absolute bottom-0 md:hidden" />
-            <div className="absolute top-10 left-3 z-20 md:hidden">
-              <RewindButton onClick={() => trigger("rewind")} disabled={currentIndex === 0 || !lastDir} />
-            </div>
+            {isLoading || isSearching ? (
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="w-8 h-8 rounded-full border-2 border-foreground/20 border-t-foreground animate-spin" />
+              </div>
+            ) : isEmpty ? (
+              <div className="absolute inset-0 flex items-center justify-center px-8 text-center">
+                <p className="text-muted-foreground text-sm">No hay más publicaciones por ahora</p>
+              </div>
+            ) : post ? (
+              <>
+                <ProductImages images={images.length ? images : ["https://res.cloudinary.com/demo/image/upload/woman-blackdress-stairs.webp"]} />
+                <SellerAvatar
+                  name={post.seller.name}
+                  imageUrl={post.seller.photoUrl ?? "https://res.cloudinary.com/demo/image/upload/w_100,h_100,c_fill,g_face/sample.jpg"}
+                />
+                <ProductDetailsMobile
+                  details={{
+                    title: post.title,
+                    description: post.description,
+                    price: post.priceClp,
+                    size: "",
+                  }}
+                  className="absolute bottom-0 md:hidden"
+                />
+                <div className="absolute top-10 left-3 z-20 md:hidden">
+                  <RewindButton
+                    onClick={() => trigger("rewind")}
+                    disabled={isFiltering ? searchIndex === 0 : !canGoBack}
+                  />
+                </div>
+              </>
+            ) : null}
           </div>
 
           <LikeButton className="hidden md:flex" onClick={() => trigger("like")} />
         </div>
 
-        {/* INTERACTION BUTTONS — orden original */}
+        {/* INTERACTION BUTTONS */}
         <div className="md:h-16 md:border-t flex items-center justify-center gap-6 my-4 md:my-0 overflow-hidden">
-          <RewindButton className="hidden md:flex" onClick={() => trigger("rewind")} disabled={currentIndex === 0 || !lastDir} />
+          <RewindButton
+            className="hidden md:flex"
+            onClick={() => trigger("rewind")}
+            disabled={isFiltering ? searchIndex === 0 : !canGoBack}
+          />
           <SaveButton onClick={() => trigger("save")} />
           <IgnoreButton className="md:hidden" onClick={() => trigger("dislike")} />
           <OpenDesktopDetailsButton className="hidden md:flex" onClick={toggleDetails} />
@@ -127,12 +201,19 @@ export default function Feed() {
       </div>
 
       {/* DESKTOP SIDEBAR */}
-      {isDesktopDetailsOpen && (
+      {isDesktopDetailsOpen && post && (
         <div className="w-1/3 hidden md:block border-l overflow-hidden">
-          <ProductDetailsDesktop details={product.details} onClose={toggleDetails} />
+          <ProductDetailsDesktop
+            details={{
+              title: post.title,
+              description: post.description,
+              price: post.priceClp,
+              size: "",
+            }}
+            onClose={toggleDetails}
+          />
         </div>
       )}
-
     </main>
   );
 }
