@@ -13,9 +13,10 @@ import type { OfferForm } from "@/components/common/cards/make-offer/offer-schem
 type Props = {
   post: PostDto;
   onRemove?: (postId: string) => void;
+  canOffer?: boolean;
 };
 
-export function SavedPostCard({ post, onRemove }: Props) {
+export function SavedPostCard({ post, onRemove, canOffer = true }: Props) {
   const [detailOpen, setDetailOpen] = useState(false);
   const [offerOpen, setOfferOpen] = useState(false);
   const createOffer = useCreateOffer();
@@ -30,16 +31,20 @@ export function SavedPostCard({ post, onRemove }: Props) {
         <MiniRoundButton aria-label="Ver detalle" onClick={() => setDetailOpen(true)}>
           <IconInfoCircle className="size-4" />
         </MiniRoundButton>
-        <MiniRoundButton aria-label="Hacer oferta" onClick={() => setOfferOpen(true)}>
-          <IconCoins className="size-4" />
-        </MiniRoundButton>
-        <MiniRoundButton
-          aria-label="Quitar de guardados"
-          className="text-destructive"
-          onClick={() => onRemove?.(post.id)}
-        >
-          <IconBookmarkOff className="size-4" />
-        </MiniRoundButton>
+        {canOffer && (
+          <MiniRoundButton aria-label="Hacer oferta" onClick={() => setOfferOpen(true)}>
+            <IconCoins className="size-4" />
+          </MiniRoundButton>
+        )}
+        {onRemove && (
+          <MiniRoundButton
+            aria-label="Quitar de guardados"
+            className="text-destructive"
+            onClick={() => onRemove(post.id)}
+          >
+            <IconBookmarkOff className="size-4" />
+          </MiniRoundButton>
+        )}
       </div>
 
       <div className="bg-muted aspect-5/6 w-full flex items-center justify-center text-xs text-muted-foreground">
@@ -52,12 +57,14 @@ export function SavedPostCard({ post, onRemove }: Props) {
       </div>
 
       <PostDetailModal open={detailOpen} onClose={() => setDetailOpen(false)} post={post} />
-      <MakeOfferForm
-        post={post}
-        open={offerOpen}
-        onOpenChange={setOfferOpen}
-        onSubmit={handleOfferSubmit}
-      />
+      {canOffer && (
+        <MakeOfferForm
+          post={post}
+          open={offerOpen}
+          onOpenChange={setOfferOpen}
+          onSubmit={handleOfferSubmit}
+        />
+      )}
     </article>
   );
 }
