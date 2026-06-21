@@ -22,12 +22,13 @@ export function useTags() {
   };
 }
 
-export function usePostTags(postId: string) {
+export function usePostTags(postId?: string) {
   return useQuery({
     queryKey: ["postTags", postId],
+    enabled: !!postId,
     queryFn: async () => {
       const accessToken = await getAccessToken();
-      return fetchPostTags(postId, accessToken);
+      return fetchPostTags(postId!, accessToken);
     },
   });
 }

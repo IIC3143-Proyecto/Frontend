@@ -4,19 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { IconX, IconInfoCircle, IconChevronDown, IconChevronUp } from "@tabler/icons-react";
 import { formatPriceCLP } from "@/lib/utils";
+import { ProductDetails } from "./extract-product-details";
 
-// type Product = {
-//   id: string;
-//   details: ProductDetails;
-//   images: string[];
-// };
-
-type ProductDetails = {
-  title: string;
-  description: string;
-  price: number;
-  size: string;
-};
 
 export function ProductDetailsDesktop({ onClose, details }: { onClose: () => void; details: ProductDetails }) {
   return (

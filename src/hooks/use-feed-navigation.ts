@@ -1,51 +1,73 @@
 "use client";
 
-import { useState, useCallback } from "react";
-import { getAccessToken } from "@/actions/auth";
-import { removeInteraction } from "@/lib/api/user";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useFeed } from "./use-feed";
+import { usePostTags } from "./use-tags";
+import { useCreateInteraction } from "./use-interaction";
+import { usePostSaveState } from "./use-post-save-state";
+import type { PostDto } from "@/lib/types/post";
 
-type HistoryEntry = {
-  postId: string;
-  interaction: "Liked" | "Saved" | null;
-};
+const PREFETCH_THRESHOLD = 5;
+
+export type ProductPost = PostDto & { size: string };
 
 export function useFeedNavigation() {
-  const [index, setIndex] = useState(0);
-  const [history, setHistory] = useState<HistoryEntry[]>([]);
-  const [cursor, setCursor] = useState(0);
+  const { data, isLoading, hasNextPage, isFetchingNextPage, fetchNextPage } = useFeed();
+  const createInteraction = useCreateInteraction();
 
-  const advance = useCallback(
-    (postId: string, interaction: "Liked" | "Saved" | null) => {
-      setHistory((prev) => [...prev.slice(0, cursor), { postId, interaction }]);
-      setCursor((prev) => prev + 1);
-      setIndex((prev) => prev + 1);
-    },
-    [cursor],
-  );
+  const [queue, setQueue] = useState<PostDto[]>([]);
+  const consumedPages = useRef(0);
+  const [direction, setDirection] = useState<1 | -1>(1);
 
-  const goBack = useCallback(async () => {
-    if (cursor === 0) return;
-
-    const entry = history[cursor - 1];
-
-    if (entry?.interaction) {
-      try {
-        const token = await getAccessToken();
-        await removeInteraction(entry.postId, entry.interaction, token);
-      } catch {
-        // El post sigue siendo visible aunque falle el rollback
-      }
+  useEffect(() => {
+    const pages = data?.pages ?? [];
+    if (pages.length > consumedPages.current) {
+      const freshPosts = pages.slice(consumedPages.current).flat();
+      consumedPages.current = pages.length;
+      setQueue((prev) => [...prev, ...freshPosts]);
     }
+  }, [data]);
 
-    setCursor((prev) => Math.max(0, prev - 1));
-    setIndex((prev) => Math.max(0, prev - 1));
-  }, [cursor, history]);
+  useEffect(() => {
+    if (queue.length <= PREFETCH_THRESHOLD && hasNextPage && !isFetchingNextPage) {
+      fetchNextPage();
+    }
+  }, [queue.length, hasNextPage, isFetchingNextPage, fetchNextPage]);
+
+  const currentPost = queue[0] ?? null;
+
+  const { data: postTags } = usePostTags(currentPost?.id);
+  const size = postTags?.["Talla"]?.[0] ?? "no especificada";
+
+  const { isSaved, toggleSave, isSavePending } = usePostSaveState(currentPost?.id ?? null);
+
+  const advance = useCallback((dir: 1 | -1) => {
+    setDirection(dir);
+    setQueue((prev) => prev.slice(1));
+  }, []);
+
+  const like = useCallback(() => {
+    if (currentPost) createInteraction.mutate({ postId: currentPost.id, type: "Liked" });
+    advance(1);
+  }, [advance, currentPost, createInteraction]);
+
+  const ignore = useCallback(() => {
+    advance(-1);
+  }, [advance]);
+
+  const isFinished = !currentPost && !isLoading && !isFetchingNextPage && !hasNextPage;
+
+  const currentProduct: ProductPost | null = currentPost ? { ...currentPost, size } : null;
 
   return {
-    currentIndex: index,
-    canGoBack: cursor > 0,
-    history,
-    advance,
-    goBack,
+    currentPost: currentProduct,
+    direction,
+    isLoading: isLoading && queue.length === 0,
+    isFinished,
+    like,
+    ignore,
+    isSaved,
+    toggleSave,
+    isSavePending,
   };
 }
