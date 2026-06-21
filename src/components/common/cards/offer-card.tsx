@@ -1,13 +1,19 @@
 "use client";
 
-import { IconInfoCircle, IconSettingsDollar } from "@tabler/icons-react";
+import {
+  IconInfoCircle,
+  IconSettingsDollar,
+  IconStar,
+} from "@tabler/icons-react";
 import { useState } from "react";
 import type { OfferDto } from "@/lib/types/offer";
 import { OfferDirection } from "@/lib/types/offer-direction.enum";
+import { OfferStatus } from "@/lib/types/offer-status.enum";
 import { getOfferActions, getRoleForDirection } from "@/lib/offer-transitions";
 import { formatPriceCLP } from "@/lib/utils";
 import { OfferDetailModal } from "./offer-detail-modal";
 import { OfferEditModal } from "./offer-edit-modal";
+import { RateSellerDialog } from "@/components/profile/rate-seller-dialog";
 import { MiniRoundButton } from "@/components/common/mini-round-button";
 import { Button } from "@/components/ui/button";
 
@@ -19,6 +25,7 @@ type OfferCardProps = {
 export function OfferCard({ offer, direction }: OfferCardProps) {
   const [detailOpen, setDetailOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
+  const [rateOpen, setRateOpen] = useState(false);
 
   const { post } = offer;
   const counterparty =
@@ -26,10 +33,11 @@ export function OfferCard({ offer, direction }: OfferCardProps) {
   const counterpartyLabel =
     direction === OfferDirection.RECEIVED ? "De" : "Para";
   const firstImage = post.imagesUrls?.split(",").filter(Boolean)[0];
-  // El lápiz abre el modal de gestión solo si el usuario tiene alguna
-  // transición disponible sobre la oferta en su estado actual.
   const canManage =
     getOfferActions(offer.status, getRoleForDirection(direction)).length > 0;
+  const canRate =
+    direction === OfferDirection.MADE &&
+    offer.status.trim().toLowerCase() === OfferStatus.SUCCESSFUL.toLowerCase();
 
   return (
     <article className="relative bg-card border border-border flex flex-row p-3 gap-3 overflow-hidden">
@@ -88,6 +96,17 @@ export function OfferCard({ offer, direction }: OfferCardProps) {
             {offer.status}
           </span>
         </div>
+
+        {canRate && (
+          <Button
+            variant="outline"
+            className="mt-3 w-full"
+            onClick={() => setRateOpen(true)}
+          >
+            <IconStar className="w-4 h-4" />
+            Calificar vendedor
+          </Button>
+        )}
       </div>
 
       <OfferDetailModal
@@ -102,6 +121,14 @@ export function OfferCard({ offer, direction }: OfferCardProps) {
         offer={offer}
         direction={direction}
       />
+      {canRate && (
+        <RateSellerDialog
+          open={rateOpen}
+          onOpenChange={setRateOpen}
+          sellerId={post.sellerId}
+          sellerName={post.seller?.username ?? post.seller?.name ?? ""}
+        />
+      )}
     </article>
   );
 }
