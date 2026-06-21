@@ -30,9 +30,11 @@ export const offersHandlers = [
     if (!token)
       return HttpResponse.json({ message: "Unauthorized" }, { status: 401 });
     const incoming = new URL(request.url).searchParams.get("incoming");
-    // truthy (≠ '0'/'false'/'') → ofertas realizadas; en otro caso → recibidas.
-    const isMade = !!incoming && incoming !== "0" && incoming !== "false";
-    return HttpResponse.json(isMade ? MOCK_OFFERS_MADE : MOCK_OFFERS_RECEIVED);
+    // truthy (≠ '0'/'false'/'') → ofertas recibidas; en otro caso → realizadas.
+    const isReceived = !!incoming && incoming !== "0" && incoming !== "false";
+    return HttpResponse.json(
+      isReceived ? MOCK_OFFERS_RECEIVED : MOCK_OFFERS_MADE,
+    );
   }),
 
   // PATCH /api/offer — modifica el estado de una oferta { id, status }.

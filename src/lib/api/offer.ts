@@ -3,13 +3,13 @@ import { OfferDirection } from "@/lib/types/offer-direction.enum";
 import { BASE } from "./base";
 import { api } from "./index";
 
-// incoming=true  → ofertas REALIZADAS por el usuario (salientes, el usuario es el buyer).
-// incoming=falsy → ofertas RECIBIDAS por el usuario (entrantes, el usuario es el seller).
+// incoming=true  → ofertas RECIBIDAS por el usuario (entrantes, el usuario es el seller).
+// incoming=false → ofertas REALIZADAS por el usuario (salientes, el usuario es el buyer).
 export async function getOffers(
   direction: OfferDirection,
   accessToken: string,
 ): Promise<OfferDto[]> {
-  const incoming = direction === OfferDirection.MADE;
+  const incoming = direction === OfferDirection.RECEIVED;
   const res = await fetch(`${BASE}/api/offer?incoming=${incoming}`, {
     headers: { Authorization: `Bearer ${accessToken}` },
   });
