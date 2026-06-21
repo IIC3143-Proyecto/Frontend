@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { ProductImages } from "@/components/feed/product-images";
-import { Filters } from "@/components/feed/filters";
+import { Filters } from "@/components/feed/filters/filters";
 import {
   ProductDetailsMobile,
   ProductDetailsDesktop,
