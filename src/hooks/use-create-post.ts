@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { getAccessToken } from "@/actions/auth";
-import { createPost, patchPostTags, uploadPostImages } from "@/lib/api/post";
+import { createPost, patchPost, patchPostTags, uploadPostImages } from "@/lib/api/post";
 import { desktopToMobile, mobileToDesktop } from '@/lib/post-steps';
 import { handleApiError } from "@/lib/api/handle-error";
 import type { PhotoItem } from "@/lib/types/post";
@@ -324,6 +324,7 @@ export function useCreatePost(onClose: () => void): UseCreatePostReturn {
             },
             accessToken,
           );
+          await patchPost({ id: postIdRef.current, status: "Publicado" }, accessToken);
           toast.success("Publicación creada", {
             description: "Tu prenda fue publicada exitosamente.",
           });
