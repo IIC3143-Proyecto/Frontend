@@ -7,6 +7,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { UserProfileLink } from "@/components/common/user-profile-link";
 import type { OfferDto } from "@/lib/types/offer";
 import { OfferDirection } from "@/lib/types/offer-direction.enum";
 import { formatPriceCLP } from "@/lib/utils";
@@ -100,7 +101,9 @@ export function OfferDetailModal({ open, onClose, offer, direction }: Props) {
 
             <div>
               <SectionLabel>{counterpartyLabel}</SectionLabel>
-              <p>{counterparty?.name ?? counterparty?.username ?? "—"}</p>
+              <p>
+                <UserProfileLink user={counterparty} />
+              </p>
             </div>
 
             {offer.comment && (

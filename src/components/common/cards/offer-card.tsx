@@ -15,6 +15,7 @@ import { OfferDetailModal } from "./offer-detail-modal";
 import { OfferEditModal } from "./offer-edit-modal";
 import { RateSellerDialog } from "@/components/profile/rate-seller-dialog";
 import { MiniRoundButton } from "@/components/common/mini-round-button";
+import { UserProfileLink } from "@/components/common/user-profile-link";
 import { Button } from "@/components/ui/button";
 
 type OfferCardProps = {
@@ -80,7 +81,7 @@ export function OfferCard({ offer, direction }: OfferCardProps) {
 
           <p className="text-xs text-muted-foreground truncate">
             {counterpartyLabel}:{" "}
-            {counterparty?.name ?? counterparty?.username ?? "—"}
+            <UserProfileLink user={counterparty} />
           </p>
 
           <div className="flex items-baseline gap-2 mt-2 flex-wrap">
