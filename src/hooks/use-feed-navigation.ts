@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { getAccessToken } from "@/actions/auth";
 import { removeInteraction } from "@/lib/api/user";
 
@@ -12,38 +12,39 @@ type HistoryEntry = {
 export function useFeedNavigation() {
   const [index, setIndex] = useState(0);
   const [history, setHistory] = useState<HistoryEntry[]>([]);
-  const [cursor, setCursor] = useState(0);
+  const cursorRef = useRef(0); // ref sincrónico: evita stale closure en advance/goBack
 
   const advance = useCallback(
     (postId: string, interaction: "Liked" | "Saved" | null) => {
+      const cursor = cursorRef.current;
       setHistory((prev) => [...prev.slice(0, cursor), { postId, interaction }]);
-      setCursor((prev) => prev + 1);
+      cursorRef.current = cursor + 1;
       setIndex((prev) => prev + 1);
     },
-    [cursor],
+    [],
   );
 
   const goBack = useCallback(async () => {
-    if (cursor === 0) return;
+    if (cursorRef.current === 0) return;
 
-    const entry = history[cursor - 1];
-
-    if (entry?.interaction) {
-      try {
-        const token = await getAccessToken();
-        await removeInteraction(entry.postId, entry.interaction, token);
-      } catch {
-        // El post sigue siendo visible aunque falle el rollback
+    const cursor = cursorRef.current;
+    setHistory((prev) => {
+      const entry = prev[cursor - 1];
+      if (entry?.interaction) {
+        getAccessToken().then((token) =>
+          removeInteraction(entry.postId, entry.interaction!, token)
+        ).catch(() => {});
       }
-    }
+      return prev;
+    });
 
-    setCursor((prev) => Math.max(0, prev - 1));
+    cursorRef.current = Math.max(0, cursor - 1);
     setIndex((prev) => Math.max(0, prev - 1));
-  }, [cursor, history]);
+  }, []);
 
   return {
     currentIndex: index,
-    canGoBack: cursor > 0,
+    canGoBack: index > 0,
     history,
     advance,
     goBack,

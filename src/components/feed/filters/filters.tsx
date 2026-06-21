@@ -5,7 +5,7 @@ import { FiltersBody } from "./filters-body";
 import { arraysEqual } from "@/lib/utils";
 
 export function Filters({ filtersByCategory, appliedFilters, setAppliedFilters }: { filtersByCategory: Record<string, string[]>; appliedFilters: string[]; setAppliedFilters: (filters: string[]) => void;}) {
-  const [isFiltersOpen, setIsFiltersOpen] = useState(true);
+  const [isFiltersOpen, setIsFiltersOpen] = useState(false);
   const [selectedFilters, setSelectedFilters] = useState<string[]>([]);
 
   const toggleOpen = () => setIsFiltersOpen((isOpen) => !isOpen);

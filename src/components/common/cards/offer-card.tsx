@@ -25,7 +25,7 @@ export function OfferCard({ offer, direction }: OfferCardProps) {
     direction === OfferDirection.RECEIVED ? offer.buyer : post.seller;
   const counterpartyLabel =
     direction === OfferDirection.RECEIVED ? "De" : "Para";
-  const firstImage = post.imagesUrls?.split(",").filter(Boolean)[0];
+  const firstImage = post.imagesUrls?.split(";").filter(Boolean)[0];
   // El lápiz abre el modal de gestión solo si el usuario tiene alguna
   // transición disponible sobre la oferta en su estado actual.
   const canManage =

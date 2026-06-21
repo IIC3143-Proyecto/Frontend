@@ -17,12 +17,15 @@ import {
   OfferButton,
   RewindButton,
 } from "@/components/feed/interaction-buttons";
+import { IconLoader2 } from "@tabler/icons-react";
+import { MakeOfferForm } from "@/components/common/cards/make-offer/make-offer-form";
+import { useCreateOffer } from "@/hooks/use-create-offer";
 import { usePaginatedFeed, useSearchByTags } from "@/hooks/use-feed";
 import { useFeedNavigation } from "@/hooks/use-feed-navigation";
 import { useCreateInteraction } from "@/hooks/use-interaction";
 import { useTags } from "@/hooks/use-tags";
 
-type FeedAction = "like" | "dislike" | "save" | "offer" | "rewind" | null;
+type FeedAction = "like" | "dislike" | "save" | "rewind" | null;
 type ExitDir = "right" | "left" | "up";
 
 const ANIM_DURATION = 380;
@@ -52,8 +55,9 @@ function parseImages(raw: string): string[] {
 }
 
 export default function Feed() {
-  const [isDesktopDetailsOpen, setIsDetailsOpen] = useState(true);
+  const [isDesktopDetailsOpen, setIsDetailsOpen] = useState(false);
   const toggleDetails = () => setIsDetailsOpen((open) => !open);
+  const [isOfferOpen, setIsOfferOpen] = useState(false);
 
   const [appliedFilters, setAppliedFilters] = useState<string[]>([]);
   const [feedAction, setFeedAction] = useState<FeedAction>(null);
@@ -64,6 +68,7 @@ export default function Feed() {
   const { posts, isFetching, prefetchIfNeeded } = usePaginatedFeed();
   const { currentIndex, canGoBack, advance, goBack } = useFeedNavigation();
   const createInteraction = useCreateInteraction();
+  const createOffer = useCreateOffer();
   const { categories: tagsByCategory } = useTags();
 
   const isFiltering = appliedFilters.length > 0;
@@ -111,7 +116,7 @@ export default function Feed() {
       } else {
         const interaction: "Liked" | "Saved" | null =
           action === "like" ? "Liked" :
-          action === "save" || action === "offer" ? "Saved" : null;
+          action === "save" ? "Saved" : null;
         advance(post.id, interaction);
         if (interaction) {
           createInteraction.mutate({ postId: post.id, type: interaction });
@@ -150,7 +155,7 @@ export default function Feed() {
           >
             {isLoading || isSearching ? (
               <div className="absolute inset-0 flex items-center justify-center">
-                <div className="w-8 h-8 rounded-full border-2 border-foreground/20 border-t-foreground animate-spin" />
+                <IconLoader2 className="size-8 text-muted-foreground animate-spin" />
               </div>
             ) : isEmpty ? (
               <div className="absolute inset-0 flex items-center justify-center px-8 text-center">
@@ -196,9 +201,19 @@ export default function Feed() {
           <IgnoreButton className="md:hidden" onClick={() => trigger("dislike")} />
           <OpenDesktopDetailsButton className="hidden md:flex" onClick={toggleDetails} />
           <LikeButton className="md:hidden" onClick={() => trigger("like")} />
-          <OfferButton onClick={() => trigger("offer")} />
+          <OfferButton onClick={() => post && setIsOfferOpen(true)} />
         </div>
       </div>
+
+      {/* MODAL DE OFERTA */}
+      {post && (
+        <MakeOfferForm
+          post={post}
+          open={isOfferOpen}
+          onOpenChange={setIsOfferOpen}
+          onSubmit={(data) => createOffer.mutate({ postId: post.id, ...data })}
+        />
+      )}
 
       {/* DESKTOP SIDEBAR */}
       {isDesktopDetailsOpen && post && (

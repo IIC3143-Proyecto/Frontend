@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { getAccessToken } from "@/actions/auth";
 import { getFeed, searchByTags } from "@/lib/api/post";
@@ -11,10 +11,12 @@ const PREFETCH_THRESHOLD = 5;
 
 export function usePaginatedFeed() {
   const [posts, setPosts] = useState<PostDto[]>([]);
-  const [isFetching, setIsFetching] = useState(false);
+  const [isFetching, setIsFetching] = useState(true); // true desde el inicio evita el flash de empty state
+  const inFlight = useRef(false); // ref sincrónico para el guard, evita stale closure
 
   const fetchMore = useCallback(async () => {
-    if (isFetching) return;
+    if (inFlight.current) return;
+    inFlight.current = true;
     setIsFetching(true);
     try {
       const token = await getAccessToken();
@@ -24,11 +26,12 @@ export function usePaginatedFeed() {
         return [...prev, ...newPosts.filter((p) => !seenIds.has(p.id))];
       });
     } finally {
+      inFlight.current = false;
       setIsFetching(false);
     }
-  }, [isFetching]);
+  }, []);
 
-  useEffect(() => { fetchMore(); }, []);
+  useEffect(() => { fetchMore(); }, [fetchMore]);
 
   const prefetchIfNeeded = useCallback((currentIndex: number) => {
     if (posts.length > 0 && currentIndex >= posts.length - PREFETCH_THRESHOLD) {
