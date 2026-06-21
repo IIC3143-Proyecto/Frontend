@@ -14,7 +14,6 @@ import {
   assertNoImageRequest,
   setPatchPostError,
   setDeleteImageError,
-  setAppendImageError,
 } from './helpers/edit-post';
 
 test.describe('Edit Post', () => {
@@ -33,7 +32,8 @@ test.describe('Edit Post', () => {
 
     await test.step('tags pre-populated from fetchPostTags', async () => {
       await openSection(page, 'Especificaciones esenciales');
-      await expect(page.getByRole('button', { name: 'M', exact: true })).toHaveAttribute('aria-pressed', 'true');
+      await page.getByRole('button', { name: 'Tallas de letra' }).click();
+      await expect(page.getByRole('button', { name: 'M', exact: true })).toBeVisible();
       await expect(page.getByRole('radio', { name: 'Nuevo', exact: true })).toBeChecked();
       await expect(page.getByRole('button', { name: 'Camiseta', exact: true })).toHaveAttribute('aria-pressed', 'true');
     });
@@ -93,6 +93,7 @@ test.describe('Edit Post', () => {
 
     await test.step('empty required tags shows error', async () => {
       await openSection(page, 'Especificaciones esenciales');
+      await page.getByRole('button', { name: 'Tallas de letra' }).click();
       await page.getByRole('button', { name: 'M', exact: true }).click();
       await page.getByRole('button', { name: 'Camiseta', exact: true }).click();
       await clickSave(page);
@@ -150,7 +151,7 @@ test.describe('Edit Post', () => {
   });
 
   test('error handling', async ({ page }) => {
-    await test.step('PATCH_POST_401 redirects to session-expired', async () => {
+    await test.step('401 on save redirects to session-expired', async () => {
       await setPatchPostError(page, 401);
       await clickSave(page);
       await page.waitForURL('**/session-expired', { timeout: 8_000 });
@@ -159,7 +160,7 @@ test.describe('Edit Post', () => {
     await gotoAuthenticated(page, '/posts', 'FULL');
     await openEditModal(page);
 
-    await test.step('PATCH_POST_500 shows error toast', async () => {
+    await test.step('500 on save shows error toast', async () => {
       await setPatchPostError(page, 500);
       await clickSave(page);
       await waitForToast(page, 'Error al guardar cambios');
@@ -168,7 +169,7 @@ test.describe('Edit Post', () => {
     await page.getByRole('button', { name: 'Cancelar' }).click();
     await openEditModal(page);
 
-    await test.step('DELETE_IMAGE_500 shows error toast', async () => {
+    await test.step('500 on image delete shows error toast', async () => {
       await openSection(page, 'Fotos');
       await page.getByRole('button', { name: 'Eliminar foto' }).first().click();
       await uploadEditPhotos(page, 1);

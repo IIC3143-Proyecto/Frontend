@@ -131,7 +131,7 @@ test.describe('from step 1', () => {
       await expect(page.getByRole('heading', { name: 'Tu perfil' })).toBeVisible();
     });
 
-    await test.step('slow upload shows Guardando spinner', async () => {
+    await test.step('slow upload shows loading spinner', async () => {
       await resetErrorScenario(page);
       await gotoAuthenticated(page, '/onboarding', 'NEW');
       await page.getByRole('button', { name: 'Empezar' }).click();
