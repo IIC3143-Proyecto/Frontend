@@ -8,6 +8,14 @@ export function getRoleForDirection(direction: OfferDirection): OfferRole {
   return direction === OfferDirection.RECEIVED ? "seller" : "buyer";
 }
 
+export function getDirectionForAction(
+  action: OfferPatchAction,
+): OfferDirection {
+  return action === OfferPatchAction.BUYER_CONFIRM
+    ? OfferDirection.MADE
+    : OfferDirection.RECEIVED;
+}
+
 export type OfferActionOption = {
   label: string;
   action: OfferPatchAction;

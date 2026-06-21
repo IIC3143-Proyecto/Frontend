@@ -2,6 +2,8 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { getAccessToken } from "@/actions/auth";
 import { patchOffer } from "@/lib/api/offer";
+import { offerKeys } from "@/hooks/use-offers";
+import { getDirectionForAction } from "@/lib/offer-transitions";
 import type { PatchOfferRequest } from "@/lib/types/offer";
 
 type Options = {
@@ -16,8 +18,10 @@ export const usePatchOffer = (options?: Options) => {
       const accessToken = await getAccessToken();
       return patchOffer({ id, status }, accessToken);
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["offers"] });
+    onSuccess: (_data, { status }) => {
+      queryClient.invalidateQueries({
+        queryKey: offerKeys.list(getDirectionForAction(status)),
+      });
       toast.success("Oferta actualizada");
       options?.onSuccess?.();
     },

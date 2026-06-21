@@ -1,19 +1,49 @@
 "use client";
 
 import { useState } from "react";
-import { useOffers } from "@/hooks/use-offers";
+import { useOffers, useSuccessfulOffers } from "@/hooks/use-offers";
+import type { DirectedOffer } from "@/hooks/use-offers";
 import { cn } from "@/lib/utils";
 import { OfferDirection } from "@/lib/types/offer-direction.enum";
 import { OfferCard } from "@/components/common/cards/offer-card";
 
-const TABS: { id: OfferDirection; label: string }[] = [
-  { id: OfferDirection.MADE, label: "Realizadas" },
-  { id: OfferDirection.RECEIVED, label: "Recibidas" },
+type TabId = "made" | "received" | "successful";
+
+const TABS: { id: TabId; label: string }[] = [
+  { id: "made", label: "Realizadas" },
+  { id: "received", label: "Recibidas" },
+  { id: "successful", label: "Exitosas" },
 ];
 
+const EMPTY_MESSAGE: Record<TabId, string> = {
+  made: "Aún no has realizado ofertas.",
+  received: "No has recibido ofertas.",
+  successful: "Todavía no tienes ofertas exitosas.",
+};
+
 export function OffersList() {
-  const [tab, setTab] = useState<OfferDirection>(OfferDirection.MADE);
-  const { data: offers, isLoading, isError } = useOffers(tab);
+  const [tab, setTab] = useState<TabId>("made");
+  const directionQuery = useOffers(
+    tab === "received" ? OfferDirection.RECEIVED : OfferDirection.MADE,
+  );
+  const successfulQuery = useSuccessfulOffers();
+
+  const { items, isLoading, isError } =
+    tab === "successful"
+      ? {
+          items: successfulQuery.data,
+          isLoading: successfulQuery.isLoading,
+          isError: successfulQuery.isError,
+        }
+      : {
+          items: (directionQuery.data ?? []).map<DirectedOffer>((offer) => ({
+            offer,
+            direction:
+              tab === "received" ? OfferDirection.RECEIVED : OfferDirection.MADE,
+          })),
+          isLoading: directionQuery.isLoading,
+          isError: directionQuery.isError,
+        };
 
   return (
     <div className="w-full">
@@ -47,15 +77,13 @@ export function OffersList() {
             Error al cargar las ofertas.
           </p>
         )}
-        {!isLoading && !isError && (offers?.length ?? 0) === 0 && (
+        {!isLoading && !isError && items.length === 0 && (
           <p className="w-full text-center text-xs text-muted-foreground py-8">
-            {tab === OfferDirection.MADE
-              ? "Aún no has realizado ofertas."
-              : "No has recibido ofertas."}
+            {EMPTY_MESSAGE[tab]}
           </p>
         )}
-        {offers?.map((offer) => (
-          <OfferCard key={offer.id} offer={offer} direction={tab} />
+        {items.map(({ offer, direction }) => (
+          <OfferCard key={offer.id} offer={offer} direction={direction} />
         ))}
       </div>
     </div>
