@@ -16,28 +16,28 @@ test.describe('Profile', () => {
   });
 
   test('happy path — view', async ({ page }) => {
-    await test.step('username y bio visibles', async () => {
+    await test.step('username and bio visible', async () => {
       await expect(page.getByText('@Flo_Full')).toBeVisible();
       await expect(page.getByText('Bio completa del usuario')).toBeVisible();
     });
-    await test.step('sección de contacto visible', async () => {
+    await test.step('contact section visible', async () => {
       await expect(page.getByText('Sin información de contacto')).toBeVisible();
     });
-    await test.step('sección de zona visible', async () => {
+    await test.step('zone section visible', async () => {
       await expect(page.getByText('Sin zona definida')).toBeVisible();
     });
-    await test.step('sección de guardados visible', async () => {
+    await test.step('saved posts section visible', async () => {
       await expect(page.getByText(/Guardados \(\d+\)/)).toBeVisible();
       await expect(page.getByRole('button', { name: /ver guardados/i })).toBeVisible();
     });
   });
 
   test('edit contact', async ({ page }) => {
-    await test.step('abrir dialog de contacto', async () => {
+    await test.step('open contact editor dialog', async () => {
       await openContactEditor(page);
       await expect(page.getByText('Editar contacto')).toBeVisible();
     });
-    await test.step('llenar Instagram y guardar', async () => {
+    await test.step('fill Instagram and save', async () => {
       await page.getByPlaceholder('tu_usuario').fill('test_ig');
       await page.getByRole('button', { name: 'Guardar' }).click();
       await expect(page.getByText('Editar contacto')).not.toBeVisible();
@@ -45,15 +45,15 @@ test.describe('Profile', () => {
   });
 
   test('saved posts & offer', async ({ page }) => {
-    await test.step('abrir sheet y ver 3 posts guardados', async () => {
+    await test.step('open saved sheet and see 3 posts', async () => {
       await openSavedSheet(page);
       await expect(getSavedCards(page)).toHaveCount(3);
     });
-    await test.step('quitar primer post → 2 cards', async () => {
+    await test.step('remove first post — 2 cards remain', async () => {
       await removeCardAt(page, 0);
       await expect(getSavedCards(page)).toHaveCount(2);
     });
-    await test.step('abrir make offer y enviar', async () => {
+    await test.step('open make-offer form and submit', async () => {
       await openOfferFormAt(page, 0);
       await expect(page.getByText('Hacer oferta')).toBeVisible();
       await page.locator('textarea').fill('Oferta de prueba');
@@ -63,10 +63,18 @@ test.describe('Profile', () => {
   });
 
   test('error handling — patch contact', async ({ page }) => {
-    await test.step('abrir dialog de contacto', async () => {
+    await test.step('401 on save redirects to session-expired', async () => {
       await openContactEditor(page);
+      await setPatchError(page, 'PATCH_401');
+      await page.getByPlaceholder('tu_usuario').fill('error_ig');
+      await page.getByRole('button', { name: 'Guardar' }).click();
+      await page.waitForURL('**/session-expired', { timeout: 8_000 });
     });
-    await test.step('PATCH_500 → toast de error visible', async () => {
+
+    await gotoAuthenticated(page, '/profile', 'FULL');
+
+    await test.step('500 on save shows error toast', async () => {
+      await openContactEditor(page);
       await setPatchError(page, 'PATCH_500');
       await page.getByPlaceholder('tu_usuario').fill('error_ig');
       await page.getByRole('button', { name: 'Guardar' }).click();
