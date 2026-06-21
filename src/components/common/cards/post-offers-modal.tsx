@@ -31,14 +31,14 @@ export function PostOffersModal({ open, onClose, post }: Props) {
 
   return (
     <Dialog open={open} onOpenChange={(next) => !next && onClose()}>
-      <DialogContent className="sm:max-w-lg flex flex-col gap-0 p-0 max-h-[85vh]">
+      <DialogContent className="min-w-[300px] w-[90vw] max-w-[640px] flex flex-col gap-0 p-0 max-h-[85vh] overflow-hidden">
         <DialogHeader className="border-b border-border px-4 pt-4 pb-3 shrink-0">
           <DialogTitle className="text-xs font-black uppercase tracking-wider truncate">
             Ofertas — {post.title}
           </DialogTitle>
         </DialogHeader>
 
-        <div className="overflow-y-auto flex-1 p-4 flex flex-col gap-3">
+        <div className="flex-1 min-h-0 overflow-y-auto p-4 space-y-3">
           {isLoading && (
             <p className="text-xs text-muted-foreground text-center py-8">
               Cargando ofertas…
