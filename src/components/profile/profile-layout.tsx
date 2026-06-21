@@ -13,6 +13,7 @@ import {
   IconLogout,
   IconStar,
   IconStarFilled,
+  IconLayoutGrid,
 } from "@tabler/icons-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -21,6 +22,7 @@ import type { PostDto } from "@/lib/types/post";
 import { groupTagPreferencesByCategory } from "@/lib/tag-utils";
 import { ContactDialog } from "./contact-dialog";
 import { MetroDialog } from "./metro-dialog";
+import Link from "next/link";
 import { SavedSheet } from "./saved-sheet";
 import { PhotoDialog } from "./photo-dialog";
 import { useUserTagPreferences } from "@/hooks/use-user-tag-preferences";
@@ -203,6 +205,17 @@ export function ProfileLayout({
               Sin preferencias registradas todavía.
             </p>
           )}
+        </section>
+
+        <section className="bg-card border border-border rounded-2xl p-4 sm:p-3 sm:col-span-2 flex items-center justify-between">
+          <p className="text-xs font-black uppercase flex items-center gap-1.5 text-muted-foreground">
+            <IconLayoutGrid className="size-3.5" /> Publicaciones
+          </p>
+          <Button size="sm" variant="outline" asChild>
+            <Link href={`/profile/${user.id}/posts`}>
+              {isOwner ? "Ver mis publicaciones" : "Ver publicaciones"}
+            </Link>
+          </Button>
         </section>
 
         {isOwner && (

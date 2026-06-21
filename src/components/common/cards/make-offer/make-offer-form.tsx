@@ -24,7 +24,7 @@ type Props = {
 };
 
 export function MakeOfferForm({ post, open, onOpenChange, onSubmit }: Props) {
-  const hasOffer = post.interactions.some((i) => i.type === "Offered");
+  const hasOffer = post.interactions?.some((i) => i.type === "Offered") ?? false;
 
   const min = 1_000;
   const max = post.priceClp;
