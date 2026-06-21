@@ -35,13 +35,4 @@ export type NewPostDto = {
   isNegotiable: boolean;
 };
 
-export type PostTagsDto = {
-  Talla: string[];
-  Condición: string;
-  'Tipo de prenda': string[];
-  Marca: string[];
-  Color: string[];
-  Género: string[];
-  Estilo: string[];
-  Temporada: string[];
-};
+export type PostTagsDto = Record<string, string[]>;
