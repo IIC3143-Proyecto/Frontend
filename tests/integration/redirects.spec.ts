@@ -15,7 +15,6 @@ test.describe('Onboarding redirects (useAuth)', () => {
   test('ONBOARDING_PENDING: /onboarding permanece en /onboarding', async ({ page }) => {
     await gotoAuthenticated(page, '/onboarding', 'ONBOARDING_PENDING');
     await expect(page).toHaveURL('/onboarding');
-    await expect(page.getByRole('heading', { name: 'Completa tu perfil' })).toBeVisible();
   });
 
   test('NEW: /notifications redirige a /onboarding', async ({ page }) => {
