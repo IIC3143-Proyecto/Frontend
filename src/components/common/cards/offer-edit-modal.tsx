@@ -19,6 +19,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
+import { UserProfileLink } from "@/components/common/user-profile-link";
 import { usePatchOffer } from "@/hooks/use-patch-offer";
 import { getOfferActions, getRoleForDirection } from "@/lib/offer-transitions";
 import type { OfferDto } from "@/lib/types/offer";
@@ -110,7 +111,7 @@ export function OfferEditModal({ open, onClose, offer, direction }: Props) {
           <div className="flex flex-wrap justify-center gap-x-5 gap-y-2 text-sm">
             <span className="flex items-center gap-1 text-muted-foreground">
               <IconUser className="size-3.5 shrink-0" />
-              {counterparty?.name ?? counterparty?.username ?? "—"}
+              <UserProfileLink user={counterparty} />
             </span>
             <span className="flex items-center gap-1 text-muted-foreground">
               <IconCalendar className="size-3.5 shrink-0" />
