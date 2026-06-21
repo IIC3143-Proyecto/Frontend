@@ -212,7 +212,7 @@ export function ProfileLayout({
             <IconLayoutGrid className="size-3.5" /> Publicaciones
           </p>
           <Button size="sm" variant="outline" asChild>
-            <Link href={`/profile/${user.id}/posts`}>
+            <Link href={isOwner ? "/posts" : `/profile/${user.id}/posts`}>
               {isOwner ? "Ver mis publicaciones" : "Ver publicaciones"}
             </Link>
           </Button>
