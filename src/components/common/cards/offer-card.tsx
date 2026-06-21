@@ -1,6 +1,6 @@
 "use client";
 
-import { IconInfoCircle, IconPencil } from "@tabler/icons-react";
+import { IconInfoCircle, IconSettingsDollar } from "@tabler/icons-react";
 import { useState } from "react";
 import type { OfferDto } from "@/lib/types/offer";
 import { OfferDirection } from "@/lib/types/offer-direction.enum";
