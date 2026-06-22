@@ -5,6 +5,7 @@ import {
   IconX,
   IconCheck,
   IconCurrencyDollar,
+  IconArrowBack,
 } from "@tabler/icons-react";
 
 export function SaveButton({ active, disabled, onClick }: { active: boolean; disabled?:boolean; onClick: () => void }) {
@@ -37,6 +38,14 @@ export function OfferButton({ onClick }: { onClick: () => void }) {
   return (
     <Button size="icon-lg" variant="outline" onClick={onClick}>
       <IconCurrencyDollar className="text-yellow-600" />
+    </Button>
+  );
+}
+
+export function RewindButton({ onClick, disabled, className }: { onClick: () => void; disabled?: boolean; className?: string }) {
+  return (
+    <Button size="icon-lg" variant="outline" onClick={onClick} disabled={disabled} className={className}>
+      <IconArrowBack className="text-blue-500" />
     </Button>
   );
 }
