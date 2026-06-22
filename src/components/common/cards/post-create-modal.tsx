@@ -353,6 +353,7 @@ export function PostCreateModal({ isOpen, onClose }: CreatePostModalProps) {
       >
         <TagSuggestionModal
           isOpen={showTagSuggestionModal}
+          photos={photos.map((p) => p.file)}
           onManual={handleManualTags}
           onGemini={handleGeminiTags}
         />

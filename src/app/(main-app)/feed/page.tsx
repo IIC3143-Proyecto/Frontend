@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { IconLoader2 } from "@tabler/icons-react";
 import { ProductImages } from "@/components/feed/product-images";
 import { Filters } from "@/components/feed/filters/filters";
 import {
@@ -13,57 +14,116 @@ import {
   LikeButton,
   SaveButton,
   OfferButton,
+  RewindButton,
 } from "@/components/feed/interaction-buttons";
-import { products } from "./hardcoded_posts";
-import { tagsByCategory } from "./hardcoded_filters";
+import { PostTransition } from "@/components/feed/post-transition";
+import { useFeedNavigation } from "@/hooks/use-feed-navigation";
+import { useTags } from "@/hooks/use-tags";
+import { MakeOfferForm } from "@/components/common/cards/make-offer/make-offer-form";
+import { useCreateOffer } from "@/hooks/use-create-offer";
+import { extractDetails } from "@/components/feed/extract-product-details";
+import { SellerAvatar } from "@/components/feed/seller-avatar";
 
 export default function Feed() {
   const [isDesktopDetailsOpen, setIsDetailsOpen] = useState(true);
   const toggleDetails = () => setIsDetailsOpen((isOpen) => !isOpen);
 
-  const product = products[1]; // ejemplo hardcodeado
+  const [appliedFilters, setAppliedFilters] = useState<string[]>([]);
 
-  const [appliedFilters , setAppliedFilters] = useState<string[]>([]);
-  
+  const { categories: tagsByCategory } = useTags();
+
+  const {
+    currentPost: displayProduct,
+    direction,
+    isLoading,
+    isFinished,
+    canGoBack,
+    like,
+    ignore,
+    save,
+    next,
+    rewind,
+  } = useFeedNavigation(appliedFilters);
+
+  const isFiltering = appliedFilters.length > 0;
+
+  const [isOfferOpen, setIsOfferOpen] = useState(false);
+  const createOffer = useCreateOffer();
+
+  const isEmpty = !displayProduct && !isLoading && isFinished;
+
   return (
     <main className="flex-1 flex flex-row min-h-0 h-full">
       <div className="flex-1 flex flex-col min-h-0 min-w-0">
         {/* FILTERS */}
-        <Filters 
+        <Filters
           filtersByCategory={tagsByCategory}
           appliedFilters={appliedFilters}
           setAppliedFilters={setAppliedFilters}
         />
 
-        {/* MAIN CONTENT*/}
+        {/* MAIN CONTENT */}
         <div className="flex-1 overflow-hidden flex justify-center items-center gap-8 md:px-4">
-          <IgnoreButton className="hidden md:flex" />
+          <IgnoreButton className="hidden md:flex" onClick={ignore} />
 
           <div className="relative h-full min-h-75 aspect-3/4 md:border-x overflow-hidden">
-            <ProductImages images={product.images} />
-            <ProductDetailsMobile details={product.details} className="absolute bottom-0 md:hidden" />
+            {isLoading ? (
+              <div className="absolute inset-0 flex items-center justify-center">
+                <IconLoader2 className="size-8 text-muted-foreground animate-spin" />
+              </div>
+            ) : isEmpty ? (
+              <div className="flex-1 flex items-center justify-center border h-full px-8 text-center text-muted-foreground">
+                {isFiltering ? "No hay resultados para estos filtros." : "No hay más publicaciones."}
+              </div>
+            ) : displayProduct ? (
+              <PostTransition postKey={displayProduct.id} direction={direction}>
+                <ProductImages images={displayProduct.imagesUrls ? displayProduct.imagesUrls.split(";").filter(Boolean) : []} />
+                <SellerAvatar
+                  alt={displayProduct.seller?.name ?? ""}
+                  imageUrl={displayProduct.seller?.photoUrl}
+                  href={displayProduct.sellerId ? `/profile/${displayProduct.sellerId}` : undefined}
+                />
+                <ProductDetailsMobile details={extractDetails(displayProduct)} className="absolute bottom-0 md:hidden" />
+                <div className="absolute top-10 left-3 z-20 md:hidden">
+                  <RewindButton onClick={rewind} disabled={!canGoBack} />
+                </div>
+              </PostTransition>
+            ) : null}
           </div>
 
-          <LikeButton className="hidden md:flex" />
+          <LikeButton className="hidden md:flex" onClick={like} />
         </div>
 
         {/* INTERACTION BUTTONS */}
         <div className="md:h-20 md:border-t flex items-center justify-center gap-6 my-6 md:my-0 overflow-hidden">
-          <SaveButton />
-          <IgnoreButton className="md:hidden" />
+          <RewindButton className="hidden md:flex" onClick={rewind} disabled={!canGoBack} />
+          <SaveButton onClick={save} />
+          <IgnoreButton className="md:hidden" onClick={ignore} />
           <OpenDesktopDetailsButton className="hidden md:flex" onClick={toggleDetails} />
-          <LikeButton className="md:hidden" />
-          <OfferButton />
+          <LikeButton className="md:hidden" onClick={like} />
+          <OfferButton onClick={() => displayProduct && setIsOfferOpen(true)} />
         </div>
       </div>
 
-      {/* DESKTOP SIDEBAR */}
-      {isDesktopDetailsOpen && (
-        <div className="w-1/3 hidden md:block border-l overflow-hidden">
-          <ProductDetailsDesktop details={product.details} onClose={toggleDetails} />
-        </div>
+      {/* MODAL DE OFERTA */}
+      {displayProduct && (
+        <MakeOfferForm
+          post={displayProduct}
+          open={isOfferOpen}
+          onOpenChange={setIsOfferOpen}
+          onSubmit={(data) => {
+            createOffer.mutate({ postId: displayProduct.id, ...data });
+            next();
+          }}
+        />
       )}
 
+      {/* DESKTOP SIDEBAR */}
+      {isDesktopDetailsOpen && displayProduct && (
+        <div className="w-1/3 hidden md:block border-l overflow-hidden">
+          <ProductDetailsDesktop details={extractDetails(displayProduct)} onClose={toggleDetails} />
+        </div>
+      )}
     </main>
   );
 }

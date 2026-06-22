@@ -4,19 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { IconX, IconInfoCircle, IconChevronDown, IconChevronUp } from "@tabler/icons-react";
 import { formatPriceCLP } from "@/lib/utils";
+import { ProductDetails } from "./extract-product-details";
 
-// type Product = {
-//   id: string;
-//   details: ProductDetails;
-//   images: string[];
-// };
-
-type ProductDetails = {
-  title: string;
-  description: string;
-  price: number;
-  size: string;
-};
 
 export function ProductDetailsDesktop({ onClose, details }: { onClose: () => void; details: ProductDetails }) {
   return (
@@ -34,7 +23,7 @@ export function ProductDetailsDesktop({ onClose, details }: { onClose: () => voi
 
         <div className="flex gap-4">
           <Badge> {formatPriceCLP(details.price)} </Badge>
-          <Badge> Talla {details.size} </Badge>
+          {details.size && <Badge> Talla {details.size} </Badge>}
         </div>
       </div>
     </>
@@ -60,7 +49,7 @@ export function ProductDetailsMobile({ details, className }: { details: ProductD
 
       <div className="flex gap-3 items-center">
         <Badge variant="secondary"> {formatPriceCLP(details.price)} </Badge>
-        <Badge variant="secondary"> Talla {details.size} </Badge>
+        {details.size && <Badge variant="secondary"> Talla {details.size} </Badge>}
 
         <OpenMobileDetailsButton onClick={toggleDetails} active={isDetailsOpen} className="" />
       </div>
