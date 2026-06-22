@@ -11,7 +11,10 @@ export const TAGS_QUERY_KEY = ['tags-categories'] as const;
 export function useTags() {
   const { data, isLoading, error } = useQuery({
     queryKey: TAGS_QUERY_KEY,
-    queryFn: fetchTags,
+    queryFn: async () => {
+      const accessToken = await getAccessToken();
+      return fetchTags(accessToken);
+    },
     staleTime: 1000 * 60 * 10,
   });
 

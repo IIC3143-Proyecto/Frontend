@@ -33,7 +33,7 @@ During setup, `page.route()` intercepts `/auth/sync-user` and returns a mock `FU
 | File | What it covers |
 |------|----------------|
 | `auth.spec.ts` | Login redirects to Auth0, signup with `screen_hint=signup`, authenticated user accesses `/profile`, logout clears session and redirects to `/`, post-logout private routes redirect with `returnTo` |
-| `routes.spec.ts` | Public routes (`/`, `/about-us`, `/faq`) accessible without auth; private routes (`/notifications`, `/profile`, `/publications`, `/shopping-history`, `/onboarding`, `/posts`) redirect to `/login?returnTo=...` |
+| `routes.spec.ts` | Public routes (`/`, `/about-us`, `/faq`) accessible without auth; private routes (`/notifications`, `/profile`, `/offers`, `/posts`, `/onboarding`) redirect to `/login?returnTo=...` |
 | `auth-integration.spec.ts` | Real backend connectivity — self-skips when `NEXT_PUBLIC_API_URL` is not set. Verifies `/health`, `sync-user` reaches the backend, response has expected fields (`id`, `email`, `onboardingCompleted`, `providerAuth0`), `onboardingCompleted` is derived from `bio` |
 | `onboarding-e2e.spec.ts` | `test.fixme` — new user sees onboarding form; completing onboarding redirects to `/profile` |
 | `create-post-e2e.spec.ts` | `test.fixme` — authenticated user opens create-post modal and completes all steps |

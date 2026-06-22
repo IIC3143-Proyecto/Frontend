@@ -2,14 +2,9 @@
 
 import type { UseFormReturn } from "react-hook-form";
 import { ToggleInputGroup } from "@/components/common/toggle-input";
+import { SizeSelector } from "@/components/common/size-selector";
 import type { TagCategories } from "@/lib/types/tag";
 import type { OnboardingSchema } from "../schema";
-
-const ONBOARDING_CATEGORY_MAP = {
-  clothingGender: 'Género',
-  clothingTypes: 'Tipo de prenda',
-  size: 'Talla',
-} as const;
 
 interface StepEstiloProps {
   form: UseFormReturn<OnboardingSchema>;
@@ -18,9 +13,9 @@ interface StepEstiloProps {
 }
 
 export function StepEstilo({ form, tags, disabled }: StepEstiloProps) {
-  const clothingGenderOptions = (tags[ONBOARDING_CATEGORY_MAP.clothingGender] ?? []).map((v) => ({ label: v, value: v }));
-  const clothingTypeOptions = (tags[ONBOARDING_CATEGORY_MAP.clothingTypes] ?? []).map((v) => ({ label: v, value: v }));
-  const sizeOptions = (tags[ONBOARDING_CATEGORY_MAP.size] ?? []).map((v) => ({ label: v, value: v }));
+  const clothingGenderOptions = (tags["Género"] ?? []).map((v) => ({ label: v, value: v }));
+  const clothingTypeOptions = (tags["Tipo de prenda"] ?? []).map((v) => ({ label: v, value: v }));
+  const sizeOptions = tags["Talla"] ?? [];
 
   return (
     <div className="flex flex-col gap-6">
@@ -43,10 +38,9 @@ export function StepEstilo({ form, tags, disabled }: StepEstiloProps) {
         disabled={disabled}
       />
 
-      <ToggleInputGroup
+      <SizeSelector
         control={form.control}
         name="size"
-        label="Talla"
         options={sizeOptions}
         type="single"
         disabled={disabled}

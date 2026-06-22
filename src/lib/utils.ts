@@ -46,21 +46,8 @@ export function formatRelativeDate(iso: string): string {
   return date.toLocaleDateString("es-CL", { day: "numeric", month: "short" });
 }
 
-/**
- * Checks if two arrays contain the same elements, regardless of order.
- * 
- * @template T
- * @param {T[]} a - The first array to compare.
- * @param {T[]} b - The second array to compare.
- * @returns Returns true if both arrays contain the same elements, false otherwise.
- * 
- * @example
- * arraysEqual([1, 2, 3], [3, 2, 1]); // true
- * arraysEqual(['a', 'b'], ['a', 'c']); // false
- */
 export function arraysEqual<T>(a: T[], b: T[]): boolean {
   if (a.length !== b.length) return false;
-
   const bSet = new Set(b);
   return a.every((item) => bSet.has(item));
 }

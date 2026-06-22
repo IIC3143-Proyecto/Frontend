@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { getAccessToken } from "@/actions/auth";
-import { createPost, patchPostTags, uploadPostImages } from "@/lib/api/post";
+import { createPost, patchPost, patchPostTags, uploadPostImages } from "@/lib/api/post";
 import { desktopToMobile, mobileToDesktop } from '@/lib/post-steps';
 import { handleApiError } from "@/lib/api/handle-error";
 import type { PhotoItem } from "@/lib/types/post";
@@ -66,9 +66,12 @@ export interface UseCreatePostReturn {
   isPostCreated: boolean;
   isSubmitting: boolean;
   isLastStep: boolean;
+  showTagSuggestionModal: boolean;
   handleNext: () => Promise<void>;
   handleBack: () => void;
   handlePublish: () => Promise<void>;
+  handleManualTags: () => void;
+  handleGeminiTags: (tags: Array<{ title: string; category: string }>) => void;
   reset: () => void;
 }
 
@@ -85,6 +88,7 @@ export function useCreatePost(onClose: () => void): UseCreatePostReturn {
   const [isPosting, setIsPosting] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isPostCreated, setIsPostCreated] = useState(false);
+  const [showTagSuggestionModal, setShowTagMethodModal] = useState(false);
   const postIdRef = useRef<string>('');
   const photosUploadedRef = useRef<boolean>(false);
 
@@ -231,6 +235,29 @@ export function useCreatePost(onClose: () => void): UseCreatePostReturn {
     }
   }, [form, router]);
 
+  const handleManualTags = useCallback(() => {
+    setShowTagMethodModal(false);
+    setStep((s) => s + 1);
+  }, []);
+
+  const handleGeminiTags = useCallback((tags: Array<{ title: string; category: string }>) => {
+    const grouped: Record<string, string[]> = {};
+    for (const { title, category } of tags) {
+      (grouped[category] ??= []).push(title);
+    }
+    const single = ['Condición'] as const;
+    for (const [category, values] of Object.entries(grouped)) {
+      const key = category as keyof CreatePostSchema;
+      if (single.includes(category as typeof single[number])) {
+        form.setValue(key, values[0] ?? '', { shouldValidate: true });
+      } else {
+        form.setValue(key, values, { shouldValidate: true });
+      }
+    }
+    setShowTagMethodModal(false);
+    setStep((s) => s + 1);
+  }, [form]);
+
   const handleNext = useCallback(async () => {
     const valid = await validateStep();
     if (!valid) return;
@@ -243,6 +270,8 @@ export function useCreatePost(onClose: () => void): UseCreatePostReturn {
     if (isPhotoStep) {
       const ok = await doUpload();
       if (!ok) return;
+      setShowTagMethodModal(true);
+      return;
     }
 
     setStep((s) => s + 1);
@@ -295,6 +324,7 @@ export function useCreatePost(onClose: () => void): UseCreatePostReturn {
             },
             accessToken,
           );
+          await patchPost({ id: postIdRef.current, status: "Publicado" }, accessToken);
           toast.success("Publicación creada", {
             description: "Tu prenda fue publicada exitosamente.",
           });
@@ -327,9 +357,12 @@ export function useCreatePost(onClose: () => void): UseCreatePostReturn {
     isPostCreated,
     isSubmitting,
     isLastStep,
+    showTagSuggestionModal,
     handleNext,
     handleBack,
     handlePublish,
+    handleManualTags,
+    handleGeminiTags,
     reset,
   };
 }
