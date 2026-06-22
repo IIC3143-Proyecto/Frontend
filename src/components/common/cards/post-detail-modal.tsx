@@ -34,7 +34,7 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 
 export function PostDetailModal({ open, onClose, post }: Props) {
   const [showAllPhotos, setShowAllPhotos] = useState(false);
-  const images = post.imagesUrls?.split(",").filter(Boolean) ?? [];
+  const images = post.imagesUrls?.split(";").filter(Boolean) ?? [];
   const [mainImage, ...restImages] = images;
   const hasMorePhotos = restImages.length > 0;
 

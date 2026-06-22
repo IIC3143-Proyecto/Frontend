@@ -20,7 +20,7 @@ export function SavedPostCard({ post, onRemove, canOffer = true }: Props) {
   const [detailOpen, setDetailOpen] = useState(false);
   const [offerOpen, setOfferOpen] = useState(false);
   const createOffer = useCreateOffer();
-  const firstImage = post.imagesUrls?.split(",").filter(Boolean)[0];
+  const firstImage = post.imagesUrls?.split(";").filter(Boolean)[0];
 
   function handleOfferSubmit(data: OfferForm) {
     createOffer.mutate({ postId: post.id, priceClp: data.priceClp, comment: data.comment });

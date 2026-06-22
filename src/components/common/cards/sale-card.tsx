@@ -121,7 +121,7 @@ export function SaleCard({
   const isAccepted = post.status === PostStatus.RESERVED;
   const showBadge = (post.offersCount ?? 0) > 0 && !isAccepted && !isSold;
 
-  const firstImage = post.imagesUrls?.split(",").filter(Boolean)[0];
+  const firstImage = post.imagesUrls?.split(";").filter(Boolean)[0];
 
   const cardClasses = cn(
     "relative bg-card border border-border flex flex-col overflow-hidden",
