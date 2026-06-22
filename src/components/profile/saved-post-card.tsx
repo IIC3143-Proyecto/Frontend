@@ -20,6 +20,7 @@ export function SavedPostCard({ post, onRemove, canOffer = true }: Props) {
   const [detailOpen, setDetailOpen] = useState(false);
   const [offerOpen, setOfferOpen] = useState(false);
   const createOffer = useCreateOffer();
+  const firstImage = post.imagesUrls?.split(",").filter(Boolean)[0];
 
   function handleOfferSubmit(data: OfferForm) {
     createOffer.mutate({ postId: post.id, priceClp: data.priceClp, comment: data.comment });
@@ -47,8 +48,17 @@ export function SavedPostCard({ post, onRemove, canOffer = true }: Props) {
         )}
       </div>
 
-      <div className="bg-muted aspect-5/6 w-full flex items-center justify-center text-xs text-muted-foreground">
-        Imagen
+      <div className="bg-muted aspect-5/6 w-full flex items-center justify-center text-xs text-muted-foreground overflow-hidden">
+        {firstImage ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={firstImage}
+            alt={post.title}
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          "Imagen"
+        )}
       </div>
 
       <div className="flex-1 flex flex-col min-w-0 mt-1">

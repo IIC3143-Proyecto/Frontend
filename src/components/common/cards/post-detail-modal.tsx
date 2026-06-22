@@ -1,3 +1,6 @@
+"use client";
+
+import { useState } from "react";
 import { IconMapPin, IconTag } from "@tabler/icons-react";
 import {
   Dialog,
@@ -30,6 +33,11 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 }
 
 export function PostDetailModal({ open, onClose, post }: Props) {
+  const [showAllPhotos, setShowAllPhotos] = useState(false);
+  const images = post.imagesUrls?.split(",").filter(Boolean) ?? [];
+  const [mainImage, ...restImages] = images;
+  const hasMorePhotos = restImages.length > 0;
+
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent showCloseButton={false} className="sm:max-w-2xl">
@@ -41,12 +49,27 @@ export function PostDetailModal({ open, onClose, post }: Props) {
 
         <div className="grid grid-cols-1 md:grid-cols-[2fr_3fr] gap-6">
           <div className="flex flex-col gap-3">
-            <div className="bg-muted aspect-5/6 flex items-center justify-center text-xs text-muted-foreground">
-              Imagen
+            <div className="bg-muted aspect-5/6 flex items-center justify-center text-xs text-muted-foreground overflow-hidden">
+              {mainImage ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={mainImage}
+                  alt={post.title}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                "Imagen"
+              )}
             </div>
-            <Button variant="outline" className="w-full">
-              Ver más fotos
-            </Button>
+            {hasMorePhotos && (
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={() => setShowAllPhotos((v) => !v)}
+              >
+                {showAllPhotos ? "Ocultar fotos" : "Ver más fotos"}
+              </Button>
+            )}
           </div>
 
           <div className="flex flex-col gap-4 min-w-0">
@@ -94,6 +117,24 @@ export function PostDetailModal({ open, onClose, post }: Props) {
             </div>
           </div>
         </div>
+
+        {showAllPhotos && hasMorePhotos && (
+          <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+            {restImages.map((url, i) => (
+              <div
+                key={url}
+                className="bg-muted aspect-5/6 overflow-hidden rounded-md"
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={url}
+                  alt={`${post.title} — foto ${i + 2}`}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            ))}
+          </div>
+        )}
 
         <DialogFooter>
           <Button variant="outline" onClick={onClose} className="w-full">
