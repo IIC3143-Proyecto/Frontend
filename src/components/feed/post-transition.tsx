@@ -3,7 +3,7 @@
 import { AnimatePresence, motion, type Variants } from "framer-motion";
 import { ReactNode } from "react";
 
-type Direction = 1 | -1; // 1 = like (derecha), -1 = ignore (izquierda)
+type Direction = 1 | -1; // 1 = like (right), -1 = ignore (left)
 
 const variants: Variants = {
   initial: { opacity: 0 },

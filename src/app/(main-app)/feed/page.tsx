@@ -55,14 +55,12 @@ export default function Feed() {
   return (
     <main className="flex-1 flex flex-row min-h-0 h-full">
       <div className="flex-1 flex flex-col min-h-0 min-w-0">
-        {/* FILTERS */}
         <Filters
           filtersByCategory={tagsByCategory}
           appliedFilters={appliedFilters}
           setAppliedFilters={setAppliedFilters}
         />
 
-        {/* MAIN CONTENT */}
         <div className="flex-1 overflow-hidden flex justify-center items-center gap-8 md:px-4">
           <IgnoreButton className="hidden md:flex" onClick={ignore} />
 
@@ -94,7 +92,6 @@ export default function Feed() {
           <LikeButton className="hidden md:flex" onClick={like} />
         </div>
 
-        {/* INTERACTION BUTTONS */}
         <div className="md:h-20 md:border-t flex items-center justify-center gap-6 my-6 md:my-0 overflow-hidden">
           <RewindButton className="hidden md:flex" onClick={rewind} disabled={!canGoBack} />
           <SaveButton onClick={save} />
@@ -105,7 +102,6 @@ export default function Feed() {
         </div>
       </div>
 
-      {/* MODAL DE OFERTA */}
       {displayProduct && (
         <MakeOfferForm
           post={displayProduct}
@@ -118,7 +114,6 @@ export default function Feed() {
         />
       )}
 
-      {/* DESKTOP SIDEBAR */}
       {isDesktopDetailsOpen && displayProduct && (
         <div className="w-1/3 hidden md:block border-l overflow-hidden">
           <ProductDetailsDesktop details={extractDetails(displayProduct)} onClose={toggleDetails} />

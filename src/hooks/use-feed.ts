@@ -11,8 +11,8 @@ const PREFETCH_THRESHOLD = 5;
 
 export function usePaginatedFeed() {
   const [posts, setPosts] = useState<PostDto[]>([]);
-  const [isFetching, setIsFetching] = useState(true); // true desde el inicio evita el flash de empty state
-  const inFlight = useRef(false); // ref sincrónico para el guard, evita stale closure
+  const [isFetching, setIsFetching] = useState(true); // start true to avoid an empty-state flash
+  const inFlight = useRef(false); // synchronous guard against overlapping fetches
 
   const fetchMore = useCallback(async () => {
     if (inFlight.current) return;

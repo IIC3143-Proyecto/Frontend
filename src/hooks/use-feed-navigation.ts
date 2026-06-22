@@ -32,7 +32,7 @@ export function useFeedNavigation(appliedFilters: string[] = []) {
   const [direction, setDirection] = useState<1 | -1>(1);
   const [history, setHistory] = useState<HistoryEntry[]>([]);
 
-  // Reset al cambiar de modo/filtros (ajuste de estado en render, patrón documentado de React)
+  // Reset navigation when the filter set changes (adjust state during render)
   const [prevFiltersKey, setPrevFiltersKey] = useState(filtersKey);
   if (prevFiltersKey !== filtersKey) {
     setPrevFiltersKey(filtersKey);
@@ -44,11 +44,11 @@ export function useFeedNavigation(appliedFilters: string[] = []) {
   const currentPost = source[index] ?? null;
   const canGoBack = index > 0;
 
-  // Talla: solo cae en "no especificada" cuando las tags ya cargaron (evita el flash)
+  // Only fall back to "no especificada" once tags have loaded, to avoid a flash on advance
   const { data: postTags } = usePostTags(currentPost?.id);
   const size = postTags ? (postTags["Talla"]?.[0] ?? "no especificada") : "";
 
-  // Prefetch de las tags del siguiente post para que la talla aparezca de inmediato al avanzar
+  // Prefetch the next post's tags so its size shows instantly on advance
   const nextPostId = source[index + 1]?.id;
   useEffect(() => {
     if (!nextPostId) return;
@@ -58,7 +58,7 @@ export function useFeedNavigation(appliedFilters: string[] = []) {
     });
   }, [nextPostId, queryClient]);
 
-  // Prefetch de más posts del feed (la búsqueda es finita, sin paginación)
+  // Tag search is finite, so only the paginated feed needs more pages
   useEffect(() => {
     if (!isFiltering) prefetchIfNeeded(index);
   }, [index, isFiltering, prefetchIfNeeded]);
@@ -87,7 +87,7 @@ export function useFeedNavigation(appliedFilters: string[] = []) {
 
   const ignore = useCallback(() => advance(null, -1), [advance]);
 
-  // Para oferta: avanza sin registrar interacción (el rewind no la deshace)
+  // For offers: advance without recording an interaction, so rewind won't undo it
   const next = useCallback(() => advance(null, 1), [advance]);
 
   const rewind = useCallback(() => {

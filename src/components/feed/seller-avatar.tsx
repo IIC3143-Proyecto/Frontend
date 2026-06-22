@@ -26,13 +26,11 @@ export function SellerAvatar({ alt, imageUrl, href }: { alt: string; imageUrl?: 
 
   return (
     <>
-      {/* Mobile */}
       <div className="absolute z-10 bottom-6 right-3 md:hidden
         ring-2 ring-white rounded-full drop-shadow-[0_1px_4px_rgba(0,0,0,0.5)]">
         {wrap(circle("w-8 h-8"))}
       </div>
 
-      {/* Desktop */}
       <div className="absolute z-10 bottom-4 right-3 hidden md:block
         ring-2 ring-white rounded-full drop-shadow-[0_1px_4px_rgba(0,0,0,0.5)]">
         {wrap(circle("w-9 h-9"))}
