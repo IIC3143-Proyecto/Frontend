@@ -46,7 +46,7 @@ export interface UseEditPostReturn {
 
 function buildInitialPhotos(imagesUrls: string): PhotoItem[] {
   return imagesUrls
-    .split(",")
+    .split(";")
     .filter(Boolean)
     .map((url) => ({
       preview: url,
@@ -61,7 +61,7 @@ export function useEditPost(post: PostDto, onClose: () => void): UseEditPostRetu
   const isLocked = (post.offersCount ?? 0) > 0;
 
   const initialExistingUrls = useRef(
-    new Set(post.imagesUrls?.split(",").filter(Boolean) ?? [])
+    new Set(post.imagesUrls?.split(";").filter(Boolean) ?? [])
   );
 
   const [allPhotos, setAllPhotos] = useState<PhotoItem[]>(() =>
