@@ -78,7 +78,11 @@ export default function Feed() {
             ) : displayProduct ? (
               <PostTransition postKey={displayProduct.id} direction={direction}>
                 <ProductImages images={displayProduct.imagesUrls ? displayProduct.imagesUrls.split(";").filter(Boolean) : []} />
-                <SellerAvatar alt={displayProduct.seller.name} imageUrl={displayProduct.seller.photoUrl} />
+                <SellerAvatar
+                  alt={displayProduct.seller?.name ?? ""}
+                  imageUrl={displayProduct.seller?.photoUrl}
+                  href={displayProduct.sellerId ? `/profile/${displayProduct.sellerId}` : undefined}
+                />
                 <ProductDetailsMobile details={extractDetails(displayProduct)} className="absolute bottom-0 md:hidden" />
                 <div className="absolute top-10 left-3 z-20 md:hidden">
                   <RewindButton onClick={rewind} disabled={!canGoBack} />
