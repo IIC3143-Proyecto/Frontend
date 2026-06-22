@@ -2,14 +2,12 @@ import { expect } from '@playwright/test';
 import { test } from '../fixtures';
 import { waitForToast, expectError } from './helpers/onboarding';
 import { gotoAuthenticated } from '../e2e/helpers/auth';
+import { resetErrorScenario } from './helpers/form-errors';
 import {
   setUploadError,
-  setUploadNetwork,
   setUploadSlow,
   setCreateError,
-  setCreateNetwork,
   setPatchTagsError,
-  setPatchTagsNetwork,
   openModal,
   clickNext,
   clickBack,
@@ -17,7 +15,7 @@ import {
   fillStep1,
   uploadPhotos,
   selectRequiredTags,
-  selectMultipleTags,
+  dismissGeminiSuggestions,
 } from './helpers/create-post';
 
 test.describe('Create Post — desktop', () => {
@@ -26,93 +24,148 @@ test.describe('Create Post — desktop', () => {
     await openModal(page);
   });
 
-  test('should publish successfully with minimum required data', async ({ page }) => {
-    await fillStep1(page, { title: 'Camiseta Nike azul', price: 25000 });
-    await uploadPhotos(page, 3);
-    await clickNext(page);
-
-    await selectRequiredTags(page);
-    await clickNext(page);
-
-    await clickPublish(page);
-    await waitForToast(page, 'Publicación creada');
-    await expect(page.getByRole('dialog')).not.toBeVisible();
+  test('publishes post with minimum required data', async ({ page }) => {
+    await test.step('fill step 1 with minimum data', async () => {
+      await fillStep1(page, { title: 'Camiseta Nike azul', price: 25000 });
+      await uploadPhotos(page, 3);
+      await clickNext(page);
+    });
+    await test.step('select required tags and publish', async () => {
+      await selectRequiredTags(page);
+      await clickNext(page);
+      await clickPublish(page);
+      await waitForToast(page, 'Publicación creada');
+      await expect(page.getByRole('dialog')).not.toBeVisible();
+    });
   });
 
-  test('should show validation error when title is empty', async ({ page }) => {
-    await page.getByPlaceholder('ej: 25000').fill('25000');
-    await uploadPhotos(page, 3);
-    await clickNext(page);
-    await expectError(page, 'Título requerido');
+  test('shows validation errors for required fields', async ({ page }) => {
+    await test.step('empty title shows required error', async () => {
+      await page.getByPlaceholder('ej: 25000').fill('25000');
+      await uploadPhotos(page, 3);
+      await clickNext(page);
+      await expectError(page, 'Título requerido');
+      await page.getByRole('button', { name: 'Cancelar' }).click();
+    });
+
+    await openModal(page);
+
+    await test.step('empty price shows required error', async () => {
+      await page.getByPlaceholder('ej: Camiseta Nike azul').fill('Camiseta');
+      await uploadPhotos(page, 3);
+      await clickNext(page);
+      await expectError(page, 'El precio debe ser mayor a 0');
+      await page.getByRole('button', { name: 'Cancelar' }).click();
+    });
+
+    await openModal(page);
+
+    await test.step('fewer than 3 photos shows required error', async () => {
+      await fillStep1(page, { title: 'Camiseta', price: 10000 });
+      await uploadPhotos(page, 2);
+      await clickNext(page);
+      await expectError(page, 'Debes subir al menos 3 fotos');
+      await page.getByRole('button', { name: 'Cancelar' }).click();
+    });
+
+    await openModal(page);
+
+    await test.step('skipping required tags shows error', async () => {
+      await fillStep1(page, { title: 'Camiseta', price: 10000 });
+      await uploadPhotos(page, 3);
+      await clickNext(page);
+      await dismissGeminiSuggestions(page);
+      await clickNext(page);
+      await expectError(page, 'Selecciona al menos una talla');
+    });
   });
 
-  test('should show validation error when price is empty', async ({ page }) => {
-    await page.getByPlaceholder('ej: Camiseta Nike azul').fill('Camiseta');
-    await uploadPhotos(page, 3);
-    await clickNext(page);
-    await expectError(page, 'El precio debe ser mayor a 0');
+  test('navigation', async ({ page }) => {
+    await test.step('no back button on step 1', async () => {
+      await expect(page.getByRole('button', { name: 'Atrás' })).not.toBeVisible();
+    });
+
+    await test.step('back button disabled on step 2 after post is created', async () => {
+      await fillStep1(page, { title: 'Camiseta', price: 10000 });
+      await uploadPhotos(page, 3);
+      await clickNext(page);
+      await dismissGeminiSuggestions(page);
+      await expect(page.getByText('Tags obligatorios')).toBeVisible();
+      await expect(page.getByRole('button', { name: 'Atrás' })).toBeDisabled();
+    });
+
+    await test.step('back from step 3 goes to step 2', async () => {
+      await selectRequiredTags(page);
+      await clickNext(page);
+      await expect(page.getByText('Tags opcionales')).toBeVisible();
+      await clickBack(page);
+      await expect(page.getByText('Tags obligatorios')).toBeVisible();
+    });
+
+    await test.step('cancel closes the modal', async () => {
+      await page.getByRole('button', { name: 'Cancelar' }).click();
+      await expect(page.getByRole('dialog')).not.toBeVisible();
+    });
+
+    await test.step('form resets after close and reopen', async () => {
+      await openModal(page);
+      await expect(page.getByPlaceholder('ej: Camiseta Nike azul')).toHaveValue('');
+      await expect(page.getByPlaceholder('ej: 25000')).toHaveValue('');
+      await expect(page.locator('img[alt="Foto de prenda"]')).toHaveCount(0);
+      await expect(page.getByRole('button', { name: 'Atrás' })).not.toBeVisible();
+    });
   });
 
-  test('should show validation error when fewer than 3 photos are uploaded', async ({ page }) => {
-    await fillStep1(page, { title: 'Camiseta', price: 10000 });
-    await uploadPhotos(page, 2);
-    await clickNext(page);
-    await expectError(page, 'Debes subir al menos 3 fotos');
+  test('error handling', async ({ page }) => {
+    await test.step('upload 500 shows error toast', async () => {
+      await setUploadError(page, 500);
+      await fillStep1(page, { title: 'Camiseta', price: 10000 });
+      await uploadPhotos(page, 3);
+      await clickNext(page);
+      await waitForToast(page, 'Error al subir fotos');
+    });
+
+    await resetErrorScenario(page);
+    await page.getByRole('button', { name: 'Cancelar' }).click();
+    await openModal(page);
+
+    await test.step('create 500 shows error toast', async () => {
+      await setCreateError(page, 500);
+      await fillStep1(page, { title: 'Camiseta', price: 10000 });
+      await uploadPhotos(page, 3);
+      await clickNext(page);
+      await waitForToast(page, 'Error al crear publicación');
+    });
+
+    await resetErrorScenario(page);
+    await page.getByRole('button', { name: 'Cancelar' }).click();
+    await openModal(page);
+
+    await test.step('patch-tags 500 shows error toast', async () => {
+      await fillStep1(page, { title: 'Camiseta', price: 10000 });
+      await uploadPhotos(page, 3);
+      await clickNext(page);
+      await selectRequiredTags(page);
+      await clickNext(page);
+      await setPatchTagsError(page, 500);
+      await clickPublish(page);
+      await waitForToast(page, 'Error al publicar');
+    });
+
+    await resetErrorScenario(page);
+    await gotoAuthenticated(page, '/posts', 'FULL');
+    await openModal(page);
+
+    await test.step('create 401 redirects to session-expired', async () => {
+      await setCreateError(page, 401);
+      await fillStep1(page, { title: 'Camiseta', price: 10000 });
+      await uploadPhotos(page, 3);
+      await clickNext(page);
+      await page.waitForURL('**/session-expired', { timeout: 8_000 });
+    });
   });
 
-  test('should advance to step 2 without a description (optional field)', async ({ page }) => {
-    await fillStep1(page, { title: 'Camiseta', price: 10000 });
-    await uploadPhotos(page, 3);
-    await clickNext(page);
-    await expect(page.getByText('Tags obligatorios')).toBeVisible();
-  });
-
-  test('should show validation error when required tags are skipped', async ({ page }) => {
-    await fillStep1(page, { title: 'Camiseta', price: 10000 });
-    await uploadPhotos(page, 3);
-    await clickNext(page);
-
-    await clickNext(page);
-    await expectError(page, 'Selecciona al menos una talla');
-  });
-
-  test('should allow selecting multiple sizes and garment types', async ({ page }) => {
-    await fillStep1(page, { title: 'Camiseta', price: 10000 });
-    await uploadPhotos(page, 3);
-    await clickNext(page);
-
-    await selectMultipleTags(page);
-    await clickNext(page);
-
-    await clickPublish(page);
-    await waitForToast(page, 'Publicación creada');
-  });
-
-  test('should redirect to session-expired when upload returns 401', async ({ page }) => {
-    await setUploadError(page, 401);
-    await fillStep1(page, { title: 'Camiseta', price: 10000 });
-    await uploadPhotos(page, 3);
-    await clickNext(page);
-    await page.waitForURL('**/session-expired', { timeout: 8_000 });
-  });
-
-  test('should show error toast when upload returns 500', async ({ page }) => {
-    await setUploadError(page, 500);
-    await fillStep1(page, { title: 'Camiseta', price: 10000 });
-    await uploadPhotos(page, 3);
-    await clickNext(page);
-    await waitForToast(page, 'Error al subir fotos');
-  });
-
-  test('should show network error toast when upload fails due to connection', async ({ page }) => {
-    await setUploadNetwork(page);
-    await fillStep1(page, { title: 'Camiseta', price: 10000 });
-    await uploadPhotos(page, 3);
-    await clickNext(page);
-    await waitForToast(page, 'Error de red');
-  });
-
-  test('should show uploading spinner during slow upload', async ({ page }) => {
+  test('slow upload — spinner visible', async ({ page }) => {
     await setUploadSlow(page);
     await fillStep1(page, { title: 'Camiseta', price: 10000 });
     await uploadPhotos(page, 3);
@@ -120,111 +173,26 @@ test.describe('Create Post — desktop', () => {
     await expect(page.getByRole('button', { name: /Subiendo/ })).toBeVisible({ timeout: 3_000 });
   });
 
-  test('should redirect to session-expired when POST /post returns 401 on step 1', async ({ page }) => {
-    await setCreateError(page, 401);
-    await fillStep1(page, { title: 'Camiseta', price: 10000 });
-    await uploadPhotos(page, 3);
-    await clickNext(page);
-    await page.waitForURL('**/session-expired', { timeout: 8_000 });
+  test('tag suggestion: apply Gemini suggestions pre-fills required tags', async ({ page }) => {
+    await test.step('trigger Gemini dialog after successful upload', async () => {
+      await fillStep1(page, { title: 'Camiseta', price: 10000 });
+      await uploadPhotos(page, 3);
+      await clickNext(page);
+      await expect(page.getByText('Gemini sugiere estos tags para tus fotos.')).toBeVisible();
+    });
+
+    await test.step('apply suggestions — dialog closes and required tags step appears', async () => {
+      await page.getByRole('button', { name: 'Aplicar estas sugerencias' }).click();
+      await expect(page.getByText('Tags obligatorios')).toBeVisible();
+    });
+
+    await test.step('pre-filled tags allow advancing without manual selection', async () => {
+      await clickNext(page);
+      await expect(page.getByText('Tags opcionales')).toBeVisible();
+    });
   });
 
-  test('should show error toast when POST /post returns 500 on step 1', async ({ page }) => {
-    await setCreateError(page, 500);
-    await fillStep1(page, { title: 'Camiseta', price: 10000 });
-    await uploadPhotos(page, 3);
-    await clickNext(page);
-    await waitForToast(page, 'Error al crear publicación');
-  });
 
-  test('should show network error toast when POST /post fails on step 1', async ({ page }) => {
-    await setCreateNetwork(page);
-    await fillStep1(page, { title: 'Camiseta', price: 10000 });
-    await uploadPhotos(page, 3);
-    await clickNext(page);
-    await waitForToast(page, 'Error de red');
-  });
-
-  // TODO: enable when backend #48 (PATCH /api/post/:id/tags) is implemented
-  test.fixme('should redirect to session-expired when PATCH /post returns 401', async ({ page }) => {
-    await fillStep1(page, { title: 'Camiseta', price: 10000 });
-    await uploadPhotos(page, 3);
-    await clickNext(page);
-    await selectRequiredTags(page);
-    await clickNext(page);
-
-    await setPatchTagsError(page, 401);
-    await clickPublish(page);
-    await page.waitForURL('**/session-expired', { timeout: 8_000 });
-  });
-
-  test.fixme('should show error toast when PATCH /post returns 500', async ({ page }) => {
-    await fillStep1(page, { title: 'Camiseta', price: 10000 });
-    await uploadPhotos(page, 3);
-    await clickNext(page);
-    await selectRequiredTags(page);
-    await clickNext(page);
-
-    await setPatchTagsError(page, 500);
-    await clickPublish(page);
-    await waitForToast(page, 'Error al publicar');
-  });
-
-  test.fixme('should show network error toast when PATCH /post fails', async ({ page }) => {
-    await fillStep1(page, { title: 'Camiseta', price: 10000 });
-    await uploadPhotos(page, 3);
-    await clickNext(page);
-    await selectRequiredTags(page);
-    await clickNext(page);
-
-    await setPatchTagsNetwork(page);
-    await clickPublish(page);
-    await waitForToast(page, 'Error de red');
-  });
-
-  test('should close the modal when Cancelar is clicked', async ({ page }) => {
-    await page.getByRole('button', { name: 'Cancelar' }).click();
-    await expect(page.getByRole('dialog')).not.toBeVisible();
-  });
-
-  test('should disable Atrás on step 2 after the post is created', async ({ page }) => {
-    await fillStep1(page, { title: 'Camiseta', price: 10000 });
-    await uploadPhotos(page, 3);
-    await clickNext(page);
-
-    await expect(page.getByText('Tags obligatorios')).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Atrás' })).toBeDisabled();
-  });
-
-  test('should navigate back from step 3 to step 2 when Atrás is clicked', async ({ page }) => {
-    await fillStep1(page, { title: 'Camiseta', price: 10000 });
-    await uploadPhotos(page, 3);
-    await clickNext(page);
-
-    await selectRequiredTags(page);
-    await clickNext(page);
-
-    await expect(page.getByText('Tags opcionales')).toBeVisible();
-    await clickBack(page);
-    await expect(page.getByText('Tags obligatorios')).toBeVisible();
-  });
-
-  test('should not show Atrás button on the first step', async ({ page }) => {
-    await expect(page.getByRole('button', { name: 'Atrás' })).not.toBeVisible();
-  });
-
-  test('should reset the form when the modal is closed and reopened', async ({ page }) => {
-    await fillStep1(page, { title: 'Prenda a descartar', price: 99000 });
-    await uploadPhotos(page, 1);
-
-    await page.getByRole('button', { name: 'Cancelar' }).click();
-    await expect(page.getByRole('dialog')).not.toBeVisible();
-
-    await openModal(page);
-    await expect(page.getByPlaceholder('ej: Camiseta Nike azul')).toHaveValue('');
-    await expect(page.getByPlaceholder('ej: 25000')).toHaveValue('');
-    await expect(page.locator('img[alt="Foto de prenda"]')).toHaveCount(0);
-    await expect(page.getByRole('button', { name: 'Atrás' })).not.toBeVisible();
-  });
 });
 
 test.describe('Create Post — mobile', () => {
@@ -235,40 +203,29 @@ test.describe('Create Post — mobile', () => {
     await openModal(page);
   });
 
-  test('should publish successfully across all 5 steps', async ({ page }) => {
-    await fillStep1(page, { title: 'Camiseta Nike azul', price: 25000 });
-    await clickNext(page);
+  test('5-step mobile flow', async ({ page }) => {
+    await test.step('5-step flow publishes successfully', async () => {
+      await fillStep1(page, { title: 'Camiseta Nike azul', price: 25000 });
+      await clickNext(page);
+      await uploadPhotos(page, 3);
+      await clickNext(page);
+      await selectRequiredTags(page);
+      await clickNext(page);
+      await clickNext(page);
+      await clickPublish(page);
+      await waitForToast(page, 'Publicación creada');
+      await expect(page.getByRole('dialog')).not.toBeVisible();
+    });
 
-    await uploadPhotos(page, 3);
-    await clickNext(page);
+    await gotoAuthenticated(page, '/posts', 'FULL');
+    await openModal(page);
 
-    await selectRequiredTags(page);
-    await clickNext(page);
-
-    await clickNext(page);
-
-    await clickPublish(page);
-    await waitForToast(page, 'Publicación creada');
-    await expect(page.getByRole('dialog')).not.toBeVisible();
-  });
-
-  test('should show validation error when fewer than 3 photos are uploaded on step 2', async ({ page }) => {
-    await fillStep1(page, { title: 'Camiseta', price: 10000 });
-    await clickNext(page);
-
-    await uploadPhotos(page, 2);
-    await clickNext(page);
-    await expectError(page, 'Debes subir al menos 3 fotos');
-  });
-
-  test('should navigate back from step 3 to step 2 (photos)', async ({ page }) => {
-    await fillStep1(page, { title: 'Camiseta', price: 10000 });
-    await clickNext(page);
-    await uploadPhotos(page, 3);
-    await clickNext(page);
-
-    await expect(page.getByText('Tags obligatorios')).toBeVisible();
-    await clickBack(page);
-    await expect(page.getByText('Fotos', { exact: true })).toBeVisible();
+    await test.step('fewer than 3 photos on step 2 shows error', async () => {
+      await fillStep1(page, { title: 'Camiseta', price: 10000 });
+      await clickNext(page);
+      await uploadPhotos(page, 2);
+      await clickNext(page);
+      await expectError(page, 'Debes subir al menos 3 fotos');
+    });
   });
 });

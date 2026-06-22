@@ -19,12 +19,10 @@ export async function setInitialSyncUserError(page: Page, status: 401 | 403 | 50
 }
 
 export async function gotoAuthenticated(page: Page, path: string, scenario: MockScenario = 'FULL') {
-  if (scenario !== 'FULL') {
-    await page.addInitScript(
-      (s) => { (window as Window & { __mswInitScenario?: string }).__mswInitScenario = s; },
-      scenario,
-    );
-  }
+  await page.addInitScript(
+    (s) => { (window as Window & { __mswInitScenario?: string }).__mswInitScenario = s; },
+    scenario,
+  );
   await page.goto(path);
   await waitForMSW(page);
   // Wait for useAuth to process sync-user and any client-side redirects to settle

@@ -34,7 +34,11 @@ export type OnboardingErrorScenario =
   // Sync-user errors (pre-navigation)
   | 'SYNC_USER_401' | 'SYNC_USER_403' | 'SYNC_USER_500' | 'SYNC_USER_503'
   // Gemini tag analysis
-  | 'GEMINI_500';
+  | 'GEMINI_500'
+  // Notifications — delete one, delete all
+  | 'NOTIF_DELETE_500' | 'NOTIF_DELETE_ALL_500'
+  // Seller rating
+  | 'RATING_500';
 
 let currentErrorScenario: OnboardingErrorScenario = 'NONE';
 

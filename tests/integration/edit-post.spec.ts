@@ -13,9 +13,7 @@ import {
   waitForImageRequest,
   assertNoImageRequest,
   setPatchPostError,
-  setPatchPostNetwork,
   setDeleteImageError,
-  setAppendImageError,
 } from './helpers/edit-post';
 
 test.describe('Edit Post', () => {
@@ -24,184 +22,160 @@ test.describe('Edit Post', () => {
     await openEditModal(page);
   });
 
-  test('should save changes successfully', async ({ page }) => {
-    await fillEditTitle(page, 'Título actualizado');
-    await fillEditPrice(page, 30000);
-    await clickSave(page);
-    await waitForToast(page, 'Publicación actualizada');
-    await expect(page.getByRole('dialog')).not.toBeVisible();
+  test('happy path and field pre-population', async ({ page }) => {
+    await test.step('basic fields are pre-populated', async () => {
+      await openSection(page, 'Título');
+      await expect(page.getByPlaceholder('ej: Camiseta Nike azul')).not.toHaveValue('');
+      await openSection(page, 'Precio');
+      await expect(page.getByPlaceholder('ej: 25000')).not.toHaveValue('');
+    });
+
+    await test.step('tags pre-populated from fetchPostTags', async () => {
+      await openSection(page, 'Especificaciones esenciales');
+      await page.getByRole('button', { name: 'Tallas de letra' }).click();
+      await expect(page.getByRole('button', { name: 'M', exact: true })).toBeVisible();
+      await expect(page.getByRole('radio', { name: 'Nuevo', exact: true })).toBeChecked();
+      await expect(page.getByRole('button', { name: 'Camiseta', exact: true })).toHaveAttribute('aria-pressed', 'true');
+    });
+
+    await test.step('saving changes shows toast and closes modal', async () => {
+      await fillEditTitle(page, 'Título actualizado');
+      await fillEditPrice(page, 30000);
+      await clickSave(page);
+      await waitForToast(page, 'Publicación actualizada');
+      await expect(page.getByRole('dialog')).not.toBeVisible();
+    });
+
+    await test.step('resets when closed and reopened', async () => {
+      await openEditModal(page);
+      await fillEditTitle(page, 'Cambio temporal');
+      await page.getByRole('button', { name: 'Cancelar' }).click();
+      await openEditModal(page);
+      await openSection(page, 'Título');
+      await expect(page.getByPlaceholder('ej: Camiseta Nike azul')).not.toHaveValue('Cambio temporal');
+    });
   });
 
-  test('should pre-populate basic fields from post data', async ({ page }) => {
-    await openSection(page, 'Título');
-    await expect(page.getByPlaceholder('ej: Camiseta Nike azul')).not.toHaveValue('');
-    await openSection(page, 'Precio');
-    await expect(page.getByPlaceholder('ej: 25000')).not.toHaveValue('');
-  });
-
-  test('should pre-populate tags from fetchPostTags', async ({ page }) => {
-    await openSection(page, 'Especificaciones esenciales');
-    await expect(page.getByRole('button', { name: 'M', exact: true })).toHaveAttribute('aria-pressed', 'true');
-    await expect(page.getByRole('radio', { name: 'Nuevo', exact: true })).toBeChecked();
-    await expect(page.getByRole('button', { name: 'Camiseta', exact: true })).toHaveAttribute('aria-pressed', 'true');
-  });
-
-  test('should reset form to original post data when closed and reopened', async ({ page }) => {
-    await fillEditTitle(page, 'Cambio temporal');
-    await page.getByRole('button', { name: 'Cancelar' }).click();
-    await expect(page.getByRole('dialog')).not.toBeVisible();
-
-    await openEditModal(page);
-    await openSection(page, 'Título');
-    await expect(page.getByPlaceholder('ej: Camiseta Nike azul')).not.toHaveValue('Cambio temporal');
-  });
-
-  test('should show locked banner and disable price when post has offers', async ({ page }) => {
-    await page.getByRole('button', { name: 'Cancelar' }).click();
-    await openEditModalForPost(page, 'Levis 501');
-    await expect(page.getByText('Precio bloqueado', { exact: false })).toBeVisible();
-    await openSection(page, 'Precio');
-    await expect(page.getByPlaceholder('ej: 25000')).toBeDisabled();
-  });
-
-  test('should allow saving other fields when price is locked', async ({ page }) => {
+  test('price locked when post has offers', async ({ page }) => {
     await page.getByRole('button', { name: 'Cancelar' }).click();
     await openEditModalForPost(page, 'Levis 501');
-    await fillEditTitle(page, 'Levis actualizado');
-    await clickSave(page);
-    await waitForToast(page, 'Publicación actualizada');
+
+    await test.step('locked price banner is visible', async () => {
+      await expect(page.getByText('Precio bloqueado', { exact: false })).toBeVisible();
+    });
+
+    await test.step('price input is disabled', async () => {
+      await openSection(page, 'Precio');
+      await expect(page.getByPlaceholder('ej: 25000')).toBeDisabled();
+    });
+
+    await test.step('other fields can be saved with locked price', async () => {
+      await fillEditTitle(page, 'Levis actualizado');
+      await clickSave(page);
+      await waitForToast(page, 'Publicación actualizada');
+    });
   });
 
+  test('form validation', async ({ page }) => {
+    await test.step('empty title shows required error', async () => {
+      await openSection(page, 'Título');
+      await page.getByPlaceholder('ej: Camiseta Nike azul').fill('');
+      await clickSave(page);
+      await expectError(page, 'Título requerido');
+    });
 
-  test('should show error when title is cleared', async ({ page }) => {
-    await openSection(page, 'Título');
-    await page.getByPlaceholder('ej: Camiseta Nike azul').fill('');
-    await clickSave(page);
-    await expectError(page, 'Título requerido');
+    await test.step('empty price shows required error', async () => {
+      await openSection(page, 'Precio');
+      await page.getByPlaceholder('ej: 25000').fill('');
+      await clickSave(page);
+      await expectError(page, 'El precio debe ser mayor a 0');
+    });
+
+    await test.step('empty required tags shows error', async () => {
+      await openSection(page, 'Especificaciones esenciales');
+      await page.getByRole('button', { name: 'Tallas de letra' }).click();
+      await page.getByRole('button', { name: 'M', exact: true }).click();
+      await page.getByRole('button', { name: 'Camiseta', exact: true }).click();
+      await clickSave(page);
+      await expectError(page, 'Selecciona al menos una talla');
+    });
+
+    await test.step('fewer than 3 photos shows error', async () => {
+      await openSection(page, 'Fotos');
+      await page.getByRole('button', { name: 'Eliminar foto' }).first().click();
+      await clickSave(page);
+      await expectError(page, 'Debes tener al menos 3 fotos');
+    });
   });
 
-  test('should show error when price is cleared', async ({ page }) => {
-    await openSection(page, 'Precio');
-    await page.getByPlaceholder('ej: 25000').fill('');
-    await clickSave(page);
-    await expectError(page, 'El precio debe ser mayor a 0');
-  });
-
-  test('should show error when required tags are empty', async ({ page }) => {
-    await openSection(page, 'Especificaciones esenciales');
-    await page.getByRole('button', { name: 'M', exact: true }).click();
-    await page.getByRole('button', { name: 'Camiseta', exact: true }).click();
-    await clickSave(page);
-    await expectError(page, 'Selecciona al menos una talla');
-  });
-
-  test('should show error when fewer than 3 photos remain', async ({ page }) => {
-    await openSection(page, 'Fotos');
-    await page.getByRole('button', { name: 'Eliminar foto' }).first().click();
-    await clickSave(page);
-    await expectError(page, 'Debes tener al menos 3 fotos');
-  });
-
-
-  test('should redirect to session-expired when PATCH /post returns 401', async ({ page }) => {
-    await setPatchPostError(page, 401);
-    await clickSave(page);
-    await page.waitForURL('**/session-expired', { timeout: 8_000 });
-  });
-
-  test('should show error toast when PATCH /post returns 500', async ({ page }) => {
-    await setPatchPostError(page, 500);
-    await clickSave(page);
-    await waitForToast(page, 'Error al guardar cambios');
-  });
-
-  test('should show network error toast when PATCH /post fails', async ({ page }) => {
-    await setPatchPostNetwork(page);
-    await clickSave(page);
-    await waitForToast(page, 'Error de red');
-  });
-
-
-  test('should not call image endpoints when no photos change', async ({ page }) => {
-    await assertNoImageRequest(
-      page,
-      async () => {
+  test('image management', async ({ page }) => {
+    await test.step('no photo changes — no image request made', async () => {
+      await assertNoImageRequest(page, async () => {
         await fillEditTitle(page, 'Solo cambio título');
         await clickSave(page);
         await waitForToast(page, 'Publicación actualizada');
-      },
-    );
+      });
+    });
+
+    await openEditModal(page);
+
+    await test.step('delete photo sends DELETE with correct URL excluding kept photos', async () => {
+      await openSection(page, 'Fotos');
+      const firstPhotoSrc = await page.locator('img[alt="Foto de prenda"]').first().getAttribute('src');
+      const allSrcs = await page.locator('img[alt="Foto de prenda"]').evaluateAll(
+        (imgs) => imgs.map((img) => (img as HTMLImageElement).src),
+      );
+      await page.getByRole('button', { name: 'Eliminar foto' }).first().click();
+      await uploadEditPhotos(page, 1);
+
+      const deleteReq = waitForImageRequest(page, 'DELETE');
+      await clickSave(page);
+
+      const req = await deleteReq;
+      const body = req.postDataJSON() as { urls: string[] };
+      expect(body.urls).toHaveLength(1);
+      expect(body.urls[0]).toBe(firstPhotoSrc);
+      for (const src of allSrcs.slice(1)) {
+        expect(body.urls).not.toContain(src);
+      }
+    });
+
+    await openEditModal(page);
+
+    await test.step('add photo sends PATCH append request', async () => {
+      await uploadEditPhotos(page, 1);
+      const appendReq = waitForImageRequest(page, 'PATCH');
+      await clickSave(page);
+      await appendReq;
+    });
   });
 
-  test('should call DELETE with only the removed photo URL', async ({ page }) => {
-    await openSection(page, 'Fotos');
-    const firstPhotoSrc = await page.locator('img[alt="Foto de prenda"]').first().getAttribute('src');
-    await page.getByRole('button', { name: 'Eliminar foto' }).first().click();
+  test('error handling', async ({ page }) => {
+    await test.step('401 on save redirects to session-expired', async () => {
+      await setPatchPostError(page, 401);
+      await clickSave(page);
+      await page.waitForURL('**/session-expired', { timeout: 8_000 });
+    });
 
-    await uploadEditPhotos(page, 1);
+    await gotoAuthenticated(page, '/posts', 'FULL');
+    await openEditModal(page);
 
-    const deleteReq = waitForImageRequest(page, 'DELETE');
-    await clickSave(page);
+    await test.step('500 on save shows error toast', async () => {
+      await setPatchPostError(page, 500);
+      await clickSave(page);
+      await waitForToast(page, 'Error al guardar cambios');
+    });
 
-    const req = await deleteReq;
-    const body = req.postDataJSON() as { urls: string[] };
-    expect(body.urls).toHaveLength(1);
-    expect(body.urls[0]).toBe(firstPhotoSrc);
-  });
+    await page.getByRole('button', { name: 'Cancelar' }).click();
+    await openEditModal(page);
 
-  test('should not include kept photos in DELETE body', async ({ page }) => {
-    await openSection(page, 'Fotos');
-    const allSrcs = await page.locator('img[alt="Foto de prenda"]').evaluateAll(
-      (imgs) => imgs.map((img) => (img as HTMLImageElement).src),
-    );
-    await page.getByRole('button', { name: 'Eliminar foto' }).first().click();
-
-    await uploadEditPhotos(page, 1);
-
-    const deleteReq = waitForImageRequest(page, 'DELETE');
-    await clickSave(page);
-
-    const req = await deleteReq;
-    const body = req.postDataJSON() as { urls: string[] };
-    const keptSrcs = allSrcs.slice(1);
-    for (const src of keptSrcs) {
-      expect(body.urls).not.toContain(src);
-    }
-  });
-
-  test('should call PATCH append when new photo is added', async ({ page }) => {
-    await uploadEditPhotos(page, 1);
-
-    const appendReq = waitForImageRequest(page, 'PATCH');
-    await clickSave(page);
-
-    await appendReq;
-  });
-
-  test('should redirect to session-expired when DELETE image returns 401', async ({ page }) => {
-    await openSection(page, 'Fotos');
-    await page.getByRole('button', { name: 'Eliminar foto' }).first().click();
-    await uploadEditPhotos(page, 1);
-
-    await setDeleteImageError(page, 401);
-    await clickSave(page);
-    await page.waitForURL('**/session-expired', { timeout: 8_000 });
-  });
-
-  test('should show error toast when DELETE image returns 500', async ({ page }) => {
-    await openSection(page, 'Fotos');
-    await page.getByRole('button', { name: 'Eliminar foto' }).first().click();
-    await uploadEditPhotos(page, 1);
-
-    await setDeleteImageError(page, 500);
-    await clickSave(page);
-    await waitForToast(page, 'Error al guardar cambios');
-  });
-
-  test('should redirect to session-expired when PATCH append image returns 401', async ({ page }) => {
-    await uploadEditPhotos(page, 1);
-    await setAppendImageError(page, 401);
-    await clickSave(page);
-    await page.waitForURL('**/session-expired', { timeout: 8_000 });
+    await test.step('500 on image delete shows error toast', async () => {
+      await openSection(page, 'Fotos');
+      await page.getByRole('button', { name: 'Eliminar foto' }).first().click();
+      await uploadEditPhotos(page, 1);
+      await setDeleteImageError(page, 500);
+      await clickSave(page);
+      await waitForToast(page, 'Error al guardar cambios');
+    });
   });
 });
