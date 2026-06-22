@@ -102,7 +102,7 @@ export function PostDetailModal({ open, onClose, post }: Props) {
                 <div className="flex flex-col gap-2">
                   {tagGroups.map(([label, values]) => (
                     <div key={label}>
-                      <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                      <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
                         {label}
                       </p>
                       <div className="flex flex-wrap gap-1.5 mt-0.5">
