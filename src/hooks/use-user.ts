@@ -13,5 +13,11 @@ export function useUser(userId: string | undefined) {
       return getUser(userId!, token);
     },
     enabled: !!userId,
+
+    retry: (count, error) => {
+      const status = (error as Error & { status?: number }).status;
+      if (status && status >= 400 && status < 500) return false;
+      return count < 2;
+    },
   });
 }

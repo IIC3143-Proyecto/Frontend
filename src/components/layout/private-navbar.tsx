@@ -6,8 +6,8 @@ import { usePathname } from "next/navigation";
 import { NavigationIconButton } from "@/components/common/navigation-icon-button";
 import {
   IconHome,
-  IconShoppingCart,
-  IconBuildingStore,
+  IconReportMoney,
+  IconHanger,
   IconBell,
   IconUser,
 } from "@tabler/icons-react";
@@ -18,22 +18,22 @@ function NavigationButtons() {
   return (
     <nav className="flex gap-8 md:gap-6">
       <NavigationIconButton
-        href="/"
+        href="/feed"
         icon={IconHome}
         label="ir al feed"
-        highlighted={pathname === "/"}
+        highlighted={pathname.startsWith("/feed")}
       />
       <NavigationIconButton
-        href="/shopping-history"
-        icon={IconShoppingCart}
-        label="ir a mis compras"
-        highlighted={pathname.startsWith("/shopping-history")}
+        href="/posts"
+        icon={IconHanger}
+        label="ir a mis publicaciones"
+        highlighted={pathname.startsWith("/posts")}
       />
       <NavigationIconButton
-        href="/publications"
-        icon={IconBuildingStore}
-        label="ir a mis ventas"
-        highlighted={pathname.startsWith("/publications")}
+        href="/offers"
+        icon={IconReportMoney}
+        label="ir a mis ofertas"
+        highlighted={pathname.startsWith("/offers")}
       />
       <NavigationIconButton
         href="/notifications"

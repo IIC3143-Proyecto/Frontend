@@ -30,10 +30,11 @@ export const postsHandlers = [
     return HttpResponse.json(MOCK_SAVED_POSTS);
   }),
 
-  // TODO: implementar cuando el backend habilite GET /api/post/user/:id_user
-  http.get('*/api/post/user/:id_user', () =>
-    HttpResponse.json({ message: 'Not implemented' }, { status: 404 })
-  ),
+  http.get('*/api/post/user/:id_user', ({ request }) => {
+    const token = request.headers.get('Authorization');
+    if (!token) return HttpResponse.json({ message: 'Unauthorized' }, { status: 401 });
+    return HttpResponse.json(MOCK_SELLER_POSTS);
+  }),
 
   http.get('*/api/post/seller/:id_user', ({ request }) => {
     const token = request.headers.get('Authorization');

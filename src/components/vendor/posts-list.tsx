@@ -3,9 +3,11 @@
 import { useMemo, useState } from "react";
 import { Grid3x3, LayoutGrid, Menu } from "lucide-react";
 import { usePosts } from "@/hooks/use-posts";
+import { useOffers } from "@/hooks/use-offers";
 import { useDeletePost } from "@/hooks/use-delete-post";
 import { useAuth } from "@/hooks/use-auth";
 import { PostStatus } from "@/lib/types/post-status.enum";
+import { OfferDirection } from "@/lib/types/offer-direction.enum";
 import { cn } from "@/lib/utils";
 import { SaleCard, type SaleView } from "@/components/common/cards/sale-card";
 
@@ -27,18 +29,32 @@ export function PostsList() {
   const [tab, setTab] = useState<Tab>("activas");
   const { dbUser } = useAuth();
   const { data: posts, isLoading, isError } = usePosts(dbUser?.id ?? "");
+  const { data: receivedOffers } = useOffers(OfferDirection.RECEIVED);
   const { mutate: deletePost, isPending: isDeleting, variables: deletingId } =
     useDeletePost();
 
+  const offersByPost = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const offer of receivedOffers ?? []) {
+      counts.set(offer.postId, (counts.get(offer.postId) ?? 0) + 1);
+    }
+    return counts;
+  }, [receivedOffers]);
+
   const filtered = useMemo(() => {
     if (!posts) return [];
-    return posts.filter((p) => {
-      if (tab === "vendidas") {
-        return p.status === PostStatus.SOLD;
-      }
-      return p.status !== PostStatus.SOLD;
-    });
-  }, [posts, tab]);
+    return posts
+      .filter((p) => {
+        if (tab === "vendidas") {
+          return p.status === PostStatus.SOLD;
+        }
+        return p.status !== PostStatus.SOLD;
+      })
+      .map((p) => ({
+        ...p,
+        offersCount: offersByPost.get(p.id) ?? p.offersCount ?? 0,
+      }));
+  }, [posts, tab, offersByPost]);
 
   return (
     <div className="w-full relative">

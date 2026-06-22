@@ -50,8 +50,8 @@ In Next.js 16.x there is no `middleware.ts`. Instead, **`proxy.ts`** acts as ser
 
 ```typescript
 const privateRoutes = [
-  '/notifications', '/profile', '/publications',
-  '/shopping-history', '/onboarding', '/posts'
+  '/feed', '/notifications', '/profile',
+  '/offers', '/onboarding', '/posts'
 ];
 ```
 
