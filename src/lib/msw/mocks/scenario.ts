@@ -36,7 +36,9 @@ export type OnboardingErrorScenario =
   // Gemini tag analysis
   | 'GEMINI_500'
   // Notifications — delete one, delete all
-  | 'NOTIF_DELETE_500' | 'NOTIF_DELETE_ALL_500';
+  | 'NOTIF_DELETE_500' | 'NOTIF_DELETE_ALL_500'
+  // Seller rating
+  | 'RATING_500';
 
 let currentErrorScenario: OnboardingErrorScenario = 'NONE';
 
