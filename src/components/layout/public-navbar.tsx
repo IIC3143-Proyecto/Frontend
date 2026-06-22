@@ -23,16 +23,9 @@ type NavigationButtonsDirection = {
 function NavigationButtons( { direction } : NavigationButtonsDirection ) {
   const { user, isLoading } = useUser();
   const isLoggedIn = !!user;
-  
+
   return (
     <nav className={cn("flex gap-3", direction === "row" ? "flex-row" : "flex-col px-6 py-6")}>
-      <Button asChild type="button" variant="link">
-        <Link href="/about-us">About us</Link>
-      </Button>
-      <Button asChild type="button" variant="link">
-        <Link href="/faq">FAQ</Link>
-      </Button>
-
       {!isLoading && (
         isLoggedIn ? (
           <Button asChild type="button" variant="default">
@@ -56,7 +49,7 @@ function NavigationButtons( { direction } : NavigationButtonsDirection ) {
 
 function MobileMenu() {
   const pathname = usePathname()
-  
+
   return (
     <Sheet modal={false} key={pathname}>
       <SheetTrigger asChild>
@@ -64,12 +57,12 @@ function MobileMenu() {
           <IconMenu2/>
         </Button>
       </SheetTrigger>
-      
+
       <SheetContent side="top" showCloseButton={false} className="top-20! md:hidden" aria-describedby={undefined}>
         <VisuallyHidden asChild>
           <SheetTitle>Mobile Menu</SheetTitle>
         </VisuallyHidden>
-        
+
         <NavigationButtons direction="column"/>
       </SheetContent>
     </Sheet>

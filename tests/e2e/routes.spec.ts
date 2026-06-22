@@ -6,8 +6,8 @@ const NO_AUTH = { storageState: { cookies: [], origins: [] } };
 const PRIVATE_ROUTES = [
   '/notifications',
   '/profile',
-  '/publications',
-  '/shopping-history',
+  '/offers',
+  '/posts',
   '/onboarding',
 ] as const;
 

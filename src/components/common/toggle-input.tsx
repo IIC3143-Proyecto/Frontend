@@ -147,7 +147,7 @@ export function ToggleInputGroup<TFieldValues extends FieldValues>({
                   className={cn(
                     s.pill,
                     "rounded-full border transition-all duration-200",
-                    "bg-[#F8F7F4] border-transparent text-foreground",
+                    "bg-[var(--surface-subtle)] border-transparent text-foreground",
                     "data-[state=on]:bg-black data-[state=on]:text-white",
                     disabled && "pointer-events-none opacity-50 shadow-none"
                   )}

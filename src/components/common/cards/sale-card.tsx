@@ -5,6 +5,7 @@ import {
   IconDots,
   IconPencil,
   IconTrash,
+  IconCoins,
 } from "@tabler/icons-react";
 import { useState } from "react";
 import type { PostDto as Post } from "@/lib/types/post";
@@ -12,6 +13,7 @@ import { PostStatus } from "@/lib/types/post-status.enum";
 import { cn, formatPriceCLP } from "@/lib/utils";
 import { PostDetailModal } from "./post-detail-modal";
 import { PostEditModal } from "./post-edit-modal";
+import { PostOffersModal } from "./post-offers-modal";
 import { MiniRoundButton } from "@/components/common/mini-round-button";
 import { Button } from "@/components/ui/button";
 import {
@@ -113,6 +115,7 @@ export function SaleCard({
   const [editOpen, setEditOpen] = useState(false);
   const [detailOpen, setDetailOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [offersOpen, setOffersOpen] = useState(false);
   const steps = getSteps(post);
   const isSold = post.status === PostStatus.SOLD;
   const isAccepted = post.status === PostStatus.RESERVED;
@@ -149,6 +152,11 @@ export function SaleCard({
         <DropdownMenuItem onSelect={() => setDetailOpen(true)}>
           <IconInfoCircle className="w-4 h-4" /> Ver detalle
         </DropdownMenuItem>
+        {!isSold && (post.offersCount ?? 0) > 0 && (
+          <DropdownMenuItem onSelect={() => setOffersOpen(true)}>
+            <IconCoins className="w-4 h-4" /> Ver ofertas
+          </DropdownMenuItem>
+        )}
         {!isSold && !isAccepted && (
           <DropdownMenuItem onSelect={() => setEditOpen(true)}>
             <IconPencil className="w-4 h-4" /> Editar
@@ -171,13 +179,19 @@ export function SaleCard({
     <Button className="w-full">Ver venta</Button>
   ) : isAccepted ? (
     <>
-      <Button variant="outline" className="flex-1">
+      <Button
+        variant="outline"
+        className="flex-1"
+        onClick={() => setOffersOpen(true)}
+      >
         Oferta
       </Button>
       <Button className="flex-1">Entregado</Button>
     </>
   ) : (post.offersCount ?? 0) > 0 ? (
-    <Button className="w-full">Ofertas</Button>
+    <Button className="w-full" onClick={() => setOffersOpen(true)}>
+      Ofertas
+    </Button>
   ) : null;
 
   return (
@@ -255,6 +269,11 @@ export function SaleCard({
       <PostDetailModal
         open={detailOpen}
         onClose={() => setDetailOpen(false)}
+        post={post}
+      />
+      <PostOffersModal
+        open={offersOpen}
+        onClose={() => setOffersOpen(false)}
         post={post}
       />
       <ConfirmDialog

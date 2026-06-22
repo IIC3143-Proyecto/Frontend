@@ -29,6 +29,7 @@ import {
 } from "@/components/ui/accordion";
 import { TextInput } from "@/components/common/text-input";
 import { ToggleInputGroup } from "@/components/common/toggle-input";
+import { SizeSelector } from "@/components/common/size-selector";
 import { PhotoUploadGrid } from "@/components/common/photo-upload-grid";
 import { useEditPost, type EditPostInput } from "@/hooks/use-edit-post";
 import { useTags } from "@/hooks/use-tags";
@@ -232,11 +233,11 @@ export function PostEditModal({ open, onClose, post }: Props) {
                     </div>
                   ) : (
                     <div className="flex flex-col gap-5">
-                      <ToggleInputGroup
+                      <SizeSelector
                         control={form.control}
                         name="Talla"
                         label="Talla"
-                        options={opts("Talla")}
+                        options={opts("Talla").map((o) => o.value)}
                         type="multiple"
                       />
                       <ToggleInputGroup

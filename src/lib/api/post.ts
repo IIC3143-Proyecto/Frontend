@@ -1,14 +1,23 @@
 import type { NewPostDto, PostDto, PostTagsDto } from '@/lib/types/post';
 import { BASE } from './base';
+import { api } from './index';
 
-export const deletePost = async (postId: string): Promise<void> => {
-  const res = await fetch(`${BASE}/api/post/${postId}`, { method: 'DELETE' });
-  if (!res.ok) throw new Error('Error al eliminar post');
+export const deletePost = async (postId: string, accessToken: string): Promise<void> => {
+  const res = await fetch(api.postById(postId), {
+    method: 'DELETE',
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
+  if (!res.ok) {
+    const json = await res.json().catch(() => ({}));
+    throw Object.assign(
+      new Error((json as { message?: string }).message ?? 'Error al eliminar post'),
+      { status: res.status }
+    );
+  }
 };
 
-// GET /api/post/seller/{id_user} — endpoint pendiente de documentación backend
 export async function getPostsBySeller(sellerId: string, accessToken: string): Promise<PostDto[]> {
-  const res = await fetch(`${BASE}/api/post/seller/${sellerId}`, {
+  const res = await fetch(api.userPosts(sellerId), {
     headers: { Authorization: `Bearer ${accessToken}` },
   });
   if (!res.ok) {
@@ -22,7 +31,7 @@ export async function getPostsBySeller(sellerId: string, accessToken: string): P
 }
 
 export async function createPost(body: NewPostDto, accessToken: string): Promise<string> {
-  const res = await fetch(`${BASE}/api/post`, {
+  const res = await fetch(api.post(), {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${accessToken}`,

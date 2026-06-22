@@ -1,5 +1,6 @@
 import type { PostDto } from "./post";
 import type { UserDto } from "./user";
+import type { OfferPatchAction } from "./offer-patch-action.enum";
 
 export type OfferDto = {
   id: string;
@@ -12,3 +13,8 @@ export type OfferDto = {
   status: string;
   createdAtUtcMinus3: string;
 };
+
+export interface PatchOfferRequest {
+  id: string;
+  status: OfferPatchAction;
+}

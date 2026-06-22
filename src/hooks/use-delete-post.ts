@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { getAccessToken } from "@/actions/auth";
 import { deletePost } from "@/lib/api/post";
 
 type Options = {
@@ -10,7 +11,10 @@ export const useDeletePost = (options?: Options) => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (postId: string) => deletePost(postId),
+    mutationFn: async (postId: string) => {
+      const accessToken = await getAccessToken();
+      return deletePost(postId, accessToken);
+    },
     onSuccess: (_, postId) => {
       queryClient.invalidateQueries({ queryKey: ["posts"] });
       toast.success("Publicación eliminada");
