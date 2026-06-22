@@ -6,6 +6,7 @@ import { offersHandlers } from "./offers";
 import { tagsHandlers } from "./tags";
 import { interactionHandlers } from "./interactions";
 import { notificationsHandlers } from "./notifications";
+import { sellerRatingHandlers } from "./seller-rating";
 import { ratingsHandlers } from "./ratings";
 import { geminiHandlers } from "./gemini";
 
@@ -18,6 +19,7 @@ export const handlers = [
   ...tagsHandlers,
   ...interactionHandlers,
   ...notificationsHandlers,
+  ...sellerRatingHandlers,
   ...ratingsHandlers,
   ...geminiHandlers,
 ];

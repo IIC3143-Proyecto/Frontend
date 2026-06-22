@@ -83,21 +83,12 @@ export async function fetchPostTags(postId: string, accessToken: string): Promis
     );
   }
   const items = await res.json() as Array<{ tag: { title: string; category: string } }>;
-  const grouped: Record<string, string[]> = {};
+  const grouped: PostTagsDto = {};
   for (const item of items) {
     const { title, category } = item.tag;
     (grouped[category] ??= []).push(title);
   }
-  return {
-    Talla: grouped['Talla'] ?? [],
-    Condición: grouped['Condición']?.[0] ?? '',
-    'Tipo de prenda': grouped['Tipo de prenda'] ?? [],
-    Marca: grouped['Marca'] ?? [],
-    Color: grouped['Color'] ?? [],
-    Género: grouped['Género'] ?? [],
-    Estilo: grouped['Estilo'] ?? [],
-    Temporada: grouped['Temporada'] ?? [],
-  };
+  return grouped;
 }
 
 export async function patchPost(body: Record<string, unknown> & { id: string }, accessToken: string): Promise<void> {
@@ -146,6 +137,51 @@ export async function appendPostImages(postId: string, fd: FormData, accessToken
       { status: res.status }
     );
   }
+}
+
+export async function getPost(postId: string, accessToken: string): Promise<PostDto> {
+  const res = await fetch(api.postById(postId), {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
+  if (!res.ok) {
+    const json = await res.json().catch(() => ({}));
+    throw Object.assign(
+      new Error((json as { message?: string }).message ?? 'Error al obtener la publicación'),
+      { status: res.status },
+    );
+  }
+  return res.json() as Promise<PostDto>;
+}
+
+export async function getFeed(accessToken: string, quantity = 20): Promise<PostDto[]> {
+  const url = `${api.feed()}?quantity=${quantity}`;
+  const res = await fetch(url, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
+  if (!res.ok) {
+    const json = await res.json().catch(() => ({}));
+    throw Object.assign(
+      new Error((json as { message?: string }).message ?? 'Error al obtener el feed'),
+      { status: res.status },
+    );
+  }
+  return res.json() as Promise<PostDto[]>;
+}
+
+export async function searchByTags(tags: string[], accessToken: string): Promise<PostDto[]> {
+  const params = tags.map((t) => `tags=${encodeURIComponent(t)}`).join('&');
+  const url = `${api.search()}?${params}`;
+  const res = await fetch(url, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
+  if (!res.ok) {
+    const json = await res.json().catch(() => ({}));
+    throw Object.assign(
+      new Error((json as { message?: string }).message ?? 'Error al buscar publicaciones'),
+      { status: res.status },
+    );
+  }
+  return res.json() as Promise<PostDto[]>;
 }
 
 export async function deletePostImages(postId: string, urls: string[], accessToken: string): Promise<void> {
