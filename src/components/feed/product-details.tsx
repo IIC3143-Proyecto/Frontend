@@ -23,7 +23,7 @@ export function ProductDetailsDesktop({ onClose, details }: { onClose: () => voi
 
         <div className="flex gap-4">
           <Badge> {formatPriceCLP(details.price)} </Badge>
-          <Badge> Talla {details.size} </Badge>
+          {details.size && <Badge> Talla {details.size} </Badge>}
         </div>
       </div>
     </>
@@ -49,7 +49,7 @@ export function ProductDetailsMobile({ details, className }: { details: ProductD
 
       <div className="flex gap-3 items-center">
         <Badge variant="secondary"> {formatPriceCLP(details.price)} </Badge>
-        <Badge variant="secondary"> Talla {details.size} </Badge>
+        {details.size && <Badge variant="secondary"> Talla {details.size} </Badge>}
 
         <OpenMobileDetailsButton onClick={toggleDetails} active={isDetailsOpen} className="" />
       </div>

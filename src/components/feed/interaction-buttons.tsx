@@ -8,7 +8,7 @@ import {
   IconArrowBack,
 } from "@tabler/icons-react";
 
-export function SaveButton({ active, disabled, onClick }: { active: boolean; disabled?:boolean; onClick: () => void }) {
+export function SaveButton({ active = false, disabled, onClick }: { active?: boolean; disabled?:boolean; onClick: () => void }) {
   const Icon = active ? IconBookmarkFilled : IconBookmark;
 
   return (

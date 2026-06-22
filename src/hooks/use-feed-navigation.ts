@@ -1,103 +1,124 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
-import { useFeed } from "./use-feed";
+import { useCallback, useEffect, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { usePaginatedFeed, useSearchByTags } from "./use-feed";
 import { usePostTags } from "./use-tags";
 import { useCreateInteraction } from "./use-interaction";
-import { usePostSaveState } from "./use-post-save-state";
 import { getAccessToken } from "@/actions/auth";
 import { removeInteraction } from "@/lib/api/user";
+import { fetchPostTags } from "@/lib/api/post";
 import type { PostDto } from "@/lib/types/post";
-
-const PREFETCH_THRESHOLD = 5;
 
 export type ProductPost = PostDto & { size: string };
 
-type HistoryEntry = { post: PostDto; interaction: "Liked" | "Saved" | null };
+type Interaction = "Liked" | "Saved" | null;
+type HistoryEntry = { postId: string; interaction: Interaction };
 
-export function useFeedNavigation() {
-  const { data, isLoading, hasNextPage, isFetchingNextPage, fetchNextPage } = useFeed();
+export function useFeedNavigation(appliedFilters: string[] = []) {
+  const isFiltering = appliedFilters.length > 0;
+  const filtersKey = appliedFilters.join("|");
+
+  const { posts: feedPosts, isFetching: isFeedFetching, prefetchIfNeeded } = usePaginatedFeed();
+  const { data: searchData = [], isFetching: isSearchFetching } = useSearchByTags(
+    isFiltering ? appliedFilters : []
+  );
+  const source = isFiltering ? searchData : feedPosts;
+
   const createInteraction = useCreateInteraction();
+  const queryClient = useQueryClient();
 
-  const [queue, setQueue] = useState<PostDto[]>([]);
-  const consumedPages = useRef(0);
+  const [index, setIndex] = useState(0);
   const [direction, setDirection] = useState<1 | -1>(1);
+  const [history, setHistory] = useState<HistoryEntry[]>([]);
 
-  const historyRef = useRef<HistoryEntry[]>([]);
-  const [canGoBack, setCanGoBack] = useState(false);
+  // Reset al cambiar de modo/filtros (ajuste de estado en render, patrón documentado de React)
+  const [prevFiltersKey, setPrevFiltersKey] = useState(filtersKey);
+  if (prevFiltersKey !== filtersKey) {
+    setPrevFiltersKey(filtersKey);
+    setHistory([]);
+    setIndex(0);
+    setDirection(1);
+  }
 
-  useEffect(() => {
-    const pages = data?.pages ?? [];
-    if (pages.length > consumedPages.current) {
-      const freshPosts = pages.slice(consumedPages.current).flat();
-      consumedPages.current = pages.length;
-      setQueue((prev) => [...prev, ...freshPosts]);
-    }
-  }, [data]);
+  const currentPost = source[index] ?? null;
+  const canGoBack = index > 0;
 
-  useEffect(() => {
-    if (queue.length <= PREFETCH_THRESHOLD && hasNextPage && !isFetchingNextPage) {
-      fetchNextPage();
-    }
-  }, [queue.length, hasNextPage, isFetchingNextPage, fetchNextPage]);
-
-  const currentPost = queue[0] ?? null;
-
+  // Talla: solo cae en "no especificada" cuando las tags ya cargaron (evita el flash)
   const { data: postTags } = usePostTags(currentPost?.id);
-  const size = postTags?.["Talla"]?.[0] ?? "no especificada";
+  const size = postTags ? (postTags["Talla"]?.[0] ?? "no especificada") : "";
 
-  const { isSaved, toggleSave, isSavePending } = usePostSaveState(currentPost?.id ?? null);
+  // Prefetch de las tags del siguiente post para que la talla aparezca de inmediato al avanzar
+  const nextPostId = source[index + 1]?.id;
+  useEffect(() => {
+    if (!nextPostId) return;
+    queryClient.prefetchQuery({
+      queryKey: ["postTags", nextPostId],
+      queryFn: async () => fetchPostTags(nextPostId, await getAccessToken()),
+    });
+  }, [nextPostId, queryClient]);
 
-  const advance = useCallback((dir: 1 | -1) => {
-    setDirection(dir);
-    setQueue((prev) => prev.slice(1));
-  }, []);
+  // Prefetch de más posts del feed (la búsqueda es finita, sin paginación)
+  useEffect(() => {
+    if (!isFiltering) prefetchIfNeeded(index);
+  }, [index, isFiltering, prefetchIfNeeded]);
+
+  const advance = useCallback(
+    (interaction: Interaction, dir: 1 | -1 = 1) => {
+      if (!currentPost) return;
+      setHistory((h) => [...h, { postId: currentPost.id, interaction }]);
+      setDirection(dir);
+      setIndex((i) => i + 1);
+    },
+    [currentPost]
+  );
 
   const like = useCallback(() => {
     if (!currentPost) return;
-    historyRef.current = [...historyRef.current, { post: currentPost, interaction: "Liked" }];
-    setCanGoBack(true);
     createInteraction.mutate({ postId: currentPost.id, type: "Liked" });
-    advance(1);
-  }, [advance, currentPost, createInteraction]);
+    advance("Liked", 1);
+  }, [currentPost, createInteraction, advance]);
 
-  const ignore = useCallback(() => {
+  const save = useCallback(() => {
     if (!currentPost) return;
-    historyRef.current = [...historyRef.current, { post: currentPost, interaction: null }];
-    setCanGoBack(true);
-    advance(-1);
-  }, [advance, currentPost]);
+    createInteraction.mutate({ postId: currentPost.id, type: "Saved" });
+    advance("Saved", 1);
+  }, [currentPost, createInteraction, advance]);
+
+  const ignore = useCallback(() => advance(null, -1), [advance]);
+
+  // Para oferta: avanza sin registrar interacción (el rewind no la deshace)
+  const next = useCallback(() => advance(null, 1), [advance]);
 
   const rewind = useCallback(() => {
-    const h = historyRef.current;
-    if (h.length === 0) return;
-    const last = h[h.length - 1];
-    historyRef.current = h.slice(0, -1);
-    setCanGoBack(historyRef.current.length > 0);
-    setQueue((prev) => [last.post, ...prev]);
-    setDirection(-1);
-    if (last.interaction) {
-      getAccessToken().then((token) =>
-        removeInteraction(last.post.id, last.interaction!, token)
-      ).catch(() => {});
+    if (index === 0) return;
+    const entry = history[index - 1];
+    setHistory((h) => h.slice(0, index - 1));
+    if (entry?.interaction) {
+      getAccessToken()
+        .then((t) => removeInteraction(entry.postId, entry.interaction!, t))
+        .catch(() => {});
     }
-  }, []);
+    setDirection(-1);
+    setIndex((i) => i - 1);
+  }, [index, history]);
 
-  const isFinished = !currentPost && !isLoading && !isFetchingNextPage && !hasNextPage;
+  const sourceFetching = isFiltering ? isSearchFetching : isFeedFetching;
+  const isLoading = sourceFetching && !currentPost;
+  const isFinished = !currentPost && !sourceFetching;
 
   const currentProduct: ProductPost | null = currentPost ? { ...currentPost, size } : null;
 
   return {
     currentPost: currentProduct,
     direction,
-    isLoading: isLoading && queue.length === 0,
+    isLoading,
     isFinished,
+    canGoBack,
     like,
     ignore,
+    save,
+    next,
     rewind,
-    canGoBack,
-    isSaved,
-    toggleSave,
-    isSavePending,
   };
 }
