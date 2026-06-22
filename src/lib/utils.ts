@@ -45,3 +45,9 @@ export function formatRelativeDate(iso: string): string {
 
   return date.toLocaleDateString("es-CL", { day: "numeric", month: "short" });
 }
+
+export function arraysEqual<T>(a: T[], b: T[]): boolean {
+  if (a.length !== b.length) return false;
+  const bSet = new Set(b);
+  return a.every((item) => bSet.has(item));
+}

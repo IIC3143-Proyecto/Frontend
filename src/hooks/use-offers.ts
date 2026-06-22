@@ -13,12 +13,16 @@ export const offerKeys = {
   list: (direction: OfferDirection) => [...offerKeys.all, direction] as const,
 };
 
+const byNewest = (a: OfferDto, b: OfferDto) =>
+  (b.createdAtUtcMinus3 ?? "").localeCompare(a.createdAtUtcMinus3 ?? "");
+
 const buildOfferQueryOptions = (direction: OfferDirection) => ({
   queryKey: offerKeys.list(direction),
   queryFn: async () => {
     const accessToken = await getAccessToken();
     return getOffers(direction, accessToken);
   },
+  select: (offers: OfferDto[]) => [...offers].sort(byNewest),
 });
 
 const isSuccessful = (status: string) =>
@@ -41,7 +45,9 @@ export const useSuccessfulOffers = () =>
       const data: DirectedOffer[] = [
         ...(made.data ?? []).map(tag(OfferDirection.MADE)),
         ...(received.data ?? []).map(tag(OfferDirection.RECEIVED)),
-      ].filter(({ offer }) => isSuccessful(offer.status));
+      ]
+        .filter(({ offer }) => isSuccessful(offer.status))
+        .sort((a, b) => byNewest(a.offer, b.offer));
 
       return {
         data,

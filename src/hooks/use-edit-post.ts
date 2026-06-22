@@ -95,14 +95,14 @@ export function useEditPost(post: PostDto, onClose: () => void): UseEditPostRetu
     if (!postTags) return;
     form.reset({
       ...form.getValues(),
-      Talla: postTags.Talla ?? [],
-      Condición: postTags.Condición ?? "",
-      "Tipo de prenda": postTags["Tipo de prenda"] ?? [],
-      Marca: postTags.Marca ?? [],
-      Color: postTags.Color ?? [],
-      Género: postTags.Género ?? [],
-      Estilo: postTags.Estilo ?? [],
-      Temporada: postTags.Temporada ?? [],
+      Talla: postTags['Talla'] ?? [],
+      Condición: postTags['Condición']?.[0] ?? "",
+      "Tipo de prenda": postTags['Tipo de prenda'] ?? [],
+      Marca: postTags['Marca'] ?? [],
+      Color: postTags['Color'] ?? [],
+      Género: postTags['Género'] ?? [],
+      Estilo: postTags['Estilo'] ?? [],
+      Temporada: postTags['Temporada'] ?? [],
     });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [postTags]);

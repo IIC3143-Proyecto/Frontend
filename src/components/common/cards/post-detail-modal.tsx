@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { IconMapPin, IconTag } from "@tabler/icons-react";
+import { IconLoader2, IconTag } from "@tabler/icons-react";
 import {
   Dialog,
   DialogContent,
@@ -10,6 +10,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { usePostTags } from "@/hooks/use-tags";
 import type { PostDto as Post } from "@/lib/types/post";
 import { formatPriceCLP } from "@/lib/utils";
 
@@ -18,11 +19,6 @@ type Props = {
   onClose: () => void;
   post: Post;
 };
-
-// TODO: estos campos aún no están en el modelo Post — placeholders por ahora.
-const PLACEHOLDER_CATEGORY = ["Streetwear", "Negro"];
-const PLACEHOLDER_SPECS = ["Hombre", "Talla M · Usado buen estado"];
-const PLACEHOLDER_LOCATION = "Línea 1, Los Leones";
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
@@ -37,6 +33,13 @@ export function PostDetailModal({ open, onClose, post }: Props) {
   const images = post.imagesUrls?.split(";").filter(Boolean) ?? [];
   const [mainImage, ...restImages] = images;
   const hasMorePhotos = restImages.length > 0;
+
+  const { data: postTags, isLoading: tagsLoading } = usePostTags(
+    open ? post.id : undefined,
+  );
+  const tagGroups = Object.entries(postTags ?? {}).filter(
+    ([, values]) => values.length > 0,
+  );
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
@@ -88,27 +91,38 @@ export function PostDetailModal({ open, onClose, post }: Props) {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <SectionLabel>Categoría</SectionLabel>
-                {PLACEHOLDER_CATEGORY.map((value) => (
-                  <p key={value}>{value}</p>
-                ))}
-              </div>
-              <div>
-                <SectionLabel>Especificaciones</SectionLabel>
-                {PLACEHOLDER_SPECS.map((value) => (
-                  <p key={value}>{value}</p>
-                ))}
-              </div>
-            </div>
-
             <div>
-              <SectionLabel>Ubicación</SectionLabel>
-              <p className="flex items-center gap-1">
-                <IconMapPin className="w-4 h-4 shrink-0" />
-                {PLACEHOLDER_LOCATION}
-              </p>
+              <SectionLabel>Especificaciones</SectionLabel>
+              {tagsLoading ? (
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <IconLoader2 className="w-4 h-4 animate-spin" />
+                  Cargando…
+                </div>
+              ) : tagGroups.length > 0 ? (
+                <div className="flex flex-col gap-2">
+                  {tagGroups.map(([label, values]) => (
+                    <div key={label}>
+                      <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                        {label}
+                      </p>
+                      <div className="flex flex-wrap gap-1.5 mt-0.5">
+                        {values.map((value) => (
+                          <span
+                            key={value}
+                            className="rounded-full bg-muted px-2 py-0.5 text-xs"
+                          >
+                            {value}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  Sin especificaciones.
+                </p>
+              )}
             </div>
 
             <div>
