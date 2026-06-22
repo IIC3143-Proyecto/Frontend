@@ -53,7 +53,7 @@ export default function Feed() {
   const isEmpty = !displayProduct && !isLoading && isFinished;
 
   return (
-    <main className="flex-1 flex flex-row min-h-0 h-full">
+    <main className="flex flex-row min-h-0 h-[calc(100dvh-5rem)]">
       <div className="flex-1 flex flex-col min-h-0 min-w-0">
         <Filters
           filtersByCategory={tagsByCategory}
