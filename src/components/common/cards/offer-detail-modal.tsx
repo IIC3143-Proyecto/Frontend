@@ -43,7 +43,7 @@ export function OfferDetailModal({ open, onClose, offer, direction }: Props) {
   const counterpartyLabel =
     direction === OfferDirection.RECEIVED ? "Comprador" : "Vendedor";
 
-  const firstImage = post.imagesUrls?.split(",").filter(Boolean)[0];
+  const firstImage = post.imagesUrls?.split(";").filter(Boolean)[0];
 
   return (
     <Dialog open={open} onOpenChange={onClose}>

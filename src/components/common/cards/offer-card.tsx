@@ -33,7 +33,7 @@ export function OfferCard({ offer, direction }: OfferCardProps) {
     direction === OfferDirection.RECEIVED ? offer.buyer : post.seller;
   const counterpartyLabel =
     direction === OfferDirection.RECEIVED ? "De" : "Para";
-  const firstImage = post.imagesUrls?.split(",").filter(Boolean)[0];
+  const firstImage = post.imagesUrls?.split(";").filter(Boolean)[0];
   const canManage =
     getOfferActions(offer.status, getRoleForDirection(direction)).length > 0;
   const canRate =

@@ -121,6 +121,8 @@ export function SaleCard({
   const isAccepted = post.status === PostStatus.RESERVED;
   const showBadge = (post.offersCount ?? 0) > 0 && !isAccepted && !isSold;
 
+  const firstImage = post.imagesUrls?.split(";").filter(Boolean)[0];
+
   const cardClasses = cn(
     "relative bg-card border border-border flex flex-col overflow-hidden",
     view === "list" && "w-full flex-row p-3 gap-3",
@@ -129,7 +131,7 @@ export function SaleCard({
   );
 
   const thumbClasses = cn(
-    "bg-muted aspect-[5/6] flex items-center justify-center text-xs text-muted-foreground",
+    "bg-muted aspect-[5/6] flex items-center justify-center text-xs text-muted-foreground overflow-hidden",
     view === "list" ? "h-auto w-2/5 max-w-40 shrink-0" : "w-full",
   );
 
@@ -233,7 +235,18 @@ export function SaleCard({
         </div>
       )}
 
-      <div className={thumbClasses}>Imagen</div>
+      <div className={thumbClasses}>
+        {firstImage ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={firstImage}
+            alt={post.title}
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          "Imagen"
+        )}
+      </div>
 
       <div className="flex-1 flex flex-col justify-between min-w-0">
         {!isCompact ? (
