@@ -15,6 +15,7 @@ export async function setUploadError(page: Page, status: 401 | 500) {
   await setScenario(page, status === 401 ? 'UPLOAD_401' : 'UPLOAD_500');
 }
 
+
 export async function setUploadNetwork(page: Page) {
   await setScenario(page, 'UPLOAD_NETWORK');
 }

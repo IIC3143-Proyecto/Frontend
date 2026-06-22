@@ -172,6 +172,27 @@ test.describe('Create Post — desktop', () => {
     await clickNext(page);
     await expect(page.getByRole('button', { name: /Subiendo/ })).toBeVisible({ timeout: 3_000 });
   });
+
+  test('tag suggestion: apply Gemini suggestions pre-fills required tags', async ({ page }) => {
+    await test.step('trigger Gemini dialog after successful upload', async () => {
+      await fillStep1(page, { title: 'Camiseta', price: 10000 });
+      await uploadPhotos(page, 3);
+      await clickNext(page);
+      await expect(page.getByText('Gemini sugiere estos tags para tus fotos.')).toBeVisible();
+    });
+
+    await test.step('apply suggestions — dialog closes and required tags step appears', async () => {
+      await page.getByRole('button', { name: 'Aplicar estas sugerencias' }).click();
+      await expect(page.getByText('Tags obligatorios')).toBeVisible();
+    });
+
+    await test.step('pre-filled tags allow advancing without manual selection', async () => {
+      await clickNext(page);
+      await expect(page.getByText('Tags opcionales')).toBeVisible();
+    });
+  });
+
+
 });
 
 test.describe('Create Post — mobile', () => {
